@@ -1,0 +1,14 @@
+# Ignore OS files
+.directory
+
+# Ignore IDEs files
+\.idea/
+.project
+\.vscode/
+
+# Ignore Rust binaries
+**/target/
+**/*.rs.bk
+
+# Ignore coverage report
+*-report.html
