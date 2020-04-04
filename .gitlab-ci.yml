@@ -1,0 +1,48 @@
+stages:
+  - fmt
+  - tests
+  - quality
+
+.rust_stable_lin64:
+  image: registry.duniter.org/docker/rust/rust-x64-stable-ci:latest
+  tags:
+    - redshift-docker-runner
+  before_script:
+    - export PATH="$HOME/.cargo/bin:$PATH"
+    - rustup show
+    - rustc --version && cargo --version
+
+fmt:
+  extends: .rust_stable_lin64
+  stage: fmt
+  before_script:
+    - cargo fmt -- --version
+  script:
+    - cargo fmt -- --check
+        
+tests:linux64:stable:
+  extends: .rust_stable_lin64
+  stage: tests
+  tags:
+    - redshift-docker-runner
+  script: 
+    - RUSTFLAGS="-D warnings" cargo build
+    - cargo test --doc
+    - cargo tarpaulin --ignore-tests -iv --out Xml
+    - bash <(curl -s https://codecov.io/bash)
+
+clippy:
+  extends: .rust_stable_lin64
+  before_script:
+    - cargo clippy -- -V
+  stage: quality
+  script:
+    - cargo clippy --all --tests -- -D warnings --verbose
+    
+audit_dependencies:
+  extends: .rust_stable_lin64
+  before_script:
+    - cargo deny -V
+  stage: quality
+  script:
+    - cargo deny check
