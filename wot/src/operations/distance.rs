@@ -130,7 +130,7 @@ impl<T: WebOfTrust + Sync> DistanceCalculator<T> for RustyDistanceCalculator {
             reached_at_border: border.len() as u32,
             success,
             success_at_border,
-            outdistanced: f64::from(success) < x_percent * f64::from(sentries),
+            outdistanced: f64::from(success) < ((x_percent * f64::from(sentries)).trunc() - 1.0),
         })
     }
 
