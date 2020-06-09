@@ -38,7 +38,7 @@ use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
 #[cfg(feature = "ser")]
-use std::marker::PhantomData;
+use std::{cmp::Ordering, marker::PhantomData};
 use unwrap::unwrap;
 #[cfg(feature = "scrypt")]
 use zeroize::Zeroize;
@@ -249,6 +249,16 @@ impl Debug for PublicKey {
     // PublicKey { DNann1L... }
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         write!(f, "PublicKey {{ {} }}", self)
+    }
+}
+
+impl PartialOrd for PublicKey {
+    fn partial_cmp(&self, other: &PublicKey) -> Option<Ordering> {
+        Some(match self.datas.cmp(&other.datas) {
+            Ordering::Equal => self.count_leading_zero.cmp(&other.count_leading_zero),
+            Ordering::Less => Ordering::Less,
+            Ordering::Greater => Ordering::Greater,
+        })
     }
 }
 
