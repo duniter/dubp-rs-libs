@@ -44,7 +44,7 @@
 )]
 #![allow(non_camel_case_types)]
 
-#[cfg(feature = "aes256")]
+#[cfg(feature = "aes")]
 pub mod aes256;
 pub mod bases;
 #[cfg(feature = "dewif")]

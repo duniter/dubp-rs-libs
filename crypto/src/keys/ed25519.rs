@@ -26,7 +26,6 @@ use crate::bases::*;
 #[cfg(feature = "rand")]
 use crate::rand::UnspecifiedRandError;
 use crate::seeds::Seed32;
-use curve25519_dalek::edwards::CompressedEdwardsY;
 use ring::signature::{Ed25519KeyPair as RingKeyPair, KeyPair, UnparsedPublicKey, ED25519};
 #[cfg(feature = "ser")]
 use serde::{
@@ -41,7 +40,7 @@ use std::hash::{Hash, Hasher};
 #[cfg(feature = "ser")]
 use std::marker::PhantomData;
 use unwrap::unwrap;
-#[cfg(feature = "scrypt_feature")]
+#[cfg(feature = "scrypt")]
 use zeroize::Zeroize;
 
 /// Size of a public key in bytes
@@ -180,6 +179,21 @@ impl AsRef<[u8]> for PublicKey {
     }
 }
 
+impl PublicKey {
+    #[inline]
+    /// Verify if bytes represents a valid point on the Edwards form of Curve25519.
+    #[cfg(feature = "pubkey_check")]
+    fn check_bytes(bytes: &[u8]) -> bool {
+        curve25519_dalek::edwards::CompressedEdwardsY::from_slice(bytes)
+            .decompress()
+            .is_some()
+    }
+    #[cfg(not(feature = "pubkey_check"))]
+    fn check_bytes(_: &[u8]) -> bool {
+        true
+    }
+}
+
 impl TryFrom<&[u8]> for PublicKey {
     type Error = PubkeyFromBytesError;
 
@@ -199,8 +213,7 @@ impl TryFrom<&[u8]> for PublicKey {
                 )
             };
             // Ensure that given bytes represents a valid point on the Edwards form of Curve25519.
-            let compressed_edwards_y = CompressedEdwardsY::from_slice(datas_bytes);
-            if compressed_edwards_y.decompress().is_some() {
+            if Self::check_bytes(datas_bytes) {
                 let mut u8_array = [0; PUBKEY_DATAS_SIZE_IN_BYTES];
                 u8_array[(PUBKEY_DATAS_SIZE_IN_BYTES - datas_bytes.len())..]
                     .copy_from_slice(datas_bytes);
@@ -361,7 +374,7 @@ impl KeyPairFromSeed32Generator {
     }
 }
 
-#[cfg(feature = "scrypt_feature")]
+#[cfg(feature = "scrypt")]
 #[derive(Zeroize)]
 #[zeroize(drop)]
 /// Salted password
@@ -370,21 +383,21 @@ pub struct SaltedPassword {
     password: String,
 }
 
-#[cfg(feature = "scrypt_feature")]
+#[cfg(feature = "scrypt")]
 impl SaltedPassword {
     /// Create new salted password
     pub fn new(salt: String, password: String) -> SaltedPassword {
         SaltedPassword { salt, password }
     }
 }
-#[cfg(feature = "scrypt_feature")]
+#[cfg(feature = "scrypt")]
 /// Keypair generator with given parameters for `scrypt` keypair function.
 #[derive(Copy, Clone)]
 pub struct KeyPairFromSaltedPasswordGenerator {
     scrypt_params: scrypt::ScryptParams,
 }
 
-#[cfg(feature = "scrypt_feature")]
+#[cfg(feature = "scrypt")]
 impl KeyPairFromSaltedPasswordGenerator {
     /// Create a `KeyPairGenerator` with default arguments `(log_n: 12, r: 16, p: 1)`
     pub fn with_default_parameters() -> KeyPairFromSaltedPasswordGenerator {
@@ -689,7 +702,7 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
     }
 
     #[test]
-    #[cfg(feature = "scrypt_feature")]
+    #[cfg(feature = "scrypt")]
     fn keypair_generate() {
         let key_pair1 = KeyPairFromSaltedPasswordGenerator::with_default_parameters().generate(
             SaltedPassword::new(
@@ -725,7 +738,7 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
 
     #[test]
     #[cfg(feature = "ser")]
-    #[cfg(feature = "scrypt_feature")]
+    #[cfg(feature = "scrypt")]
     fn keypair_generate_sign_and_verify() {
         let keypair = KeyPairFromSaltedPasswordGenerator::with_default_parameters().generate(
             SaltedPassword::new("password".to_owned(), "salt".to_owned()),
