@@ -33,12 +33,14 @@ use serde::{
     ser::{SerializeTuple, Serializer},
     Deserialize, Serialize,
 };
-use std::convert::TryFrom;
-use std::fmt;
-use std::fmt::{Debug, Display, Formatter};
-use std::hash::{Hash, Hasher};
 #[cfg(feature = "ser")]
-use std::{cmp::Ordering, marker::PhantomData};
+use std::marker::PhantomData;
+use std::{
+    cmp::Ordering,
+    convert::TryFrom,
+    fmt::{self, Debug, Display, Formatter},
+    hash::{Hash, Hasher},
+};
 use unwrap::unwrap;
 #[cfg(feature = "scrypt")]
 use zeroize::Zeroize;
