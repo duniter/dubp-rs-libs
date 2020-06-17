@@ -83,7 +83,6 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
 mod tests {
 
     use super::*;
-    use bincode;
 
     #[cfg_attr(feature = "ser", derive(Deserialize, Serialize))]
     struct BinSignableTestImpl {

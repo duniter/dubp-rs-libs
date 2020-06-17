@@ -26,7 +26,6 @@ use crate::bases::*;
 #[cfg(feature = "rand")]
 use crate::rand::UnspecifiedRandError;
 use crate::seeds::Seed32;
-use base64;
 use curve25519_dalek::edwards::CompressedEdwardsY;
 use ring::signature::{Ed25519KeyPair as RingKeyPair, KeyPair, UnparsedPublicKey, ED25519};
 #[cfg(feature = "ser")]
@@ -443,8 +442,6 @@ mod tests {
     #[cfg(feature = "ser")]
     use crate::keys::{KeyPair, Sig, Signator, Signature};
     use crate::seeds::Seed32;
-    #[cfg(feature = "ser")]
-    use bincode;
     #[cfg(feature = "ser")]
     use std::collections::hash_map::DefaultHasher;
 
