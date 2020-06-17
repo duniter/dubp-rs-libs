@@ -23,8 +23,8 @@ pub use decrypt::decrypt_bytes;
 pub use encrypt::encrypt_bytes;
 
 use crate::seeds::Seed32;
-use aes::block_cipher_trait::generic_array::GenericArray;
-use aes::block_cipher_trait::BlockCipher;
+use aes::block_cipher::generic_array::GenericArray;
+use aes::block_cipher::{BlockCipher, NewBlockCipher};
 
 type Block = GenericArray<u8, <Aes256 as BlockCipher>::BlockSize>;
 type ParBlocks = <Aes256 as BlockCipher>::ParBlocks;

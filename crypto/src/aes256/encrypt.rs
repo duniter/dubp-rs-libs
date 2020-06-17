@@ -16,8 +16,8 @@
 //! Aes256 encryption
 
 use super::{Aes256, Block, ParBlocks};
-use aes::block_cipher_trait::generic_array::GenericArray;
-use aes::block_cipher_trait::BlockCipher;
+use aes::block_cipher::generic_array::GenericArray;
+use aes::block_cipher::BlockCipher;
 
 /// Encrypt bytes.
 /// The length of the bytes slice must be a multiple of 16 !
