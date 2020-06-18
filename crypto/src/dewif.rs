@@ -106,6 +106,7 @@ pub use read::{read_dewif_file_content, DewifReadError};
 pub use write::{write_dewif_v1_content, write_dewif_v2_content};
 
 use crate::hashs::Hash;
+use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
 use arrayvec::ArrayVec;
 use unwrap::unwrap;
@@ -130,13 +131,12 @@ fn gen_aes_seed(passphrase: &str) -> Seed32 {
     unwrap!(salt.try_extend_from_slice(hash.as_ref()));
 
     let mut aes_seed_bytes = [0u8; 32];
-    scrypt::scrypt(
+    scrypt(
         passphrase.as_bytes(),
         salt.as_ref(),
-        &scrypt::ScryptParams::new(12, 16, 1).expect("dev error: invalid scrypt params"),
+        &ScryptParams::default(),
         &mut aes_seed_bytes,
-    )
-    .expect("dev error: invalid seed len");
+    );
     Seed32::new(aes_seed_bytes)
 }
 

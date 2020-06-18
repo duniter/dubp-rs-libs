@@ -55,4 +55,6 @@ pub mod keys;
 pub mod private_message;
 #[cfg(feature = "rand")]
 pub mod rand;
+#[cfg(feature = "scrypt")]
+pub mod scrypt;
 pub mod seeds;

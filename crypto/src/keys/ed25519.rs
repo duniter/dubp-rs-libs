@@ -25,6 +25,8 @@ use crate::bases::b58::{bytes_to_str_base58, ToBase58};
 use crate::bases::*;
 #[cfg(feature = "rand")]
 use crate::rand::UnspecifiedRandError;
+#[cfg(feature = "scrypt")]
+use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
 use ring::signature::{Ed25519KeyPair as RingKeyPair, KeyPair, UnparsedPublicKey, ED25519};
 #[cfg(feature = "ser")]
@@ -406,7 +408,7 @@ impl SaltedPassword {
 /// Keypair generator with given parameters for `scrypt` keypair function.
 #[derive(Copy, Clone)]
 pub struct KeyPairFromSaltedPasswordGenerator {
-    scrypt_params: scrypt::ScryptParams,
+    scrypt_params: ScryptParams,
 }
 
 #[cfg(feature = "scrypt")]
@@ -414,8 +416,7 @@ impl KeyPairFromSaltedPasswordGenerator {
     /// Create a `KeyPairGenerator` with default arguments `(log_n: 12, r: 16, p: 1)`
     pub fn with_default_parameters() -> KeyPairFromSaltedPasswordGenerator {
         KeyPairFromSaltedPasswordGenerator {
-            scrypt_params: scrypt::ScryptParams::new(12, 16, 1)
-                .expect("dev error: invalid default scrypt params"),
+            scrypt_params: ScryptParams::default(),
         }
     }
 
@@ -426,22 +427,17 @@ impl KeyPairFromSaltedPasswordGenerator {
     /// - log_n - The log2 of the Scrypt parameter N
     /// - r - The Scrypt parameter r
     /// - p - The Scrypt parameter p
-    pub fn with_parameters(
-        log_n: u8,
-        r: u32,
-        p: u32,
-    ) -> Result<KeyPairFromSaltedPasswordGenerator, scrypt::errors::InvalidParams> {
-        Ok(KeyPairFromSaltedPasswordGenerator {
-            scrypt_params: scrypt::ScryptParams::new(log_n, r, p)?,
-        })
+    pub fn with_parameters(log_n: u8, r: u32, p: u32) -> KeyPairFromSaltedPasswordGenerator {
+        KeyPairFromSaltedPasswordGenerator {
+            scrypt_params: ScryptParams::new(log_n, r, p),
+        }
     }
 
     /// Create a seed based on a given password and salt.
     pub fn generate_seed(&self, password: &[u8], salt: &[u8]) -> Seed32 {
         let mut seed = [0u8; 32];
 
-        scrypt::scrypt(password, salt, &self.scrypt_params, &mut seed)
-            .expect("dev error: invalid seed len");
+        scrypt(password, salt, &self.scrypt_params, &mut seed);
 
         Seed32::new(seed)
     }
@@ -729,7 +725,6 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
         );
 
         let key_pair2 = KeyPairFromSaltedPasswordGenerator::with_parameters(12u8, 16, 1)
-            .expect("fail to create KeyPairFromSaltedPasswordGenerator: invalid scrypt params.")
             .generate(SaltedPassword::new("toto".to_owned(), "toto".to_owned()));
 
         // Test signature display and debug
