@@ -19,7 +19,6 @@ use crate::bases::b58::{bytes_to_str_base58, ToBase58};
 use crate::bases::*;
 #[cfg(feature = "rand")]
 use crate::rand::UnspecifiedRandError;
-#[cfg(feature = "ser")]
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Debug, Display, Formatter};
 use zeroize::Zeroize;
@@ -28,8 +27,7 @@ use zeroize::Zeroize;
 pub const SEED_32_SIZE_IN_BYTES: usize = 32;
 
 /// Store a 32 bytes seed used to generate keys.
-#[cfg_attr(feature = "ser", derive(Deserialize, Serialize))]
-#[derive(Clone, Default, PartialEq, Eq, Hash, Zeroize)]
+#[derive(Clone, Default, Deserialize, Eq, Hash, PartialEq, Serialize, Zeroize)]
 #[zeroize(drop)]
 pub struct Seed32([u8; SEED_32_SIZE_IN_BYTES]);
 

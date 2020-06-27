@@ -48,7 +48,6 @@
 //! `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/`
 //! with `=` as padding character.
 
-#[cfg(feature = "ser")]
 pub mod bin_signable;
 pub mod ed25519;
 pub mod text_signable;
@@ -59,7 +58,6 @@ pub use crate::seeds::Seed32;
 
 use crate::bases::b58::ToBase58;
 use crate::bases::BaseConvertionError;
-#[cfg(feature = "ser")]
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::Debug;
@@ -71,8 +69,7 @@ use std::str::FromStr;
 use thiserror::Error;
 
 /// Cryptographic keys algorithms list
-#[cfg_attr(feature = "ser", derive(Deserialize, Serialize))]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum KeysAlgo {
     /// Ed25519 algorithm
     Ed25519 = 0,
@@ -151,8 +148,7 @@ pub trait Signature: Clone + Display + Debug + PartialEq + Eq + Hash {
 }
 
 /// Store a cryptographic signature.
-#[cfg_attr(feature = "ser", derive(Deserialize, Serialize))]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum Sig {
     /// Store a ed25519 Signature
     Ed25519(ed25519::Signature),
@@ -234,8 +230,7 @@ pub trait PublicKey: Clone + Display + Debug + PartialEq + Eq + Hash + ToBase58 
 }
 
 /// Store a cryptographic public key.
-#[cfg_attr(feature = "ser", derive(Deserialize, Serialize))]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub enum PubKey {
     /// Store a ed25519 public key.
     Ed25519(ed25519::PublicKey),

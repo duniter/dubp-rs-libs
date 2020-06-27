@@ -84,7 +84,7 @@ mod tests {
 
     use super::*;
 
-    #[cfg_attr(feature = "ser", derive(Deserialize, Serialize))]
+    #[derive(Deserialize, Serialize)]
     struct BinSignableTestImpl {
         datas: Vec<u8>,
         issuer: PubKey,

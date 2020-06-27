@@ -37,15 +37,13 @@ use crate::bases::*;
 #[cfg(feature = "rand")]
 use crate::rand::UnspecifiedRandError;
 use ring::digest;
-#[cfg(feature = "ser")]
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Error, Formatter};
 
 /// A hash wrapper.
 ///
 /// A hash is often provided as string composed of 64 hexadecimal character (0 to 9 then A to F).
-#[cfg_attr(feature = "ser", derive(Deserialize, Serialize))]
-#[derive(Copy, Clone, Eq, Ord, PartialEq, PartialOrd, Hash)]
+#[derive(Copy, Clone, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Hash(pub [u8; 32]);
 
 impl AsRef<[u8]> for Hash {
