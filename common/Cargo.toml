@@ -1,0 +1,30 @@
+[package]
+name = "dubp-common"
+version = "0.1.0"
+authors = ["elois <elois@duniter.org>"]
+description = "Provide common tools and types for DUBP."
+repository = "https://git.duniter.org/libs/dubp-rs-libs"
+readme = "README.md"
+keywords = ["duniter", "dubp"]
+license = "AGPL-3.0"
+edition = "2018"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+dup-crypto = { path = "../crypto", default-features = false }
+serde = { version = "1.0.105", features = ["derive"] }
+shrinkwraprs = "0.3.0"
+thiserror = "1.0.20"
+
+[dev-dependencies]
+bincode = "1.2.0"
+
+[features]
+dewif = ["dup-crypto/dewif"]
+x25519 = ["dup-crypto/x25519"]
+private_message = ["dup-crypto/private_message"]
+pubkey_check = ["dup-crypto/pubkey_check"]
+rand = ["dup-crypto/rand"]
+scrypt = ["dup-crypto/scrypt"]
