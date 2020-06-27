@@ -13,7 +13,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-dup-crypto = { path = "../crypto", default-features = false }
+dup-crypto = { path = "../crypto", version = "0.18.0", default-features = false }
 serde = { version = "1.0.105", features = ["derive"] }
 shrinkwraprs = "0.3.0"
 thiserror = "1.0.20"
