@@ -15,10 +15,10 @@
 
 //! Provide base64 convertion tools
 
-use crate::bases::BaseConvertionError;
+use crate::bases::BaseConversionError;
 
 /// Create an array of 64 bytes from a Base64 string.
-pub fn str_base64_to64bytes(base64_data: &str) -> Result<[u8; 64], BaseConvertionError> {
+pub fn str_base64_to64bytes(base64_data: &str) -> Result<[u8; 64], BaseConversionError> {
     let result = base64::decode(base64_data)?;
 
     if result.len() == 64 {
@@ -27,7 +27,7 @@ pub fn str_base64_to64bytes(base64_data: &str) -> Result<[u8; 64], BaseConvertio
 
         Ok(u8_array)
     } else {
-        Err(BaseConvertionError::InvalidLength {
+        Err(BaseConversionError::InvalidLength {
             found: result.len(),
             expected: 64,
         })

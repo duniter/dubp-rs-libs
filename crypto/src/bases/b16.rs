@@ -15,15 +15,15 @@
 
 //! Provide base16 convertion tools
 
-use crate::bases::BaseConvertionError;
+use crate::bases::BaseConversionError;
 
 /// Convert a hexadecimal string in an array of 32 bytes.
 ///
 /// The hex string must only contains hex characters
 /// and produce a 32 bytes value.
-pub fn str_hex_to_32bytes(text: &str) -> Result<[u8; 32], BaseConvertionError> {
+pub fn str_hex_to_32bytes(text: &str) -> Result<[u8; 32], BaseConversionError> {
     if text.len() != 64 {
-        Err(BaseConvertionError::InvalidLength {
+        Err(BaseConversionError::InvalidLength {
             expected: 64,
             found: text.len(),
         })
@@ -45,13 +45,13 @@ pub fn str_hex_to_32bytes(text: &str) -> Result<[u8; 32], BaseConvertionError> {
                     let byte = ((byte1 as u8) << 4) | byte2 as u8;
                     bytes[i / 2] = byte;
                 } else {
-                    return Err(BaseConvertionError::InvalidCharacter {
+                    return Err(BaseConversionError::InvalidCharacter {
                         character: chars[i + 1],
                         offset: i + 1,
                     });
                 }
             } else {
-                return Err(BaseConvertionError::InvalidCharacter {
+                return Err(BaseConversionError::InvalidCharacter {
                     character: chars[i],
                     offset: i,
                 });

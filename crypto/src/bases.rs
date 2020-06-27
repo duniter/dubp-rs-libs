@@ -28,7 +28,7 @@ pub mod b64;
 
 /// Errors enumeration for Base58/64 strings convertion.
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
-pub enum BaseConvertionError {
+pub enum BaseConversionError {
     #[error("Data have invalid key length : expected {expected:?}, found {found:?}.")]
     /// Data have invalid length.
     InvalidLength {
@@ -61,18 +61,18 @@ pub enum BaseConvertionError {
     UnknownError,
 }
 
-impl From<base64::DecodeError> for BaseConvertionError {
+impl From<base64::DecodeError> for BaseConversionError {
     fn from(err: base64::DecodeError) -> Self {
         match err {
             base64::DecodeError::InvalidByte(offset, byte) => {
-                BaseConvertionError::InvalidCharacter {
+                BaseConversionError::InvalidCharacter {
                     character: byte as char,
                     offset,
                 }
             }
-            base64::DecodeError::InvalidLength => BaseConvertionError::InvalidBaseConverterLength,
+            base64::DecodeError::InvalidLength => BaseConversionError::InvalidBaseConverterLength,
             base64::DecodeError::InvalidLastSymbol(offset, symbol) => {
-                BaseConvertionError::InvalidLastSymbol { symbol, offset }
+                BaseConversionError::InvalidLastSymbol { symbol, offset }
             }
         }
     }

@@ -57,7 +57,7 @@ pub(crate) mod x25519;
 pub use crate::seeds::Seed32;
 
 use crate::bases::b58::ToBase58;
-use crate::bases::BaseConvertionError;
+use crate::bases::BaseConversionError;
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::fmt::Debug;
@@ -138,7 +138,7 @@ pub trait Signature: Clone + Display + Debug + PartialEq + Eq + Hash {
     /// a [`BaseConvertionError`] is returned with the corresponding variant.
     ///
     /// [`BaseConvertionError`]: enum.BaseConvertionError.html
-    fn from_base64(base64_string: &str) -> Result<Self, BaseConvertionError>;
+    fn from_base64(base64_string: &str) -> Result<Self, BaseConversionError>;
 
     /// Convert Signature into butes vector
     fn to_bytes_vector(&self) -> Vec<u8>;
@@ -183,7 +183,7 @@ impl GetKeysAlgo for Sig {
 
 impl Signature for Sig {
     #[cfg_attr(tarpaulin, skip)]
-    fn from_base64(_base64_string: &str) -> Result<Self, BaseConvertionError> {
+    fn from_base64(_base64_string: &str) -> Result<Self, BaseConversionError> {
         unimplemented!()
     }
     fn to_bytes_vector(&self) -> Vec<u8> {
@@ -220,7 +220,7 @@ pub trait PublicKey: Clone + Display + Debug + PartialEq + Eq + Hash + ToBase58 
     /// a [`BaseConvertionError`] is returned with the corresponding variant.
     ///
     /// [`BaseConvertionError`]: enum.BaseConvertionError.html
-    fn from_base58(base58_string: &str) -> Result<Self, BaseConvertionError>;
+    fn from_base58(base58_string: &str) -> Result<Self, BaseConversionError>;
 
     /// Convert into bytes vector
     fn to_bytes_vector(&self) -> Vec<u8>;
@@ -298,7 +298,7 @@ impl Display for PubKey {
 }
 
 impl FromStr for PubKey {
-    type Err = BaseConvertionError;
+    type Err = BaseConversionError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         ed25519::PublicKey::from_base58(s).map(PubKey::Ed25519)
@@ -309,7 +309,7 @@ impl PublicKey for PubKey {
     type Signature = Sig;
 
     #[cfg_attr(tarpaulin, skip)]
-    fn from_base58(_base58_string: &str) -> Result<Self, BaseConvertionError> {
+    fn from_base58(_base58_string: &str) -> Result<Self, BaseConversionError> {
         unimplemented!()
     }
     fn to_bytes_vector(&self) -> Vec<u8> {

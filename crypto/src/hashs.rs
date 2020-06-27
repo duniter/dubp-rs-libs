@@ -110,7 +110,7 @@ impl Hash {
     /// The hex string must only contains hex characters
     /// and produce a 32 bytes value.
     #[inline]
-    pub fn from_hex(text: &str) -> Result<Hash, BaseConvertionError> {
+    pub fn from_hex(text: &str) -> Result<Hash, BaseConversionError> {
         Ok(Hash(b16::str_hex_to_32bytes(text)?))
     }
 }
@@ -169,21 +169,21 @@ mod tests {
             Hash::from_hex("0000000000000000000000000000000000000000000000000000000000000000")
         );
         assert_eq!(
-            Err(BaseConvertionError::InvalidLength {
+            Err(BaseConversionError::InvalidLength {
                 expected: 64,
                 found: 65,
             }),
             Hash::from_hex("00000000000000000000000000000000000000000000000000000000000000000")
         );
         assert_eq!(
-            Err(BaseConvertionError::InvalidCharacter {
+            Err(BaseConversionError::InvalidCharacter {
                 character: '_',
                 offset: 0,
             }),
             Hash::from_hex("_000000000000000000000000000000000000000000000000000000000000000")
         );
         assert_eq!(
-            Err(BaseConvertionError::InvalidCharacter {
+            Err(BaseConversionError::InvalidCharacter {
                 character: '_',
                 offset: 1,
             }),

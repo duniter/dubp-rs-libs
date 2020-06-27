@@ -115,7 +115,7 @@ impl<'de> Deserialize<'de> for Signature {
 
 impl super::Signature for Signature {
     #[inline]
-    fn from_base64(base64_data: &str) -> Result<Signature, BaseConvertionError> {
+    fn from_base64(base64_data: &str) -> Result<Signature, BaseConversionError> {
         Ok(Signature(b64::str_base64_to64bytes(base64_data)?))
     }
 
@@ -265,7 +265,7 @@ impl super::PublicKey for PublicKey {
     type Signature = Signature;
 
     #[inline]
-    fn from_base58(base58_data: &str) -> Result<Self, BaseConvertionError> {
+    fn from_base58(base58_data: &str) -> Result<Self, BaseConversionError> {
         let (datas, count_leading_zero) = b58::str_base58_to_32bytes(base58_data)?;
         Ok(PublicKey {
             datas,
@@ -486,7 +486,7 @@ mod tests {
         // Test seed parsing
         assert_eq!(
             Seed32::from_base58("DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQd<<").unwrap_err(),
-            BaseConvertionError::InvalidCharacter {
+            BaseConversionError::InvalidCharacter {
                 character: '<',
                 offset: 42
             }
@@ -572,7 +572,7 @@ mod tests {
         assert_eq!(
             super::PublicKey::from_base58("DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQd<<")
                 .unwrap_err(),
-            BaseConvertionError::InvalidCharacter {
+            BaseConversionError::InvalidCharacter {
                 character: '<',
                 offset: 42
             }
@@ -628,7 +628,7 @@ mod tests {
         // Test signature parsing
         assert_eq!(
             super::Signature::from_base64("YmhlaW9iaHNlcGlvaGVvaXNlcGl2ZXBvdm5pc2U=").unwrap_err(),
-            BaseConvertionError::InvalidLength {
+            BaseConversionError::InvalidLength {
                 found: 29,
                 expected: 64
             }
@@ -639,7 +639,7 @@ mod tests {
                  2V2Z3BpaHNlamVwZ25qZXNqb2dwZWpnaW9zZXNkdnNic3JicmJyZGJyZGI=",
             )
             .unwrap_err(),
-            BaseConvertionError::InvalidLength {
+            BaseConversionError::InvalidLength {
                 found: 86,
                 expected: 64
             }
@@ -650,7 +650,7 @@ mod tests {
                  mQCRerlF/3pc4sAcsnexsxBseA/3lY03KlONqJBAgdha<<",
             )
             .unwrap_err(),
-            BaseConvertionError::InvalidCharacter {
+            BaseConversionError::InvalidCharacter {
                 character: '<',
                 offset: 89
             }
@@ -661,7 +661,7 @@ mod tests {
                  MMmQCRerlF/3pc4sAcsnexsxBseA/3lY03KlONqJBAg===",
             )
             .unwrap_err(),
-            BaseConvertionError::InvalidBaseConverterLength,
+            BaseConversionError::InvalidBaseConverterLength,
         );
     }
 

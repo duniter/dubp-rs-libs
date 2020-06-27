@@ -15,7 +15,7 @@
 
 //! Provide base58 convertion tools
 
-use crate::bases::BaseConvertionError;
+use crate::bases::BaseConversionError;
 
 /// Convert to base58 string
 pub trait ToBase58 {
@@ -24,7 +24,7 @@ pub trait ToBase58 {
 }
 
 /// Create an array of 32 bytes from a Base58 string.
-pub fn str_base58_to_32bytes(base58_data: &str) -> Result<([u8; 32], u8), BaseConvertionError> {
+pub fn str_base58_to_32bytes(base58_data: &str) -> Result<([u8; 32], u8), BaseConversionError> {
     let mut source = base58_data;
     let mut count_leading_1 = 0;
     while !source.is_empty() && &source[0..1] == "1" {
@@ -45,15 +45,15 @@ pub fn str_base58_to_32bytes(base58_data: &str) -> Result<([u8; 32], u8), BaseCo
             Ok((u8_array, count_leading_1))
         }
         Err(bs58::decode::Error::InvalidCharacter { character, index }) => {
-            Err(BaseConvertionError::InvalidCharacter {
+            Err(BaseConversionError::InvalidCharacter {
                 character,
                 offset: index,
             })
         }
         Err(bs58::decode::Error::BufferTooSmall) => {
-            Err(BaseConvertionError::InvalidBaseConverterLength)
+            Err(BaseConversionError::InvalidBaseConverterLength)
         }
-        _ => Err(BaseConvertionError::UnknownError),
+        _ => Err(BaseConversionError::UnknownError),
     }
 }
 
@@ -86,7 +86,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_base_58_str_with_only_1() -> Result<(), BaseConvertionError> {
+    fn test_base_58_str_with_only_1() -> Result<(), BaseConversionError> {
         let base58str = "11111111111111111111111111111111111111111111";
 
         let (bytes, count_leading_1) = str_base58_to_32bytes(base58str)?;
@@ -99,7 +99,7 @@ mod tests {
     }
 
     #[test]
-    fn test_base_58_str_with_leading_1() -> Result<(), BaseConvertionError> {
+    fn test_base_58_str_with_leading_1() -> Result<(), BaseConversionError> {
         let base58str = "13fn6X3XWVgshHTgS8beZMo9XiyScx6MB6yPsBB5ZBia";
 
         let (bytes, count_leading_1) = str_base58_to_32bytes(base58str)?;
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn test_other_base_58_str_with_leading_1() -> Result<(), BaseConvertionError> {
+    fn test_other_base_58_str_with_leading_1() -> Result<(), BaseConversionError> {
         let base58str = "1V27SH9TiVEDs8TWFPydpRKxhvZari7wjGwQnPxMnkr";
 
         let (bytes, count_leading_1) = str_base58_to_32bytes(base58str)?;
@@ -125,7 +125,7 @@ mod tests {
     }
 
     #[test]
-    fn test_base_58_str_with_43_char() -> Result<(), BaseConvertionError> {
+    fn test_base_58_str_with_43_char() -> Result<(), BaseConversionError> {
         let base58str = "2nV7Dv4nhTJ9dZUvRJpL34vFP9b2BkDjKWv9iBW2JaR";
 
         let (bytes, count_leading_1) = str_base58_to_32bytes(base58str)?;
