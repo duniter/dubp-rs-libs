@@ -2,18 +2,7 @@ use crate::*;
 
 /// A block number.
 #[derive(
-    Copy,
-    Clone,
-    Debug,
-    Default,
-    Deserialize,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-    Serialize,
-    Shrinkwrap,
+    Copy, Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize,
 )]
 pub struct BlockNumber(pub u32);
 

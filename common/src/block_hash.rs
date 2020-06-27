@@ -1,9 +1,7 @@
 use crate::*;
 
 /// Wrapper of a block hash.
-#[derive(
-    Copy, Clone, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Shrinkwrap,
-)]
+#[derive(Copy, Clone, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct BlockHash(pub Hash);
 
 impl Display for BlockHash {

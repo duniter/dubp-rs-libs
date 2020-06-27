@@ -40,7 +40,6 @@ pub mod prelude {
 pub(crate) use crate::prelude::*;
 pub(crate) use dup_crypto::{bases::BaseConversionError, hashs::Hash};
 pub(crate) use serde::{Deserialize, Serialize};
-pub(crate) use shrinkwraprs::Shrinkwrap;
 pub(crate) use std::{
     cmp::Ordering,
     error::Error,

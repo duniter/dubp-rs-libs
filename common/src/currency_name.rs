@@ -1,7 +1,7 @@
 use crate::*;
 
 /// Currency name
-#[derive(Debug, Clone, Eq, Hash, PartialEq, Deserialize, Serialize, Shrinkwrap)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq, Deserialize, Serialize)]
 pub struct CurrencyName(pub String);
 
 impl Display for CurrencyName {
