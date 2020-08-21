@@ -1,8 +1,7 @@
 //! Provide common tools for DUBP.
 
 #![deny(
-    clippy::option_unwrap_used,
-    clippy::result_unwrap_used,
+    clippy::unwrap_used,
     missing_debug_implementations,
     missing_copy_implementations,
     trivial_casts,
