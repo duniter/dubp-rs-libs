@@ -1,6 +1,6 @@
 [package]
 name = "dubp-common"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["elois <elois@duniter.org>"]
 description = "Provide common tools and types for DUBP."
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
