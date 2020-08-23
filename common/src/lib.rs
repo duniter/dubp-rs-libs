@@ -10,6 +10,7 @@
     unused_import_braces
 )]
 
+pub mod bin_file;
 mod block_hash;
 mod block_number;
 mod blockstamp;
@@ -43,5 +44,9 @@ pub(crate) use std::{
     cmp::Ordering,
     error::Error,
     fmt::{Debug, Display, Error as FmtError, Formatter},
+    fs::File,
+    io::Read,
+    io::Write,
+    path::Path,
     str::FromStr,
 };
