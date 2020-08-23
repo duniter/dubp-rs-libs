@@ -301,17 +301,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dubp-wot"
-version = "0.11.0"
-dependencies = [
- "bincode",
- "durs-common-tools",
- "log",
- "rayon",
- "serde",
-]
-
-[[package]]
 name = "dup-crypto"
 version = "0.18.0"
 dependencies = [
@@ -330,12 +319,6 @@ dependencies = [
  "unwrap",
  "zeroize",
 ]
-
-[[package]]
-name = "durs-common-tools"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1727251a3ac1019c6aa83b9edcf405609aa0fe5314b4aff2d48870c7b62ddd6a"
 
 [[package]]
 name = "either"
