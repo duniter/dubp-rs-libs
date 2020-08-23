@@ -85,7 +85,7 @@ impl ScryptParams {
         // check: p <= ((2^32-1) * 32) / (128 * r)
         // It takes a bit of re-arranging to get the check above into this form, but, it is indeed
         // the same.
-        assert!(r * p < 0x40000000);
+        assert!(r * p < 0x4000_0000);
 
         ScryptParams {
             log_n,

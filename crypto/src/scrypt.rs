@@ -39,7 +39,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &params::ScryptParams, outpu
     // This check required by Scrypt:
     // check output.len() > 0 && output.len() <= (2^32 - 1) * 32
     assert!(!output.is_empty());
-    assert!(output.len() / 32 <= 0xffffffff);
+    assert!(output.len() / 32 <= 0xffff_ffff);
 
     // The checks in the ScryptParams constructor guarantee that the following is safe:
     let n = 1 << params.log_n;
