@@ -6,7 +6,7 @@ stages:
 .rust_stable_lin64:
   image: registry.duniter.org/docker/rust/rust-x64-stable-ci:latest
   tags:
-    - redshift-docker-runner
+    - redshift
   before_script:
     - export PATH="$HOME/.cargo/bin:$PATH"
     - rustup show
@@ -24,7 +24,7 @@ tests:linux64:stable:
   extends: .rust_stable_lin64
   stage: tests
   tags:
-    - redshift-docker-runner
+    - redshift
   script: 
     - RUSTFLAGS="-D warnings" cargo build
     - cargo test --doc
