@@ -9,15 +9,15 @@ stages:
     - redshift
   before_script:
     - export PATH="$HOME/.cargo/bin:$PATH"
+    - rustup update
     - rustup show
     - rustc --version && cargo --version
 
 fmt:
   extends: .rust_stable_lin64
   stage: fmt
-  before_script:
-    - cargo fmt -- --version
   script:
+    - cargo fmt -- --version
     - cargo fmt -- --check
         
 tests:linux64:stable:
@@ -33,16 +33,14 @@ tests:linux64:stable:
 
 clippy:
   extends: .rust_stable_lin64
-  before_script:
-    - cargo clippy -- -V
   stage: quality
   script:
+    - cargo clippy -- -V
     - cargo clippy --all --tests -- -D warnings --verbose
     
 audit_dependencies:
   extends: .rust_stable_lin64
-  before_script:
-    - cargo deny -V
   stage: quality
   script:
+    - cargo deny -V
     - cargo deny check
