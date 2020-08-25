@@ -1,2 +1,2 @@
 [workspace]
-members = ["common", "crypto"]
+members = ["common", "crypto", "currency-params"]

@@ -1,0 +1,17 @@
+[package]
+name = "dubp-currency-params"
+version = "0.2.0"
+authors = ["elois <elois@ifee.fr>"]
+description = "Duniter protocol currency parameters"
+repository = "https://git.duniter.org/nodes/rust/duniter-rs"
+keywords = ["duniter", "blockchain", "cryptocurrency"]
+license = "AGPL-3.0"
+edition = "2018"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+dubp-common = { path = "../common" }
+failure = "0.1.5"
+serde = { version = "1.0.*", features = ["derive"] }
