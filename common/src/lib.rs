@@ -17,8 +17,7 @@ mod blockstamp;
 mod bytes_traits;
 mod currency_name;
 pub mod errors;
-/*pub mod parser;
-pub mod traits;*/
+mod unescape_str;
 
 // Re export crates
 pub use dup_crypto as crypto;
@@ -32,16 +31,18 @@ pub mod prelude {
     };
     pub use crate::bytes_traits::{AsBytes, FromBytes};
     pub use crate::currency_name::CurrencyName;
-    pub use crate::errors::StringErr;
+    pub use crate::errors::{DocumentSigsErr, StringErr};
+    pub use crate::unescape_str::unescape_str;
     pub use thiserror::Error;
 }
 
 // Crate imports
 pub(crate) use crate::prelude::*;
-pub(crate) use dup_crypto::{bases::BaseConversionError, hashs::Hash};
+pub(crate) use dup_crypto::{bases::BaseConversionError, hashs::Hash, keys::SigError};
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use std::{
     cmp::Ordering,
+    collections::HashMap,
     error::Error,
     fmt::{Debug, Display, Error as FmtError, Formatter},
     fs::File,
