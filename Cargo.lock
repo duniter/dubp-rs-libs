@@ -355,7 +355,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-currency-params"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "dubp-common",
  "serde",
