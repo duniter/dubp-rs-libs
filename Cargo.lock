@@ -378,7 +378,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-documents-parser"
-version = "0.1.2"
+version = "0.1.0"
 dependencies = [
  "dubp-common",
  "dubp-documents",
