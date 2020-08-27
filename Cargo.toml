@@ -4,4 +4,8 @@ members = [
     "crypto",
     "currency-params",
     "documents",
+    "documents-parser"
 ]
+
+[patch.crates-io]
+#json-pest-parser = { path = "../../../rust/json-pest-parser" }
