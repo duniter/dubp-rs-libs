@@ -1,4 +1,4 @@
-//  Copyright (C) 2017-2019  The AXIOM TEAM Association.
+//  Copyright (C) 2020  Éloïs SANCHEZ.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -30,9 +30,13 @@
 pub mod constants;
 pub mod genesis_block_params;
 
-use crate::constants::*;
 pub use dubp_common::prelude::*;
-use genesis_block_params::v10::BlockV10Parameters;
+
+// Crate imports
+pub(crate) use crate::constants::*;
+pub(crate) use crate::genesis_block_params::v10::BlockV10Parameters;
+pub(crate) use serde::{Deserialize, Serialize};
+pub(crate) use thiserror::Error;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 /// Currency parameters

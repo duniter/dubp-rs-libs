@@ -1,4 +1,4 @@
-//  Copyright (C) 2017-2019  The AXIOM TEAM Association.
+//  Copyright (C) 2020  Éloïs SANCHEZ.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,8 +17,7 @@
 
 pub mod v10;
 
-use failure::Fail;
-use serde::{Deserialize, Serialize};
+use crate::*;
 use v10::BlockV10Parameters;
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
@@ -28,25 +27,25 @@ pub enum GenesisBlockParams {
     V10(BlockV10Parameters),
 }
 
-#[derive(Debug, Clone, Fail)]
+#[derive(Debug, Clone, Error)]
 /// Store error in block parameters parsing
 pub enum ParseParamsError {
     /// ParseIntError
-    #[fail(display = "Fail to parse params :ParseIntError !")]
-    ParseIntError(::std::num::ParseIntError),
+    #[error("Fail to parse params :ParseIntError !")]
+    ParseIntError(std::num::ParseIntError),
     /// ParseFloatError
-    #[fail(display = "Fail to parse params :ParseFloatError !")]
-    ParseFloatError(::std::num::ParseFloatError),
+    #[error("Fail to parse params :ParseFloatError !")]
+    ParseFloatError(std::num::ParseFloatError),
 }
 
-impl From<::std::num::ParseIntError> for ParseParamsError {
-    fn from(err: ::std::num::ParseIntError) -> ParseParamsError {
+impl From<std::num::ParseIntError> for ParseParamsError {
+    fn from(err: std::num::ParseIntError) -> ParseParamsError {
         ParseParamsError::ParseIntError(err)
     }
 }
 
-impl From<::std::num::ParseFloatError> for ParseParamsError {
-    fn from(err: ::std::num::ParseFloatError) -> ParseParamsError {
+impl From<std::num::ParseFloatError> for ParseParamsError {
+    fn from(err: std::num::ParseFloatError) -> ParseParamsError {
         ParseParamsError::ParseFloatError(err)
     }
 }
