@@ -1,4 +1,4 @@
-//  Copyright (C) 2017-2019  The AXIOM TEAM Association.
+//  Copyright (C) 2020  Éloïs SANCHEZ.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -39,7 +39,7 @@ pub trait Document: Debug + Clone + PartialEq + Eq {
     fn currency(&self) -> &str;
 
     /// Iterate over document issuers.
-    fn issuers(&self) -> &Vec<Self::PublicKey>;
+    fn issuers(&self) -> SmallVec<[Self::PublicKey; 1]>;
 
     /// Some documents do not directly store the sequence of bytes that will be signed but generate
     // it on request, so these types of documents cannot provide a reference to the signed bytes.
@@ -53,7 +53,7 @@ pub trait Document: Debug + Clone + PartialEq + Eq {
     }
 
     /// Iterate over document signatures.
-    fn signatures(&self) -> &Vec<<Self::PublicKey as PublicKey>::Signature>;
+    fn signatures(&self) -> SmallVec<[<Self::PublicKey as PublicKey>::Signature; 1]>;
 
     /// Verify one signature
     #[inline]
@@ -87,7 +87,7 @@ pub trait Document: Debug + Clone + PartialEq + Eq {
                 .zip(signatures)
                 .enumerate()
                 .filter_map(|(i, (key, signature))| {
-                    if let Err(e) = self.verify_one_signature(key, signature) {
+                    if let Err(e) = self.verify_one_signature(key, &signature) {
                         Some((i, e))
                     } else {
                         None
@@ -117,22 +117,16 @@ pub trait DocumentBuilder {
         Signature = <<Self::Document as Document>::PublicKey as PublicKey>::Signature,
     >;
 
+    /// Build a document and sign it with the private key.
+    fn build_and_sign(self, signators: Vec<Self::Signator>) -> Self::Document;
+
     /// Build a document with provided signatures.
     fn build_with_signature(
-        &self,
-        signatures: Vec<<<Self::Document as Document>::PublicKey as PublicKey>::Signature>,
+        self,
+        signatures: SmallVec<
+            [<<Self::Document as Document>::PublicKey as PublicKey>::Signature; 1],
+        >,
     ) -> Self::Document;
-
-    /// Build a document and sign it with the private key.
-    fn build_and_sign(&self, signators: Vec<Self::Signator>) -> Self::Document;
-}
-
-/// Trait for a document parser from a `S` source
-/// format to a `D` document. Will return the
-/// parsed document or an `E` error.
-pub trait DocumentParser<S, D, E> {
-    /// Parse a source and return a document or an error.
-    fn parse(source: S) -> Result<D, E>;
 }
 
 /// Stringify a document

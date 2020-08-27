@@ -1,4 +1,4 @@
-//  Copyright (C) 2017-2019  The AXIOM TEAM Association.
+//  Copyright (C) 2020  Éloïs SANCHEZ.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -56,7 +56,7 @@ impl<D: TextDocument> CompactTextDocument for TextDocumentFormat<D> {
 }
 
 /// Trait for a text document.
-pub trait TextDocument: Document<PublicKey = PubKey> {
+pub trait TextDocument: Document {
     /// Type of associated compact document.
     type CompactTextDocument_: CompactTextDocument;
 
@@ -101,8 +101,17 @@ pub trait TextDocument: Document<PublicKey = PubKey> {
     }
 }
 
+pub type StringAndSmallVec1<T> = (String, SmallVec<[T; 1]>);
+
 /// Trait for a V10 document builder.
-pub trait TextDocumentBuilder: DocumentBuilder {
+pub trait TextDocumentBuilder {
+    /// Type of the builded document.
+    type Document: Document;
+    /// Type of the signator signing the documents.
+    type Signator: Signator<
+        Signature = <<Self::Document as Document>::PublicKey as PublicKey>::Signature,
+    >;
+
     /// Generate document text.
     ///
     /// - Don't contains leading signatures
@@ -115,10 +124,13 @@ pub trait TextDocumentBuilder: DocumentBuilder {
     ///
     /// - Text without signatures
     /// - Signatures
-    fn build_signed_text(&self, signators: Vec<SignatorEnum>) -> (String, Vec<Sig>) {
+    fn build_signed_text(
+        &self,
+        signators: Vec<Self::Signator>,
+    ) -> StringAndSmallVec1<<<Self::Document as Document>::PublicKey as PublicKey>::Signature> {
         let text = self.generate_text();
 
-        let signatures: Vec<_> = {
+        let signatures: SmallVec<_> = {
             let text_bytes = text.as_bytes();
             signators
                 .iter()
@@ -127,5 +139,37 @@ pub trait TextDocumentBuilder: DocumentBuilder {
         };
 
         (text, signatures)
+    }
+
+    /// Build a document with provided text and signatures.
+    fn build_with_text_and_sigs(
+        self,
+        text: String,
+        signatures: SmallVec<
+            [<<Self::Document as Document>::PublicKey as PublicKey>::Signature; 1],
+        >,
+    ) -> Self::Document;
+}
+
+impl<T> DocumentBuilder for T
+where
+    T: TextDocumentBuilder,
+{
+    type Document = <Self as TextDocumentBuilder>::Document;
+    type Signator = <Self as TextDocumentBuilder>::Signator;
+
+    fn build_and_sign(self, signators: Vec<Self::Signator>) -> Self::Document {
+        let (text, signatures) = self.build_signed_text(signators);
+        self.build_with_text_and_sigs(text, signatures)
+    }
+
+    fn build_with_signature(
+        self,
+        signatures: SmallVec<
+            [<<Self::Document as Document>::PublicKey as PublicKey>::Signature; 1],
+        >,
+    ) -> Self::Document {
+        let text = self.generate_text();
+        self.build_with_text_and_sigs(text, signatures)
     }
 }
