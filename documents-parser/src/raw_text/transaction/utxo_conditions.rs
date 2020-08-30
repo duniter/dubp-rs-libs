@@ -1,5 +1,22 @@
 use crate::*;
 
+pub fn utxo_conditions_from_str(
+    source: &str,
+) -> Result<TransactionOutputCondition, RawTextParseError> {
+    let mut pairs = RawDocumentsParser::parse(Rule::output_conds, source)
+        .map_err(|e| RawTextParseError::PestError(e.into()))?;
+    TransactionOutputCondition::from_pest_pair(unwrap!(pairs.next())) // get and unwrap the `output_conds` rule; never fails
+}
+
+impl FromPestPair for UTXOConditionsGroup {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
+        let mut pairs = pair.into_inner();
+        let term_left_pair = unwrap!(pairs.next());
+
+        Ok(parse_op(parse_term(term_left_pair), pairs))
+    }
+}
+
 impl FromPestPair for TransactionOutputCondition {
     #[inline]
     fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
@@ -53,14 +70,5 @@ fn parse_op(left: UTXOConditionsGroup, mut pairs: Pairs<Rule>) -> UTXOConditions
         }
     } else {
         left
-    }
-}
-
-impl FromPestPair for UTXOConditionsGroup {
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
-        let mut pairs = pair.into_inner();
-        let term_left_pair = unwrap!(pairs.next());
-
-        Ok(parse_op(parse_term(term_left_pair), pairs))
     }
 }

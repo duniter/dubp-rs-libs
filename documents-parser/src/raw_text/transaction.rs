@@ -1,5 +1,7 @@
 use crate::*;
 
+pub use utxo_conditions::utxo_conditions_from_str;
+
 pub(crate) mod utxo_conditions;
 pub(crate) mod v10;
 

@@ -46,6 +46,7 @@ pub mod prelude {
 pub use crate::json::serde_json_value_to_pest_json_value;
 
 // Export profession types
+pub use crate::raw_text::transaction::utxo_conditions_from_str;
 
 // Crate imports
 pub(crate) use crate::json::DefaultHasher;
