@@ -34,6 +34,7 @@ mod traits;
 pub mod transaction;
 
 // Re-export crates
+pub use dubp_common;
 pub use smallvec;
 
 // prelude
