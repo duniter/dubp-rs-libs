@@ -41,7 +41,7 @@ pub use smallvec;
 pub mod prelude {
     pub use crate::traits::{
         text::{CompactTextDocument, TextDocument, TextDocumentBuilder, TextDocumentFormat},
-        Document, DocumentBuilder, ToStringObject,
+        Document, DocumentBuilder, ToStringObject, ToJsonObject
     };
     pub use crate::{DubpDocument, DubpDocumentStr};
 }
