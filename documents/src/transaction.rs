@@ -114,9 +114,7 @@ impl From<UTXOConditionsGroup> for UTXOConditions {
 impl UTXOConditions {
     /// Lightens the UTXOConditions (for example to store it while minimizing the space required)
     pub fn reduce(&mut self) {
-        if self.origin_str.is_some()
-            && self.origin_str.clone().expect("safe unwrap") == self.conditions.to_string()
-        {
+        if self.check() {
             self.origin_str = None;
         }
     }
