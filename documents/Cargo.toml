@@ -1,6 +1,6 @@
 [package]
 name = "dubp-documents"
-version = "0.17.1"
+version = "0.18.0"
 authors = ["elois <elois@duniter.org>"]
 description = "Handles DUBP documents (DUBP: DUniter Blockhain Protocol)"
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
