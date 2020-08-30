@@ -754,6 +754,7 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
     }
 
     #[test]
+    #[cfg(feature = "pubkey_check")]
     fn invalid_pubkey() -> Result<(), ()> {
         let invalid_bytes = [
             206u8, 58, 67, 221, 20, 133, 0, 225, 86, 115, 26, 104, 142, 116, 140, 132, 119, 51,

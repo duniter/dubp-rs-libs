@@ -20,11 +20,11 @@
 //!
 //! # Generate and use ed25519 key-pair
 //!
-//! ```
+//! ```ignore
 //! use dup_crypto::keys::{KeyPair, PublicKey, Signator, Signature};
 //! use dup_crypto::keys::ed25519::{KeyPairFromSaltedPasswordGenerator, SaltedPassword};
 //!
-//! let generator = KeyPairFromSaltedPasswordGenerator::with_default_parameters();
+//! let generator = KeyPairFromSaltedPasswordGenerator::generate;
 //!
 //! let keypair = generator.generate(SaltedPassword::new(
 //!     "salt".to_owned(),
