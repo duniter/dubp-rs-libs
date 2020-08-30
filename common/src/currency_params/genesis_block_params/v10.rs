@@ -15,8 +15,7 @@
 
 //! Duniter protocol currency parameters in genesis block v10
 
-use crate::genesis_block_params::ParseParamsError;
-use serde::{Deserialize, Serialize};
+use crate::*;
 
 /// Currency parameters
 #[derive(Debug, Copy, Clone, Deserialize, Serialize, PartialEq)]
@@ -92,7 +91,7 @@ impl Default for BlockV10Parameters {
     }
 }
 
-impl ::std::str::FromStr for BlockV10Parameters {
+impl std::str::FromStr for BlockV10Parameters {
     type Err = ParseParamsError;
 
     fn from_str(source: &str) -> Result<Self, Self::Err> {
@@ -149,5 +148,3 @@ impl ToString for BlockV10Parameters {
         )
     }
 }
-
-impl Eq for BlockV10Parameters {}

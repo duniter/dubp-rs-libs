@@ -15,10 +15,11 @@
 
 //! Duniter protocol currency parameters in genesis block
 
-pub mod v10;
+mod v10;
+
+pub use v10::BlockV10Parameters;
 
 use crate::*;
-use v10::BlockV10Parameters;
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 /// Currency parameters in genesis block
@@ -31,10 +32,10 @@ pub enum GenesisBlockParams {
 /// Store error in block parameters parsing
 pub enum ParseParamsError {
     /// ParseIntError
-    #[error("Fail to parse params :ParseIntError !")]
+    #[error("Fail to parse params : {0}")]
     ParseIntError(std::num::ParseIntError),
     /// ParseFloatError
-    #[error("Fail to parse params :ParseFloatError !")]
+    #[error("Fail to parse params : {0}")]
     ParseFloatError(std::num::ParseFloatError),
 }
 

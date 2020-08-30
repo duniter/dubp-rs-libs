@@ -13,30 +13,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//! Duniter protocol currency parameters
+//! DUBP protocol currency parameters
 
-#![deny(
-    clippy::unwrap_used,
-    missing_docs,
-    missing_debug_implementations,
-    missing_copy_implementations,
-    trivial_casts,
-    trivial_numeric_casts,
-    unsafe_code,
-    unstable_features,
-    unused_import_braces
-)]
+mod genesis_block_params;
 
-pub mod constants;
-pub mod genesis_block_params;
+pub use genesis_block_params::{BlockV10Parameters, GenesisBlockParams, ParseParamsError};
 
-pub use dubp_common::prelude::*;
+use crate::*;
 
-// Crate imports
-pub(crate) use crate::constants::*;
-pub(crate) use crate::genesis_block_params::v10::BlockV10Parameters;
-pub(crate) use serde::{Deserialize, Serialize};
-pub(crate) use thiserror::Error;
+/// Default currency name
+pub const DEFAULT_CURRENCY: &str = "default_currency";
+/// Default value for sig_renew_period parameter
+pub static DEFAULT_SIG_RENEW_PERIOD: &u64 = &5_259_600;
+/// Default value for ms_period parameter
+pub static DEFAULT_MS_PERIOD: &u64 = &5_259_600;
+/// Default value for tx_window parameter
+pub static DEFAULT_TX_WINDOW: &u64 = &604_800;
+/// Default maximum roolback length
+pub static DEFAULT_FORK_WINDOW_SIZE: &usize = &100;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 /// Currency parameters

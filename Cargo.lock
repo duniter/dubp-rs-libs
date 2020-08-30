@@ -354,15 +354,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dubp-currency-params"
-version = "0.3.0"
-dependencies = [
- "dubp-common",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "dubp-documents"
 version = "0.15.0"
 dependencies = [

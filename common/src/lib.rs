@@ -1,3 +1,18 @@
+//  Copyright (C) 2020  Éloïs SANCHEZ.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 //! Provide common tools for DUBP.
 
 #![deny(
@@ -16,6 +31,7 @@ mod block_number;
 mod blockstamp;
 mod bytes_traits;
 mod currency_name;
+pub mod currency_params;
 pub mod errors;
 mod unescape_str;
 
@@ -37,6 +53,7 @@ pub mod prelude {
 }
 
 // Crate imports
+pub(crate) use crate::currency_params::ParseParamsError;
 pub(crate) use crate::prelude::*;
 pub(crate) use dup_crypto::{bases::BaseConversionError, hashs::Hash, keys::SigError};
 pub(crate) use serde::{Deserialize, Serialize};
