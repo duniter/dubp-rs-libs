@@ -54,14 +54,14 @@ pub(crate) use crate::raw_text::{FromPestPair, RawDocumentsParser};
 pub(crate) use crate::transaction_utils::{
     tx_input_v10_from_str, tx_output_v10_from_str, tx_unlock_v10_from_str,
 };
-pub(crate) use dubp_common::crypto::bases::BaseConversionError;
-pub(crate) use dubp_common::crypto::hashs::Hash;
-pub(crate) use dubp_common::crypto::keys::*;
-pub(crate) use dubp_common::prelude::*;
 pub(crate) use dubp_documents::certification::{
     v10::CertificationDocumentV10Builder, CertificationDocument, CertificationDocumentV10,
     CompactCertificationDocumentV10,
 };
+pub(crate) use dubp_documents::dubp_common::crypto::bases::BaseConversionError;
+pub(crate) use dubp_documents::dubp_common::crypto::hashs::Hash;
+pub(crate) use dubp_documents::dubp_common::crypto::keys::*;
+pub(crate) use dubp_documents::dubp_common::prelude::*;
 pub(crate) use dubp_documents::identity::{
     IdentityDocument, IdentityDocumentV10, IdentityDocumentV10Builder,
 };
