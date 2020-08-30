@@ -182,7 +182,7 @@ impl GetKeysAlgo for Sig {
 }
 
 impl Signature for Sig {
-    #[cfg_attr(tarpaulin, skip)]
+    #[cfg(not(tarpaulin_include))]
     fn from_base64(_base64_string: &str) -> Result<Self, BaseConversionError> {
         unimplemented!()
     }
@@ -308,7 +308,7 @@ impl FromStr for PubKey {
 impl PublicKey for PubKey {
     type Signature = Sig;
 
-    #[cfg_attr(tarpaulin, skip)]
+    #[cfg(not(tarpaulin_include))]
     fn from_base58(_base58_string: &str) -> Result<Self, BaseConversionError> {
         unimplemented!()
     }

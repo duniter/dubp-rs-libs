@@ -74,7 +74,7 @@ impl Serialize for Signature {
     }
 }
 
-#[cfg_attr(tarpaulin, skip)]
+#[cfg(not(tarpaulin_include))]
 impl<'de> Deserialize<'de> for Signature {
     fn deserialize<D>(deserializer: D) -> Result<Signature, D::Error>
     where
@@ -87,7 +87,7 @@ impl<'de> Deserialize<'de> for Signature {
         impl<'de> Visitor<'de> for ArrayVisitor {
             type Value = Signature;
 
-            #[cfg_attr(tarpaulin, skip)]
+            #[cfg(not(tarpaulin_include))]
             fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
                 formatter.write_str(concat!("an array of length ", 64))
             }
