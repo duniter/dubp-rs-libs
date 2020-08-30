@@ -34,7 +34,8 @@ mod traits;
 pub mod transaction;
 
 // Re-export crates
-pub use dubp_common;
+pub use dubp_wallet;
+pub use dubp_wallet::dubp_common;
 pub use smallvec;
 
 // prelude
@@ -48,20 +49,15 @@ pub mod prelude {
 
 // Crate imports
 pub(crate) use crate::prelude::*;
-pub(crate) use crate::transaction::{
-    OutputIndex, TransactionDocumentTrait, TransactionUnlockProof, TxAmount, TxBase, UTXOConditions,
-};
+pub(crate) use crate::transaction::{TransactionDocumentTrait, UTXOConditions};
 pub(crate) use dubp_common::crypto::bases::b58::ToBase58;
 pub(crate) use dubp_common::crypto::hashs::Hash;
 pub(crate) use dubp_common::crypto::keys::*;
 pub(crate) use dubp_common::prelude::*;
+pub(crate) use dubp_wallet::prelude::*;
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use smallvec::{smallvec as svec, SmallVec, ToSmallVec};
-pub(crate) use std::{
-    collections::HashMap,
-    fmt::Debug,
-    ops::{Add, Deref, Sub},
-};
+pub(crate) use std::{collections::HashMap, fmt::Debug};
 
 /// User document of DUBP (DUniter Blockhain Protocol)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

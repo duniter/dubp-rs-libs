@@ -31,6 +31,9 @@ mod json;
 mod raw_text;
 mod transaction_utils;
 
+// Re-export crates
+pub use dubp_documents::dubp_wallet;
+
 // Prelude
 pub mod prelude {
     pub use crate::compact_text::certifications::parse_compact_certifications;
@@ -46,7 +49,7 @@ pub mod prelude {
 pub use crate::json::serde_json_value_to_pest_json_value;
 
 // Export profession types
-pub use crate::raw_text::transaction::utxo_conditions_from_str;
+pub use crate::raw_text::wallet_script::wallet_script_from_str;
 
 // Crate imports
 pub(crate) use crate::json::DefaultHasher;
@@ -76,12 +79,11 @@ pub(crate) use dubp_documents::revocation::{
 };
 pub(crate) use dubp_documents::smallvec::{smallvec as svec, SmallVec};
 pub(crate) use dubp_documents::transaction::{
-    v10::TransactionInputUnlocksV10, OutputIndex, TransactionDocument, TransactionDocumentBuilder,
+    v10::TransactionInputUnlocksV10, TransactionDocument, TransactionDocumentBuilder,
     TransactionDocumentV10, TransactionDocumentV10Builder, TransactionInputV10,
-    TransactionOutputCondition, TransactionOutputV10, TransactionUnlockProof, TxAmount, TxBase,
-    UTXOConditions, UTXOConditionsGroup,
+    TransactionOutputV10, UTXOConditions,
 };
-//pub(crate) use dubp_documents::documents::c
+pub(crate) use dubp_wallet::prelude::*;
 pub(crate) use json_pest_parser::{JSONValue, Number};
 pub(crate) use pest::{
     iterators::{Pair, Pairs},

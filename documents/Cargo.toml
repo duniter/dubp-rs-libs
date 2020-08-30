@@ -13,7 +13,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-dubp-common = { path = "../common", version = "0.4.0" }
+dubp-wallet = { path = "../wallet", version = "0.1.0" }
 log = "0.4.*"
 serde = { version = "1.0.*", features = ["derive"] }
 serde_json = "1.0.*"
@@ -25,5 +25,5 @@ pretty_assertions = "0.6.1"
 unwrap = "1.2.1"
 
 [features]
-crypto_rand = ["dubp-common/crypto_rand"]
-crypto_scrypt = ["dubp-common/crypto_scrypt"]
+crypto_rand = ["dubp-wallet/crypto_rand"]
+crypto_scrypt = ["dubp-wallet/crypto_scrypt"]

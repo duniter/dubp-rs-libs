@@ -24,74 +24,6 @@ pub use v10::{
     TransactionInputV10, TransactionOutputV10,
 };
 
-/// Wrap a transaction amount
-#[derive(Debug, Copy, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Hash, Serialize)]
-pub struct TxAmount(pub isize);
-
-impl Add for TxAmount {
-    type Output = TxAmount;
-    fn add(self, a: TxAmount) -> Self::Output {
-        TxAmount(self.0 + a.0)
-    }
-}
-
-impl Sub for TxAmount {
-    type Output = TxAmount;
-    fn sub(self, a: TxAmount) -> Self::Output {
-        TxAmount(self.0 - a.0)
-    }
-}
-
-/// Wrap a transaction amout base
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Deserialize, Hash, Serialize)]
-pub struct TxBase(pub usize);
-
-/// Wrap an output index
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub struct OutputIndex(pub usize);
-
-/// Wrap a transaction unlock proof
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub enum TransactionUnlockProof {
-    /// Indicates that the signature of the corresponding key is at the bottom of the document
-    Sig(usize),
-    /// Provides the code to unlock the corresponding funds
-    Xhx(String),
-}
-
-impl ToString for TransactionUnlockProof {
-    fn to_string(&self) -> String {
-        match *self {
-            TransactionUnlockProof::Sig(ref index) => format!("SIG({})", index),
-            TransactionUnlockProof::Xhx(ref hash) => format!("XHX({})", hash),
-        }
-    }
-}
-
-/// Wrap a transaction ouput condition
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub enum TransactionOutputCondition {
-    /// The consumption of funds will require a valid signature of the specified key
-    Sig(PubKey),
-    /// The consumption of funds will require to provide a code with the hash indicated
-    Xhx(Hash),
-    /// Funds may not be consumed until the blockchain reaches the timestamp indicated.
-    Cltv(u64),
-    /// Funds may not be consumed before the duration indicated, starting from the timestamp of the block where the transaction is written.
-    Csv(u64),
-}
-
-impl ToString for TransactionOutputCondition {
-    fn to_string(&self) -> String {
-        match *self {
-            TransactionOutputCondition::Sig(ref pubkey) => format!("SIG({})", pubkey),
-            TransactionOutputCondition::Xhx(ref hash) => format!("XHX({})", hash),
-            TransactionOutputCondition::Cltv(timestamp) => format!("CLTV({})", timestamp),
-            TransactionOutputCondition::Csv(duration) => format!("CSV({})", duration),
-        }
-    }
-}
-
 /// Wrap an utxo conditions
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct UTXOConditions {
@@ -99,14 +31,14 @@ pub struct UTXOConditions {
     /// because the original text may contain errors that are unfortunately allowed by duniter-ts.
     pub origin_str: Option<String>,
     /// Store script conditions
-    pub conditions: UTXOConditionsGroup,
+    pub script: WalletScriptV10,
 }
 
-impl From<UTXOConditionsGroup> for UTXOConditions {
-    fn from(conditions: UTXOConditionsGroup) -> Self {
+impl From<WalletScriptV10> for UTXOConditions {
+    fn from(script: WalletScriptV10) -> Self {
         UTXOConditions {
             origin_str: None,
-            conditions,
+            script,
         }
     }
 }
@@ -121,7 +53,7 @@ impl UTXOConditions {
     /// Check validity of this UTXOConditions
     pub fn check(&self) -> bool {
         !(self.origin_str.is_some()
-            && self.origin_str.clone().expect("safe unwrap") != self.conditions.to_string())
+            && self.origin_str.clone().expect("safe unwrap") != self.script.to_string())
     }
 }
 
@@ -130,41 +62,7 @@ impl ToString for UTXOConditions {
         if let Some(ref origin_str) = self.origin_str {
             origin_str.to_string()
         } else {
-            self.conditions.to_string()
-        }
-    }
-}
-
-/// Wrap a transaction ouput condition group
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub enum UTXOConditionsGroup {
-    /// Single
-    Single(TransactionOutputCondition),
-    /// Brackets
-    Brackets(Box<UTXOConditionsGroup>),
-    /// And operator
-    And(Box<UTXOConditionsGroup>, Box<UTXOConditionsGroup>),
-    /// Or operator
-    Or(Box<UTXOConditionsGroup>, Box<UTXOConditionsGroup>),
-}
-
-impl ToString for UTXOConditionsGroup {
-    fn to_string(&self) -> String {
-        match *self {
-            UTXOConditionsGroup::Single(ref condition) => condition.to_string(),
-            UTXOConditionsGroup::Brackets(ref condition_group) => {
-                format!("({})", condition_group.deref().to_string())
-            }
-            UTXOConditionsGroup::And(ref condition_group_1, ref condition_group_2) => format!(
-                "{} && {}",
-                condition_group_1.deref().to_string(),
-                condition_group_2.deref().to_string()
-            ),
-            UTXOConditionsGroup::Or(ref condition_group_1, ref condition_group_2) => format!(
-                "{} || {}",
-                condition_group_1.deref().to_string(),
-                condition_group_2.deref().to_string()
-            ),
+            self.script.to_string()
         }
     }
 }
@@ -347,13 +245,10 @@ pub(super) mod tests {
 
     pub(super) fn tx_output_v10(amount: isize, recv: &str) -> TransactionOutputV10 {
         TransactionOutputV10 {
-            amount: TxAmount(amount),
-            base: TxBase(0),
-            conditions: UTXOConditions::from(UTXOConditionsGroup::Single(
-                TransactionOutputCondition::Sig(PubKey::Ed25519(unwrap!(
-                    ed25519::PublicKey::from_base58(recv)
-                ))),
-            )),
+            amount: SourceAmount::with_base0(amount),
+            conditions: UTXOConditions::from(WalletScriptV10::Single(WalletConditionV10::Sig(
+                unwrap!(ed25519::PublicKey::from_base58(recv)),
+            ))),
         }
     }
 
@@ -382,18 +277,21 @@ pub(super) mod tests {
             blockstamp,
             locktime: 0,
             issuers: &[pubkey],
-            inputs: &[TransactionInputV10::D(
-                TxAmount(10),
-                TxBase(0),
-                PubKey::Ed25519(unwrap!(
-                    ed25519::PublicKey::from_base58("DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV"),
-                    "Fail to parse PublicKey"
-                )),
-                BlockNumber(0),
-            )],
+            inputs: &[TransactionInputV10 {
+                amount: SourceAmount::with_base0(10),
+                id: SourceIdV10::Ud(UdSourceIdV10 {
+                    issuer: unwrap!(
+                        ed25519::PublicKey::from_base58(
+                            "DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV"
+                        ),
+                        "Fail to parse PublicKey"
+                    ),
+                    block_number: BlockNumber(0),
+                }),
+            }],
             unlocks: &[TransactionInputUnlocksV10 {
                 index: 0,
-                unlocks: vec![TransactionUnlockProof::Sig(0)],
+                unlocks: vec![WalletUnlockProofV10::Sig(0)],
             }],
             outputs: smallvec![tx_output_v10(
                 10,
@@ -436,17 +334,15 @@ pub(super) mod tests {
             blockstamp,
             locktime: 0,
             issuers: &[pubkey],
-            inputs: &[TransactionInputV10::T(
-                TxAmount(950),
-                TxBase(0),
-                unwrap!(
-                    Hash::from_hex(
+            inputs: &[TransactionInputV10 {
+                amount: SourceAmount::with_base0(950),
+                id: SourceIdV10::Utxo(UtxoIdV10 {
+                    tx_hash: unwrap!(Hash::from_hex(
                         "2CF1ACD8FE8DC93EE39A1D55881C50D87C55892AE8E4DB71D4EBAB3D412AA8FD"
-                    ),
-                    "Fail to parse Hash"
-                ),
-                OutputIndex(1),
-            )],
+                    )),
+                    output_index: 1,
+                }),
+            }],
             unlocks: &[TransactionInputUnlocksV10::default()],
             outputs: smallvec![
                 tx_output_v10(30, "38MEAZN68Pz1DTvT3tqgxx4yQP6snJCQhPqEFxbDk4aE"),

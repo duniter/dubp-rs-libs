@@ -6,6 +6,7 @@ pub(super) mod identity;
 pub(super) mod membership;
 pub(super) mod revocation;
 pub(super) mod transaction;
+pub(super) mod wallet_script;
 
 #[derive(Debug, Clone, Copy, Parser)]
 #[grammar = "documents_grammar.pest"]

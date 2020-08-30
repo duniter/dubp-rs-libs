@@ -34,13 +34,15 @@ mod tests {
 
         assert_eq!(
             TransactionOutputV10 {
-                amount: TxAmount(49),
-                base: TxBase(2),
-                conditions: UTXOConditions::from(UTXOConditionsGroup::Single(
-                    TransactionOutputCondition::Sig(PubKey::Ed25519(unwrap!(
-                        PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
-                    )))
-                ))
+                amount: SourceAmount {
+                    amount: 49,
+                    base: 2,
+                },
+                conditions: UTXOConditions::from(WalletScriptV10::Single(WalletConditionV10::Sig(
+                    unwrap!(PublicKey::from_base58(
+                        "6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i"
+                    ))
+                )))
             },
             tx_output_v10_from_str(output_v10_str)?
         );
@@ -54,19 +56,19 @@ mod tests {
 
         assert_eq!(
             TransactionOutputV10 {
-                amount: TxAmount(49),
-                base: TxBase(2),
-                conditions: UTXOConditions::from(UTXOConditionsGroup::Or(
-                    Box::new(UTXOConditionsGroup::Single(
-                        TransactionOutputCondition::Sig(PubKey::Ed25519(unwrap!(
-                            PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
-                        )))
-                    )),
-                    Box::new(UTXOConditionsGroup::Single(
-                        TransactionOutputCondition::Xhx(unwrap!(Hash::from_hex(
+                amount: SourceAmount {
+                    amount: 49,
+                    base: 2,
+                },
+                conditions: UTXOConditions::from(WalletScriptV10::Or(
+                    Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(unwrap!(
+                        PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
+                    )))),
+                    Box::new(WalletScriptV10::Single(WalletConditionV10::Xhx(unwrap!(
+                        Hash::from_hex(
                             "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
-                        )))
-                    ))
+                        )
+                    ))))
                 ))
             },
             tx_output_v10_from_str(output_v10_str)?
@@ -81,22 +83,20 @@ mod tests {
 
         assert_eq!(
             TransactionOutputV10 {
-                amount: TxAmount(49),
-                base: TxBase(2),
-                conditions: UTXOConditions::from(UTXOConditionsGroup::Brackets(Box::new(
-                    UTXOConditionsGroup::Or(
-                        Box::new(UTXOConditionsGroup::Single(
-                            TransactionOutputCondition::Sig(PubKey::Ed25519(unwrap!(
-                                PublicKey::from_base58(
-                                    "6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i"
-                                )
-                            )))
-                        )),
-                        Box::new(UTXOConditionsGroup::Single(
-                            TransactionOutputCondition::Xhx(unwrap!(Hash::from_hex(
+                amount: SourceAmount {
+                    amount: 49,
+                    base: 2,
+                },
+                conditions: UTXOConditions::from(WalletScriptV10::Brackets(Box::new(
+                    WalletScriptV10::Or(
+                        Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(unwrap!(
+                            PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
+                        )))),
+                        Box::new(WalletScriptV10::Single(WalletConditionV10::Xhx(unwrap!(
+                            Hash::from_hex(
                                 "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
-                            )))
-                        ))
+                            )
+                        ))))
                     )
                 )))
             },
@@ -113,27 +113,23 @@ mod tests {
 
         assert_eq!(
             TransactionOutputV10 {
-                amount: TxAmount(49),
-                base: TxBase(2),
-                conditions: UTXOConditions::from(UTXOConditionsGroup::Or(
-                    Box::new(UTXOConditionsGroup::Single(
-                        TransactionOutputCondition::Sig(PubKey::Ed25519(unwrap!(
-                            PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
-                        )))
-                    )),
-                    Box::new(UTXOConditionsGroup::And(
-                        Box::new(UTXOConditionsGroup::Single(
-                            TransactionOutputCondition::Xhx(unwrap!(Hash::from_hex(
+                amount: SourceAmount {
+                    amount: 49,
+                    base: 2,
+                },
+                conditions: UTXOConditions::from(WalletScriptV10::Or(
+                    Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(unwrap!(
+                        PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
+                    )))),
+                    Box::new(WalletScriptV10::And(
+                        Box::new(WalletScriptV10::Single(WalletConditionV10::Xhx(unwrap!(
+                            Hash::from_hex(
                                 "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
-                            )))
-                        )),
-                        Box::new(UTXOConditionsGroup::Single(
-                            TransactionOutputCondition::Sig(PubKey::Ed25519(unwrap!(
-                                PublicKey::from_base58(
-                                    "42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp"
-                                )
-                            )))
-                        )),
+                            )
+                        )))),
+                        Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(unwrap!(
+                            PublicKey::from_base58("42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp")
+                        )))),
                     )),
                 ))
             },

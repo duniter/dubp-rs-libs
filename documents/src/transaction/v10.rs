@@ -19,41 +19,31 @@ use crate::*;
 
 /// Wrap a transaction input
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub enum TransactionInputV10 {
-    /// Universal Dividend Input
-    D(TxAmount, TxBase, PubKey, BlockNumber),
-    /// Previous Transaction Input
-    T(TxAmount, TxBase, Hash, OutputIndex),
+pub struct TransactionInputV10 {
+    pub amount: SourceAmount,
+    pub id: SourceIdV10,
 }
 
 impl ToString for TransactionInputV10 {
     fn to_string(&self) -> String {
-        match *self {
-            TransactionInputV10::D(amount, base, pubkey, block_number) => {
-                format!("{}:{}:D:{}:{}", amount.0, base.0, pubkey, block_number.0)
-            }
-            TransactionInputV10::T(amount, base, ref tx_hash, tx_index) => {
-                format!("{}:{}:T:{}:{}", amount.0, base.0, tx_hash, tx_index.0)
-            }
+        match self.id {
+            SourceIdV10::Ud(UdSourceIdV10 {
+                issuer,
+                block_number,
+            }) => format!(
+                "{}:{}:D:{}:{}",
+                self.amount.amount, self.amount.base, issuer, block_number.0
+            ),
+            SourceIdV10::Utxo(UtxoIdV10 {
+                tx_hash,
+                output_index,
+            }) => format!(
+                "{}:{}:T:{}:{}",
+                self.amount.amount, self.amount.base, tx_hash, output_index
+            ),
         }
     }
 }
-
-/*impl FromStr for TransactionInputV10 {
-    type Err = std::convert::Infallible;
-
-    fn from_str(source: &str) -> Result<Self, Self::Err> {
-        let strs = source.split(':').collect();
-
-        let amount = TxAmount(unwrap!(strs[0].parse()));
-
-        match strs[2] {
-            'D' =>
-            'T' =>
-        }
-        todo!()
-    }
-}*/
 
 impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
     type Input = TransactionInputV10;
@@ -74,14 +64,14 @@ pub struct TransactionInputUnlocksV10 {
     /// Input index
     pub index: usize,
     /// List of proof to unlock funds
-    pub unlocks: Vec<TransactionUnlockProof>,
+    pub unlocks: Vec<WalletUnlockProofV10>,
 }
 
 impl Default for TransactionInputUnlocksV10 {
     fn default() -> Self {
         TransactionInputUnlocksV10 {
             index: 0,
-            unlocks: vec![TransactionUnlockProof::Sig(0)],
+            unlocks: vec![WalletUnlockProofV10::Sig(0)],
         }
     }
 }
@@ -102,9 +92,7 @@ impl ToString for TransactionInputUnlocksV10 {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TransactionOutputV10 {
     /// Amount
-    pub amount: TxAmount,
-    /// Base
-    pub base: TxBase,
+    pub amount: SourceAmount,
     /// List of conditions for consum this output
     pub conditions: UTXOConditions,
 }
@@ -124,8 +112,8 @@ impl ToString for TransactionOutputV10 {
     fn to_string(&self) -> String {
         format!(
             "{}:{}:{}",
-            self.amount.0,
-            self.base.0,
+            self.amount.amount,
+            self.amount.base,
             self.conditions.to_string()
         )
     }
@@ -481,18 +469,21 @@ mod tests {
             blockstamp: block,
             locktime: 0,
             issuers: &[pubkey],
-            inputs: &[TransactionInputV10::D(
-                TxAmount(10),
-                TxBase(0),
-                PubKey::Ed25519(unwrap!(
-                    ed25519::PublicKey::from_base58("DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV"),
-                    "Fail to parse PublicKey"
-                )),
-                BlockNumber(0),
-            )],
+            inputs: &[TransactionInputV10 {
+                amount: SourceAmount::with_base0(10),
+                id: SourceIdV10::Ud(UdSourceIdV10 {
+                    issuer: unwrap!(
+                        ed25519::PublicKey::from_base58(
+                            "DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV"
+                        ),
+                        "Fail to parse PublicKey"
+                    ),
+                    block_number: BlockNumber(0),
+                }),
+            }],
             unlocks: &[TransactionInputUnlocksV10 {
                 index: 0,
-                unlocks: vec![TransactionUnlockProof::Sig(0)],
+                unlocks: vec![WalletUnlockProofV10::Sig(0)],
             }],
             outputs: smallvec![tx_output_v10(
                 10,
@@ -535,17 +526,15 @@ mod tests {
             blockstamp: block,
             locktime: 0,
             issuers: &[pubkey],
-            inputs: &[TransactionInputV10::T(
-                TxAmount(950),
-                TxBase(0),
-                unwrap!(
-                    Hash::from_hex(
+            inputs: &[TransactionInputV10 {
+                amount: SourceAmount::with_base0(950),
+                id: SourceIdV10::Utxo(UtxoIdV10 {
+                    tx_hash: unwrap!(Hash::from_hex(
                         "2CF1ACD8FE8DC93EE39A1D55881C50D87C55892AE8E4DB71D4EBAB3D412AA8FD"
-                    ),
-                    "Fail to parse Hash"
-                ),
-                OutputIndex(1),
-            )],
+                    )),
+                    output_index: 1,
+                }),
+            }],
             unlocks: &[TransactionInputUnlocksV10::default()],
             outputs: smallvec![
                 tx_output_v10(30, "38MEAZN68Pz1DTvT3tqgxx4yQP6snJCQhPqEFxbDk4aE"),

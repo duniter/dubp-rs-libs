@@ -357,7 +357,7 @@ dependencies = [
 name = "dubp-documents"
 version = "0.17.1"
 dependencies = [
- "dubp-common",
+ "dubp-wallet",
  "log",
  "pretty_assertions",
  "serde",

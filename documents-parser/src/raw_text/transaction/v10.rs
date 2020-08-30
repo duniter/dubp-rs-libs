@@ -66,24 +66,34 @@ impl FromPestPair for TransactionInputV10 {
             Rule::tx_input_du => {
                 let mut inner_rules = tx_input_type_pair.into_inner(); // ${ tx_amount ~ ":" ~ tx_amount_base ~ ":D:" ~ pubkey ~ ":" ~ du_block_id }
 
-                TransactionInputV10::D(
-                    TxAmount(unwrap!(unwrap!(inner_rules.next()).as_str().parse())),
-                    TxBase(unwrap!(unwrap!(inner_rules.next()).as_str().parse())),
-                    PubKey::Ed25519(unwrap!(ed25519::PublicKey::from_base58(
-                        unwrap!(inner_rules.next()).as_str()
-                    ))),
-                    BlockNumber(unwrap!(unwrap!(inner_rules.next()).as_str().parse())),
-                )
+                TransactionInputV10 {
+                    amount: SourceAmount {
+                        amount: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
+                        base: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
+                    },
+                    id: SourceIdV10::Ud(UdSourceIdV10 {
+                        issuer: unwrap!(ed25519::PublicKey::from_base58(
+                            unwrap!(inner_rules.next()).as_str()
+                        )),
+                        block_number: BlockNumber(unwrap!(unwrap!(inner_rules.next())
+                            .as_str()
+                            .parse())),
+                    }),
+                }
             }
             Rule::tx_input_tx => {
                 let mut inner_rules = tx_input_type_pair.into_inner(); // ${ tx_amount ~ ":" ~ tx_amount_base ~ ":D:" ~ pubkey ~ ":" ~ du_block_id }
 
-                TransactionInputV10::T(
-                    TxAmount(unwrap!(unwrap!(inner_rules.next()).as_str().parse())),
-                    TxBase(unwrap!(unwrap!(inner_rules.next()).as_str().parse())),
-                    unwrap!(Hash::from_hex(unwrap!(inner_rules.next()).as_str())),
-                    OutputIndex(unwrap!(unwrap!(inner_rules.next()).as_str().parse())),
-                )
+                TransactionInputV10 {
+                    amount: SourceAmount {
+                        amount: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
+                        base: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
+                    },
+                    id: SourceIdV10::Utxo(UtxoIdV10 {
+                        tx_hash: unwrap!(Hash::from_hex(unwrap!(inner_rules.next()).as_str())),
+                        output_index: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
+                    }),
+                }
             }
             _ => panic!("unexpected rule: {:?}", tx_input_type_pair.as_rule()), // Grammar ensures that we never reach this line
         })
@@ -99,13 +109,13 @@ impl FromPestPair for TransactionInputUnlocksV10 {
             match unlock_field.as_rule() {
                 Rule::input_index => input_index = unwrap!(unlock_field.as_str().parse()),
                 Rule::unlock_sig => {
-                    unlock_conds.push(TransactionUnlockProof::Sig(unwrap!(unwrap!(unlock_field
+                    unlock_conds.push(WalletUnlockProofV10::Sig(unwrap!(unwrap!(unlock_field
                         .into_inner()
                         .next())
                     .as_str()
                     .parse())))
                 }
-                Rule::unlock_xhx => unlock_conds.push(TransactionUnlockProof::Xhx(String::from(
+                Rule::unlock_xhx => unlock_conds.push(WalletUnlockProofV10::Xhx(String::from(
                     unwrap!(unlock_field.into_inner().next()).as_str(),
                 ))),
                 _ => panic!("unexpected rule: {:?}", unlock_field.as_rule()), // Grammar ensures that we never reach this line
@@ -121,27 +131,25 @@ impl FromPestPair for TransactionInputUnlocksV10 {
 impl FromPestPair for TransactionOutputV10 {
     fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionOutputV10, RawTextParseError> {
         let mut utxo_pairs = pair.into_inner();
-        let amount = TxAmount(unwrap!(unwrap!(utxo_pairs.next()).as_str().parse()));
-        let base = TxBase(unwrap!(unwrap!(utxo_pairs.next()).as_str().parse()));
-        let conditions_pairs = unwrap!(utxo_pairs.next());
-        let conditions_origin_str = conditions_pairs.as_str();
-        let conditions = UTXOConditionsGroup::from_pest_pair(conditions_pairs)?;
+        let amount = SourceAmount {
+            amount: unwrap!(unwrap!(utxo_pairs.next()).as_str().parse()),
+            base: unwrap!(unwrap!(utxo_pairs.next()).as_str().parse()),
+        };
+        let script_pairs = unwrap!(utxo_pairs.next());
+        let script_origin_str = script_pairs.as_str();
+        let script = WalletScriptV10::from_pest_pair(script_pairs)?;
 
         Ok(TransactionOutputV10 {
             amount,
-            base,
             conditions: UTXOConditions {
-                origin_str: if conditions_origin_str != conditions.to_string() {
-                    println!("TMP DEBUG conditions={:#?}", conditions);
-                    println!(
-                        "TMP DEBUG conditions.to_string()={}",
-                        conditions.to_string()
-                    );
-                    Some(conditions_origin_str.to_owned())
+                origin_str: if script_origin_str != script.to_string() {
+                    println!("TMP DEBUG conditions={:#?}", script);
+                    println!("TMP DEBUG conditions.to_string()={}", script.to_string());
+                    Some(script_origin_str.to_owned())
                 } else {
                     None
                 },
-                conditions,
+                script,
             },
         })
     }
