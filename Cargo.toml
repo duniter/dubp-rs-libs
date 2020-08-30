@@ -3,7 +3,8 @@ members = [
     "common",
     "crypto",
     "documents",
-    "documents-parser"
+    "documents-parser",
+    "wallet"
 ]
 
 [patch.crates-io]

@@ -1,0 +1,27 @@
+[package]
+name = "dubp-wallet"
+version = "0.1.0"
+authors = ["elois <elois@duniter.org>"]
+description = "Provide wallet definition for DUBP protocol"
+repository = "https://git.duniter.org/libs/dubp-rs-libs"
+readme = "README.md"
+keywords = ["duniter", "blockchain", "cryptocurrency", "wallet"]
+license = "AGPL-3.0"
+edition = "2018"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+dubp-common = { path = "../common", version = "0.4.0" }
+serde = { version = "1.0.*", features = ["derive"] }
+thiserror = "1.0.20"
+
+[dev-dependencies]
+maplit = "1.0.2"
+pretty_assertions = "0.6.1"
+unwrap = "1.2.1"
+
+[features]
+crypto_rand = ["dubp-common/crypto_rand"]
+crypto_scrypt = ["dubp-common/crypto_scrypt"]
