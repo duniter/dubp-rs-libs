@@ -1,6 +1,6 @@
 [package]
 name = "dup-crypto"
-version = "0.18.0"
+version = "0.19.0"
 authors = ["elois <c@elo.tf>"]
 description = "Manage cryptographic operations for DUniter Protocols and the Duniter eco-system most broadly."
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
@@ -38,7 +38,7 @@ harness = false
 required-features = ["criterion"]
 
 [features]
-default = ["dewif", "private_message", "pubkey_check", "rand"]
+#default = ["dewif", "private_message", "pubkey_check", "rand"]
 
 dewif = ["aes", "arrayvec", "scrypt"]
 x25519 = ["curve25519-dalek"]
