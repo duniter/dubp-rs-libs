@@ -13,7 +13,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-dubp-documents = { path = "../documents", version = "0.16.0" }
+dubp-documents = { path = "../documents", version = "0.17.0" }
 json-pest-parser = "0.3.0"
 pest = "2.1.3"
 pest_derive = "2.1.0"
@@ -24,4 +24,5 @@ unwrap = "1.2.1"
 [dev-dependencies]
 
 [features]
+crypto_rand = ["dubp-documents/crypto_rand"]
 crypto_scrypt = ["dubp-documents/crypto_scrypt"]
