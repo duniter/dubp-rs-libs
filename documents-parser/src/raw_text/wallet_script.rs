@@ -1,9 +1,9 @@
 use crate::*;
 
-pub fn wallet_script_from_str(source: &str) -> Result<WalletConditionV10, RawTextParseError> {
+pub fn wallet_script_from_str(source: &str) -> Result<WalletScriptV10, RawTextParseError> {
     let mut pairs = RawDocumentsParser::parse(Rule::output_conds, source)
         .map_err(|e| RawTextParseError::PestError(e.into()))?;
-    WalletConditionV10::from_pest_pair(unwrap!(pairs.next())) // get and unwrap the `output_conds` rule; never fails
+    WalletScriptV10::from_pest_pair(unwrap!(pairs.next())) // get and unwrap the `output_conds` rule; never fails
 }
 
 impl FromPestPair for WalletScriptV10 {
@@ -83,5 +83,39 @@ fn parse_op(
         }
     } else {
         left
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::*;
+
+    #[test]
+    fn parse_complex_wallet_script_v10() -> Result<(), RawTextParseError> {
+        let script_v10_str =
+            "SIG(6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i) || (XHX(3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA) && SIG(42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp))";
+        let expected_script = WalletScriptV10 {
+            root: WalletSubScriptV10::Or(0, 4),
+            nodes: svec![
+                WalletSubScriptV10::Single(WalletConditionV10::Sig(pk(
+                    "6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i"
+                ))),
+                WalletSubScriptV10::Single(WalletConditionV10::Xhx(h(
+                    "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
+                ))),
+                WalletSubScriptV10::Single(WalletConditionV10::Sig(pk(
+                    "42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp"
+                ))),
+                WalletSubScriptV10::And(1, 2),
+                WalletSubScriptV10::Brackets(3),
+            ],
+        };
+
+        assert_eq!(script_v10_str, expected_script.to_string(),);
+
+        assert_eq!(expected_script, wallet_script_from_str(script_v10_str)?);
+
+        Ok(())
     }
 }

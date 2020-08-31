@@ -27,17 +27,8 @@ pub(crate) fn tx_output_v10_from_str(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tests::*;
     use dubp_documents::smallvec::smallvec as svec;
-
-    #[inline(always)]
-    fn h(hash_str: &str) -> Hash {
-        unwrap!(Hash::from_hex(hash_str))
-    }
-
-    #[inline(always)]
-    fn pk(pk_b58: &str) -> ed25519::PublicKey {
-        unwrap!(PublicKey::from_base58(pk_b58))
-    }
 
     #[test]
     fn parse_tx_output_v10_single() -> Result<(), RawTextParseError> {

@@ -146,3 +146,19 @@ impl<T: pest::RuleType> From<pest::error::Error<T>> for RawTextParseError {
         RawTextParseError::PestError(e.into())
     }
 }
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    use unwrap::unwrap;
+
+    #[inline(always)]
+    pub fn h(hash_str: &str) -> Hash {
+        unwrap!(Hash::from_hex(hash_str))
+    }
+
+    #[inline(always)]
+    pub fn pk(pk_b58: &str) -> ed25519::PublicKey {
+        unwrap!(PublicKey::from_base58(pk_b58))
+    }
+}
