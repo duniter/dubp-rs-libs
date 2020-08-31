@@ -370,7 +370,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-documents-parser"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "dubp-documents",
  "json-pest-parser",
