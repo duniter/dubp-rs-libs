@@ -1,6 +1,6 @@
 [package]
 name = "dubp-documents-parser"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["elois <elois@duniter.org>"]
 description = "Parser for DUBP documents."
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
