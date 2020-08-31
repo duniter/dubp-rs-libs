@@ -148,3 +148,43 @@ impl ToString for BlockV10Parameters {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_genesis_params_from_str() -> Result<(), ParseParamsError> {
+        let genesis_params_str = "0.0488:86400:1000:432000:100:5259600:63115200:5:5259600:5259600:0.8:31557600:5:24:300:12:0.67:1488970800:1490094000:15778800";
+
+        let genesis_params = BlockV10Parameters::from_str(genesis_params_str)?;
+
+        assert_eq!(
+            BlockV10Parameters {
+                c: 0.0488,
+                dt: 86_400,
+                ud0: 1_000,
+                sig_period: 432_000,
+                sig_stock: 100,
+                sig_window: 5_259_600,
+                sig_validity: 63_115_200,
+                sig_qty: 5,
+                idty_window: 5_259_600,
+                ms_window: 5_259_600,
+                x_percent: 0.8,
+                ms_validity: 31557600,
+                step_max: 5,
+                median_time_blocks: 24,
+                avg_gen_time: 300,
+                dt_diff_eval: 12,
+                percent_rot: 0.67,
+                ud_time0: 1_488_970_800,
+                ud_reeval_time0: 1_490_094_000,
+                dt_reeval: 15_778_800,
+            },
+            genesis_params
+        );
+
+        Ok(())
+    }
+}

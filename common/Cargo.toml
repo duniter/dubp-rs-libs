@@ -20,6 +20,7 @@ thiserror = "1.0.20"
 
 [dev-dependencies]
 bincode = "1.2.0"
+unwrap = "1.2.1"
 
 [features]
 crypto_dewif = ["dup-crypto/dewif"]

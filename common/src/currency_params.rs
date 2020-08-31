@@ -93,25 +93,21 @@ impl From<(&CurrencyName, BlockV10Parameters)> for CurrencyParameters {
     fn from(source: (&CurrencyName, BlockV10Parameters)) -> CurrencyParameters {
         let (currency_name, block_params) = source;
         let sig_renew_period = match currency_name.0.as_str() {
-            DEFAULT_CURRENCY => *DEFAULT_SIG_RENEW_PERIOD,
             "g1" => 5_259_600,
             "g1-test" => 5_259_600 / 5,
             _ => *DEFAULT_SIG_RENEW_PERIOD,
         };
         let ms_period = match currency_name.0.as_str() {
-            DEFAULT_CURRENCY => *DEFAULT_MS_PERIOD,
             "g1" => 5_259_600,
             "g1-test" => 5_259_600 / 5,
             _ => *DEFAULT_MS_PERIOD,
         };
         let tx_window = match currency_name.0.as_str() {
-            DEFAULT_CURRENCY => *DEFAULT_TX_WINDOW,
             "g1" => 604_800,
             "g1-test" => 604_800,
             _ => *DEFAULT_TX_WINDOW,
         };
         let fork_window_size = match currency_name.0.as_str() {
-            DEFAULT_CURRENCY => *DEFAULT_FORK_WINDOW_SIZE,
             "g1" => 100,
             "g1-test" => 100,
             _ => *DEFAULT_FORK_WINDOW_SIZE,
@@ -150,5 +146,138 @@ impl CurrencyParameters {
     /// Get max value of connectivity (=1/x_percent)
     pub fn max_connectivity(&self) -> f64 {
         1.0 / self.x_percent
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_currency_params() {
+        let genesis_params = BlockV10Parameters {
+            c: 0.0488,
+            dt: 86_400,
+            ud0: 1_000,
+            sig_period: 432_000,
+            sig_stock: 100,
+            sig_window: 5_259_600,
+            sig_validity: 63_115_200,
+            sig_qty: 5,
+            idty_window: 5_259_600,
+            ms_window: 5_259_600,
+            x_percent: 0.8,
+            ms_validity: 31557600,
+            step_max: 5,
+            median_time_blocks: 24,
+            avg_gen_time: 300,
+            dt_diff_eval: 12,
+            percent_rot: 0.67,
+            ud_time0: 1_488_970_800,
+            ud_reeval_time0: 1_490_094_000,
+            dt_reeval: 15_778_800,
+        };
+
+        let currency_params_g1 =
+            CurrencyParameters::from((&CurrencyName("g1".to_owned()), genesis_params));
+
+        assert_eq!(
+            CurrencyParameters {
+                protocol_version: 10,
+                c: 0.0488,
+                dt: 86_400,
+                ud0: 1_000,
+                sig_period: 432_000,
+                sig_renew_period: 5_259_600,
+                sig_stock: 100,
+                sig_window: 5_259_600,
+                sig_validity: 63_115_200,
+                sig_qty: 5,
+                idty_window: 5_259_600,
+                ms_window: 5_259_600,
+                tx_window: 604_800,
+                x_percent: 0.8,
+                ms_validity: 31557600,
+                ms_period: 5_259_600,
+                step_max: 5,
+                median_time_blocks: 24,
+                avg_gen_time: 300,
+                dt_diff_eval: 12,
+                percent_rot: 0.67,
+                ud_time0: 1_488_970_800,
+                ud_reeval_time0: 1_490_094_000,
+                dt_reeval: 15_778_800,
+                fork_window_size: 100,
+            },
+            currency_params_g1,
+        );
+
+        let currency_params_gt =
+            CurrencyParameters::from((&CurrencyName("g1-test".to_owned()), genesis_params));
+
+        assert_eq!(
+            CurrencyParameters {
+                protocol_version: 10,
+                c: 0.0488,
+                dt: 86_400,
+                ud0: 1_000,
+                sig_period: 432_000,
+                sig_renew_period: 5_259_600 / 5,
+                sig_stock: 100,
+                sig_window: 5_259_600,
+                sig_validity: 63_115_200,
+                sig_qty: 5,
+                idty_window: 5_259_600,
+                ms_window: 5_259_600,
+                tx_window: 604_800,
+                x_percent: 0.8,
+                ms_validity: 31557600,
+                ms_period: 5_259_600 / 5,
+                step_max: 5,
+                median_time_blocks: 24,
+                avg_gen_time: 300,
+                dt_diff_eval: 12,
+                percent_rot: 0.67,
+                ud_time0: 1_488_970_800,
+                ud_reeval_time0: 1_490_094_000,
+                dt_reeval: 15_778_800,
+                fork_window_size: 100,
+            },
+            currency_params_gt,
+        );
+
+        let currency_params_default =
+            CurrencyParameters::from((&CurrencyName(DEFAULT_CURRENCY.to_owned()), genesis_params));
+
+        assert_eq!(
+            CurrencyParameters {
+                protocol_version: 10,
+                c: 0.0488,
+                dt: 86_400,
+                ud0: 1_000,
+                sig_period: 432_000,
+                sig_renew_period: *DEFAULT_SIG_RENEW_PERIOD,
+                sig_stock: 100,
+                sig_window: 5_259_600,
+                sig_validity: 63_115_200,
+                sig_qty: 5,
+                idty_window: 5_259_600,
+                ms_window: 5_259_600,
+                tx_window: *DEFAULT_TX_WINDOW,
+                x_percent: 0.8,
+                ms_validity: 31557600,
+                ms_period: *DEFAULT_MS_PERIOD,
+                step_max: 5,
+                median_time_blocks: 24,
+                avg_gen_time: 300,
+                dt_diff_eval: 12,
+                percent_rot: 0.67,
+                ud_time0: 1_488_970_800,
+                ud_reeval_time0: 1_490_094_000,
+                dt_reeval: 15_778_800,
+                fork_window_size: *DEFAULT_FORK_WINDOW_SIZE,
+            },
+            currency_params_default,
+        );
     }
 }

@@ -29,12 +29,6 @@ pub enum BlockstampParseError {
     InvalidBlockHash(BaseConversionError),
 }
 
-impl From<BaseConversionError> for BlockstampParseError {
-    fn from(e: BaseConversionError) -> Self {
-        BlockstampParseError::InvalidBlockHash(e)
-    }
-}
-
 /// A blockstamp (Unique ID).
 ///
 /// It's composed of the [`BlockNumber`] and
@@ -142,7 +136,7 @@ impl FromStr for Blockstamp {
 
         match (split.next(), split.next(), split.next()) {
             (Some(id), Some(hash), None) => {
-                let hash = Hash::from_hex(hash)?;
+                let hash = Hash::from_hex(hash).map_err(BlockstampParseError::InvalidBlockHash)?;
 
                 if let Ok(id) = id.parse::<u32>() {
                     Ok(Blockstamp {
@@ -162,6 +156,7 @@ impl FromStr for Blockstamp {
 mod tests {
 
     use super::*;
+    use unwrap::unwrap;
 
     #[test]
     fn blockstamp_default() {
@@ -172,6 +167,45 @@ mod tests {
                 hash: BlockHash(Hash([0u8; 32])),
             }
         )
+    }
+
+    #[test]
+    fn blockstamp_ord() {
+        let b1 = unwrap!(Blockstamp::from_str(
+            "123-000003176306959F8674C25757BCE1CD27768E29A9B2F6DD2A4AACEAFF8C9413"
+        ));
+        let b2 = unwrap!(Blockstamp::from_str(
+            "124-000003176306959F8674C25757BCE1CD27768E29A9B2F6DD2A4AACEAFF8C9413"
+        ));
+        let b3 = unwrap!(Blockstamp::from_str(
+            "124-000003176306959F8674C25757BCE1CD27768E29A9B2F6DD2A4AACEAFF8C9415"
+        ));
+
+        assert!(b1 < b2);
+        assert!(b2 < b3);
+    }
+
+    #[test]
+    fn blockstamp_from_str_errors() {
+        assert_eq!(
+            Err(BlockstampParseError::InvalidFormat),
+            Blockstamp::from_str("invalid_format")
+        );
+        assert_eq!(
+            Err(BlockstampParseError::InvalidBlockNumber),
+            Blockstamp::from_str(
+                "not_a_number-000003176306959F8674C25757BCE1CD27768E29A9B2F6DD2A4AACEAFF8C9413"
+            )
+        );
+        assert_eq!(
+            Err(BlockstampParseError::InvalidBlockHash(
+                BaseConversionError::InvalidLength {
+                    expected: 64,
+                    found: 3,
+                }
+            )),
+            Blockstamp::from_str("123-ZZZ")
+        );
     }
 
     #[test]
