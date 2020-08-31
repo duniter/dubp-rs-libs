@@ -15,7 +15,7 @@
 
 use crate::*;
 
-/// Parse memberships documents from array of str
+/// Parse array of compact memberships
 pub fn parse_compact_memberships(
     currency: &str,
     membership_type: MembershipType,
@@ -45,4 +45,45 @@ pub fn parse_compact_memberships(
             }
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use unwrap::unwrap;
+
+    #[test]
+    fn test_parse_compact_memberships() -> Result<(), ParseCompactDocError> {
+        let compact_memberships_strs = &[
+            "5bG4wxsFDpG3n7vtgDyv8jCC9h5pWjJdDxDDSE21RgZJ:462+UqY616pj2WU1M9/xLQIppfuT2CLruoPSGT8Frm1iKepp1fQ3iNk3b/Z6EaFJ3cFD4Eu2jMmgwsbcnVQXBg==:123123-000004E70532AEC7EFC90C63C3FF996D2C070915DFAEB37E24E149E94A48730E:123123-000004E70532AEC7EFC90C63C3FF996D2C070915DFAEB37E24E149E94A48730E:toto",
+            "GFShJBGAnXXNvWuWv2sBTc2jxPfuJLgB6sxunEj69i31:PPuXwwmL/Voc4Q+6NNKV31cfwlK07SC10m+u91RovPLj4Dn7F+452BucruiFZ190L8aB66RbiHByebE5kVD/DQ==:246246-0000060288862F19C36CD79AD8BAE142B0667EDECCD9E10826E345C358002F6F:246246-0000060288862F19C36CD79AD8BAE142B0667EDECCD9E10826E345C358002F6F:titi",
+        ];
+
+        let memberships =
+            parse_compact_memberships("test", MembershipType::In(), compact_memberships_strs)?;
+
+        assert_eq!(
+            vec![
+                MembershipDocumentV10Builder {
+                    currency: "test",
+                    issuer: unwrap!(ed25519::PublicKey::from_base58("5bG4wxsFDpG3n7vtgDyv8jCC9h5pWjJdDxDDSE21RgZJ")),
+                    blockstamp: unwrap!(Blockstamp::from_str("123123-000004E70532AEC7EFC90C63C3FF996D2C070915DFAEB37E24E149E94A48730E")),
+                    membership: MembershipType::In(),
+                    identity_username: "toto",
+                    identity_blockstamp: unwrap!(Blockstamp::from_str("123123-000004E70532AEC7EFC90C63C3FF996D2C070915DFAEB37E24E149E94A48730E")),
+                }.build_with_signature(svec![unwrap!(ed25519::Signature::from_base64("462+UqY616pj2WU1M9/xLQIppfuT2CLruoPSGT8Frm1iKepp1fQ3iNk3b/Z6EaFJ3cFD4Eu2jMmgwsbcnVQXBg=="))]),
+                MembershipDocumentV10Builder {
+                    currency: "test",
+                    issuer: unwrap!(ed25519::PublicKey::from_base58("GFShJBGAnXXNvWuWv2sBTc2jxPfuJLgB6sxunEj69i31")),
+                    blockstamp: unwrap!(Blockstamp::from_str("246246-0000060288862F19C36CD79AD8BAE142B0667EDECCD9E10826E345C358002F6F")),
+                    membership: MembershipType::In(),
+                    identity_username: "titi",
+                    identity_blockstamp: unwrap!(Blockstamp::from_str("246246-0000060288862F19C36CD79AD8BAE142B0667EDECCD9E10826E345C358002F6F")),
+                }.build_with_signature(svec![unwrap!(ed25519::Signature::from_base64("PPuXwwmL/Voc4Q+6NNKV31cfwlK07SC10m+u91RovPLj4Dn7F+452BucruiFZ190L8aB66RbiHByebE5kVD/DQ=="))]),
+            ],
+            memberships,
+        );
+
+        Ok(())
+    }
 }

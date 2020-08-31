@@ -15,7 +15,7 @@
 
 use crate::*;
 
-/// Parse array of revocations json documents into vector of `CompactRevocationDocumentV10`
+/// Parse array of compact revocations into vector of `CompactRevocationDocumentV10`
 pub fn parse_compact_revocations(
     str_revocations: &[&str],
 ) -> Result<Vec<TextDocumentFormat<RevocationDocumentV10>>, ParseCompactDocError> {
@@ -32,4 +32,36 @@ pub fn parse_compact_revocations(
         }
     }
     Ok(revocations)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use unwrap::unwrap;
+
+    #[test]
+    fn test_parse_compact_revocations() -> Result<(), ParseCompactDocError> {
+        let compact_revocations_strs = &[
+            "5bG4wxsFDpG3n7vtgDyv8jCC9h5pWjJdDxDDSE21RgZJ:462+UqY616pj2WU1M9/xLQIppfuT2CLruoPSGT8Frm1iKepp1fQ3iNk3b/Z6EaFJ3cFD4Eu2jMmgwsbcnVQXBg==",
+            "GFShJBGAnXXNvWuWv2sBTc2jxPfuJLgB6sxunEj69i31:PPuXwwmL/Voc4Q+6NNKV31cfwlK07SC10m+u91RovPLj4Dn7F+452BucruiFZ190L8aB66RbiHByebE5kVD/DQ==",
+        ];
+
+        let compact_revocations = parse_compact_revocations(compact_revocations_strs)?;
+
+        assert_eq!(
+            vec![
+                TextDocumentFormat::Compact(CompactRevocationDocumentV10 {
+                    issuer: unwrap!(ed25519::PublicKey::from_base58("5bG4wxsFDpG3n7vtgDyv8jCC9h5pWjJdDxDDSE21RgZJ")),
+                    signature: unwrap!(ed25519::Signature::from_base64("462+UqY616pj2WU1M9/xLQIppfuT2CLruoPSGT8Frm1iKepp1fQ3iNk3b/Z6EaFJ3cFD4Eu2jMmgwsbcnVQXBg==")),
+                }),
+                TextDocumentFormat::Compact(CompactRevocationDocumentV10 {
+                    issuer: unwrap!(ed25519::PublicKey::from_base58("GFShJBGAnXXNvWuWv2sBTc2jxPfuJLgB6sxunEj69i31")),
+                    signature: unwrap!(ed25519::Signature::from_base64("PPuXwwmL/Voc4Q+6NNKV31cfwlK07SC10m+u91RovPLj4Dn7F+452BucruiFZ190L8aB66RbiHByebE5kVD/DQ==")),
+                }),
+            ],
+            compact_revocations,
+        );
+
+        Ok(())
+    }
 }
