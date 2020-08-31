@@ -95,12 +95,8 @@ impl TextDocument for MembershipDocument {
         }
     }
 
-    fn to_compact_document(&self) -> Self::CompactTextDocument_ {
-        match self {
-            MembershipDocument::V10(ms_v10) => {
-                MembershipDocument::V10(ms_v10.to_compact_document())
-            }
-        }
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_> {
+        Cow::Borrowed(self)
     }
 }
 

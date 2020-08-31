@@ -145,13 +145,13 @@ impl TextDocument for IdentityDocumentV10 {
         }
     }
 
-    fn to_compact_document(&self) -> Self::CompactTextDocument_ {
-        CompactIdentityDocumentV10 {
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_> {
+        Cow::Owned(CompactIdentityDocumentV10 {
             username: self.username.clone(),
             blockstamp: self.blockstamp,
             pubkey: self.issuer,
             signature: self.signature,
-        }
+        })
     }
 }
 

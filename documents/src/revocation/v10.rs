@@ -169,11 +169,11 @@ impl TextDocument for RevocationDocumentV10 {
         &self.text
     }
 
-    fn to_compact_document(&self) -> Self::CompactTextDocument_ {
-        CompactRevocationDocumentV10 {
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_> {
+        Cow::Owned(CompactRevocationDocumentV10 {
             issuer: self.issuer,
             signature: self.signature,
-        }
+        })
     }
 }
 

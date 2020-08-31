@@ -186,13 +186,13 @@ impl TextDocument for CertificationDocumentV10 {
         &self.text
     }
 
-    fn to_compact_document(&self) -> Self::CompactTextDocument_ {
-        CompactCertificationDocumentV10 {
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_> {
+        Cow::Owned(CompactCertificationDocumentV10 {
             issuer: self.issuer,
             target: self.target,
             block_number: self.blockstamp().number,
             signature: self.signatures()[0],
-        }
+        })
     }
 }
 

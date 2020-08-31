@@ -194,8 +194,8 @@ impl TextDocument for MembershipDocumentV10 {
         }
     }
 
-    fn to_compact_document(&self) -> Self::CompactTextDocument_ {
-        self.clone()
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_> {
+        Cow::Borrowed(self)
     }
 }
 

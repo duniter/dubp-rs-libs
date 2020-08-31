@@ -280,22 +280,22 @@ impl Document for TransactionDocumentV10 {
 impl CompactTextDocument for TransactionDocumentV10 {
     fn as_compact_text(&self) -> String {
         let mut issuers_str = String::from("");
-        for issuer in self.issuers.clone() {
+        for issuer in &self.issuers {
             issuers_str.push_str("\n");
             issuers_str.push_str(&issuer.to_string());
         }
         let mut inputs_str = String::from("");
-        for input in self.inputs.clone() {
+        for input in &self.inputs {
             inputs_str.push_str("\n");
             inputs_str.push_str(&input.to_string());
         }
         let mut unlocks_str = String::from("");
-        for unlock in self.unlocks.clone() {
+        for unlock in &self.unlocks {
             unlocks_str.push_str("\n");
             unlocks_str.push_str(&unlock.to_string());
         }
         let mut outputs_str = String::from("");
-        for output in self.outputs.clone() {
+        for output in &self.outputs {
             outputs_str.push_str("\n");
             outputs_str.push_str(&output.to_string());
         }
@@ -304,7 +304,7 @@ impl CompactTextDocument for TransactionDocumentV10 {
             comment_str.push_str("\n");
         }
         let mut signatures_str = String::from("");
-        for sig in self.signatures.clone() {
+        for sig in &self.signatures {
             signatures_str.push_str(&sig.to_string());
             signatures_str.push_str("\n");
         }
@@ -341,8 +341,8 @@ impl TextDocument for TransactionDocumentV10 {
         }
     }
 
-    fn to_compact_document(&self) -> Self::CompactTextDocument_ {
-        self.clone()
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_> {
+        Cow::Borrowed(self)
     }
 }
 

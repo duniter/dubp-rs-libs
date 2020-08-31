@@ -52,8 +52,11 @@ impl UTXOConditions {
     }
     /// Check validity of this UTXOConditions
     pub fn check(&self) -> bool {
-        !(self.origin_str.is_some()
-            && self.origin_str.clone().expect("safe unwrap") != self.script.to_string())
+        if let Some(ref origin_str) = self.origin_str {
+            origin_str == self.script.to_string().as_str()
+        } else {
+            true
+        }
     }
 }
 
@@ -187,8 +190,8 @@ impl TextDocument for TransactionDocument {
         }
     }
 
-    fn to_compact_document(&self) -> Self::CompactTextDocument_ {
-        self.clone()
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_> {
+        Cow::Borrowed(self)
     }
 }
 

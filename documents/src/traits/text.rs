@@ -28,16 +28,16 @@ pub enum TextDocumentFormat<D: TextDocument> {
 
 impl<D: TextDocument> TextDocumentFormat<D> {
     /// To compact document
-    pub fn to_compact_document(&self) -> D::CompactTextDocument_ {
+    pub fn to_compact_document(&self) -> Cow<D::CompactTextDocument_> {
         match *self {
             TextDocumentFormat::Complete(ref doc) => doc.to_compact_document(),
-            TextDocumentFormat::Compact(ref compact_doc) => (*compact_doc).clone(),
+            TextDocumentFormat::Compact(ref compact_doc) => Cow::Borrowed(compact_doc),
         }
     }
 }
 
 /// Trait for a compact text document.
-pub trait CompactTextDocument: Sized + Clone {
+pub trait CompactTextDocument: Sized + Clone + PartialEq {
     /// Generate document compact text.
     /// the compact format is the one used in the blocks.
     ///
@@ -89,7 +89,7 @@ pub trait TextDocument: Document {
     /// Generate compact document.
     /// the compact format is the one used in the blocks.
     /// - Don't contains leading signatures
-    fn to_compact_document(&self) -> Self::CompactTextDocument_;
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_>;
 
     /// Generate document compact text.
     /// the compact format is the one used in the blocks.
