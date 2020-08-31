@@ -217,14 +217,12 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
                 issuers: svec![issuer1],
                 signatures: svec![sig2],
             };
-            // todo: gérer l'erreur avec PartialEq
-            /*
             assert_eq!(
                 doc.verify_signatures(),
-                Err(DocumentSigsErr::Invalid(vec![0]))
+                Err(DocumentSigsErr::Invalid(
+                    maplit::hashmap![0 => SigError::InvalidSig]
+                ))
             );
-            */
-            assert!(doc.verify_signatures().is_err());
         }
 
         {
@@ -234,14 +232,10 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
                 signatures: svec![sig1],
             };
 
-            // todo: gérer l'erreur avec PartialEq
-            /*
             assert_eq!(
                 doc.verify_signatures(),
                 Err(DocumentSigsErr::IncompletePairs(2, 1))
             );
-            */
-            assert!(doc.verify_signatures().is_err());
         }
 
         {
@@ -251,14 +245,10 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
                 signatures: svec![sig1, sig2],
             };
 
-            // todo: gérer l'erreur avec PartialEq
-            /*
             assert_eq!(
                 doc.verify_signatures(),
                 Err(DocumentSigsErr::IncompletePairs(1, 2))
             );
-            */
-            assert!(doc.verify_signatures().is_err());
         }
     }
 }

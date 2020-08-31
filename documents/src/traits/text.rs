@@ -75,16 +75,17 @@ pub trait TextDocument: Document {
         &text[0..(text.len() - sigs_str_len)]
     }
 
-    /*/// Return document as text with leading signatures.
+    /// Return document as text with leading signatures.
     fn as_text_with_signatures(&self) -> String {
         let mut text = self.as_text().to_string();
 
         for sig in self.signatures() {
-            text = format!("{}{}\n", text, sig.to_base64());
+            text.push_str(&sig.to_base64());
+            text.push('\n');
         }
 
         text
-    }*/
+    }
 
     /// Generate compact document.
     /// the compact format is the one used in the blocks.

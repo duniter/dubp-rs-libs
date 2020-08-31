@@ -255,33 +255,4 @@ mod tests {
             ]
         );
     }
-
-    /*#[test]
-    fn test_scrypt_c() {
-        let salt = b"JhxtHB7UcsDbA9wMSyMKXUzBZUQvqVyB32KwzS9SWoLkjrUhHV";
-        let password = b"JhxtHB7UcsDbA9wMSyMKXUzBZUQvqVyB32KwzS9SWoLkjrUhHV_";
-
-        let mut seed = [0u8; 32];
-        let now = std::time::Instant::now();
-        rust_scrypt::scrypt(
-            password,
-            salt,
-            &rust_scrypt::ScryptParams {
-                n: 4096,
-                r: 16,
-                p: 1,
-            },
-            &mut seed,
-        );
-        println!("{}", now.elapsed().as_millis());
-
-        assert_eq!(
-            seed,
-            [
-                144u8, 5, 70, 118, 105, 47, 173, 220, 39, 152, 105, 7, 211, 34, 125, 146, 183, 172,
-                41, 54, 154, 134, 125, 97, 1, 125, 241, 95, 96, 6, 79, 150
-            ]
-        );
-    }
-    */
 }

@@ -18,7 +18,7 @@
 use crate::*;
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-/// Wrap an Compact Revocation document (in block content)
+/// Wrap an Compact certification document (in block content)
 pub struct CompactCertificationDocumentV10 {
     /// Issuer
     pub issuer: ed25519::PublicKey,
@@ -315,15 +315,6 @@ mod tests {
             identity_sig,
             blockstamp,
         };
-
-        /*println!(
-            "Signatures = {:?}",
-            builder
-                .build_and_sign(vec![SignatorEnum::Ed25519(
-                    keypair.generate_signator().expect("fail to gen signator")
-                )])
-                .signatures()
-        );*/
 
         assert!(builder
             .build_with_signature(smallvec![sig])

@@ -299,15 +299,6 @@ mod tests {
             identity_blockstamp: blockstamp,
         };
 
-        /*println!(
-            "Signatures = {:?}",
-            builder
-                .build_and_sign(vec![SignatorEnum::Ed25519(
-                    keypair.generate_signator().expect("fail to gen signator")
-                )])
-                .signatures()
-        );*/
-
         assert!(builder
             .build_with_signature(smallvec![sig])
             .verify_signatures()

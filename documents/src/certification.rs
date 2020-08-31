@@ -32,6 +32,13 @@ pub enum CertificationDocument {
     V10(CertificationDocumentV10),
 }
 
+/// Wrap an Compact certification document (in block content)
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub enum CompactCertificationDocument {
+    /// Compact certification document v10
+    V10(CompactCertificationDocumentV10),
+}
+
 impl Document for CertificationDocument {
     type PublicKey = PubKey;
 
@@ -74,6 +81,32 @@ impl Document for CertificationDocument {
     fn as_bytes(&self) -> &[u8] {
         match self {
             CertificationDocument::V10(cert_v10) => cert_v10.as_bytes(),
+        }
+    }
+}
+
+impl TextDocument for CertificationDocument {
+    type CompactTextDocument_ = CompactCertificationDocument;
+
+    fn as_text(&self) -> &str {
+        match self {
+            CertificationDocument::V10(cert_v10) => cert_v10.as_text(),
+        }
+    }
+
+    fn to_compact_document(&self) -> Cow<Self::CompactTextDocument_> {
+        match self {
+            CertificationDocument::V10(cert_v10) => Cow::Owned(CompactCertificationDocument::V10(
+                cert_v10.to_compact_document().into_owned(),
+            )),
+        }
+    }
+}
+
+impl CompactTextDocument for CompactCertificationDocument {
+    fn as_compact_text(&self) -> String {
+        match self {
+            Self::V10(compact_cert_v10) => compact_cert_v10.as_compact_text(),
         }
     }
 }

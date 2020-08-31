@@ -61,13 +61,6 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
                             .get_bin_without_sig()
                             .map_err(|e| SigError::SerdeError(format!("{}", e)))?;
                         pubkey.verify(&signed_part, &sig)
-                        /*
-                        if pubkey.verify(&signed_part, &sig) {
-                            Ok(())
-                        } else {
-                            Err(SigError::InvalidSig())
-                        }
-                        */
                     }
                     _ => Err(SigError::NotSameAlgo),
                 },

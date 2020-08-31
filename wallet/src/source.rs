@@ -30,32 +30,121 @@ impl SourceAmount {
     pub fn with_base0(amount: isize) -> Self {
         Self { amount, base: 0 }
     }
+    pub fn increment_base(self) -> Self {
+        Self {
+            amount: self.amount / 10,
+            base: self.base + 1,
+        }
+    }
 }
 
 impl Add for SourceAmount {
     type Output = SourceAmount;
+
+    #[allow(clippy::comparison_chain)]
     fn add(self, a: SourceAmount) -> Self::Output {
         if self.base == a.base {
             SourceAmount {
                 amount: self.amount + a.amount,
                 base: self.base,
             }
+        } else if self.base > a.base {
+            self.add(a.increment_base())
         } else {
-            todo!()
+            self.increment_base().add(a)
         }
     }
 }
 
 impl Sub for SourceAmount {
     type Output = SourceAmount;
+
+    #[allow(clippy::comparison_chain)]
     fn sub(self, a: SourceAmount) -> Self::Output {
         if self.base == a.base {
             SourceAmount {
                 amount: self.amount - a.amount,
                 base: self.base,
             }
+        } else if self.base > a.base {
+            self.sub(a.increment_base())
         } else {
-            todo!()
+            self.increment_base().sub(a)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add_sources_amount() {
+        let sa1 = SourceAmount {
+            amount: 12,
+            base: 1,
+        };
+        let sa2 = SourceAmount {
+            amount: 24,
+            base: 1,
+        };
+        let sa3 = SourceAmount {
+            amount: 123,
+            base: 0,
+        };
+
+        assert_eq!(
+            SourceAmount {
+                amount: 36,
+                base: 1
+            },
+            sa1 + sa2,
+        );
+        assert_eq!(
+            SourceAmount {
+                amount: 36,
+                base: 1
+            },
+            sa2 + sa3,
+        );
+        assert_eq!(
+            SourceAmount {
+                amount: 36,
+                base: 1
+            },
+            sa3 + sa2,
+        );
+    }
+
+    #[test]
+    fn test_sub_sources_amount() {
+        let sa1 = SourceAmount {
+            amount: 12,
+            base: 1,
+        };
+        let sa2 = SourceAmount {
+            amount: 36,
+            base: 1,
+        };
+        let sa3 = SourceAmount {
+            amount: 123,
+            base: 0,
+        };
+
+        assert_eq!(
+            SourceAmount {
+                amount: 24,
+                base: 1
+            },
+            sa2 - sa1,
+        );
+        assert_eq!(
+            SourceAmount {
+                amount: 24,
+                base: 1
+            },
+            sa2 - sa3,
+        );
+        assert_eq!(SourceAmount { amount: 0, base: 1 }, sa3 - sa1,);
     }
 }

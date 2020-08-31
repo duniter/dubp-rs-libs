@@ -86,11 +86,11 @@ wqZxPEGxLrHGv8VdEIfUGvUcf+tDdNTMXjLzVRCQ4UhlhDRahOMjfcbP7byNYr5OfIl83S1MBxF7VJgu
             .expect("fail to parse test certification document !");
         println!("Doc : {:?}", doc);
         assert!(doc.verify_signatures().is_ok());
-        /*assert_eq!(
-            doc.generate_compact_text(),
-            "2sZF6j2PkxBDNAqUde7Dgo5x3crkerZpQ4rBqqJGn8QT:\
-            7jzkd8GiFnpys4X7mP78w2Y3y3kwdK6fVSLEaojd3aH9:99956:\
-            Hkps1QU4HxIcNXKT8YmprYTVByBhPP1U2tIM7Z8wENzLKIWAvQClkAvBE7pW9dnVa18sJIJhVZUcRrPAZfmjBA=="
-        );*/
+        assert_eq!(
+            doc.to_compact_document().as_compact_text(),
+            "5B8iMAzq1dNmFe3ZxFTBQkqhq4fsztg1gZvxHXCk1XYH:\
+            mMPioknj2MQCX9KyKykdw8qMRxYR2w1u3UpdiEJHgXg:167884:\
+            wqZxPEGxLrHGv8VdEIfUGvUcf+tDdNTMXjLzVRCQ4UhlhDRahOMjfcbP7byNYr5OfIl83S1MBxF7VJgu8YasCA=="
+        );
     }
 }

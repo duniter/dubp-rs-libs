@@ -51,16 +51,7 @@ pub trait TextSignable: Debug + Clone {
         if let Some(signature) = self.signature() {
             match self.issuer_pubkey() {
                 PubKey::Ed25519(pubkey) => match signature {
-                    Sig::Ed25519(sig) => {
-                        pubkey.verify(&self.as_signable_text().as_bytes(), &sig)
-                        /*
-                        if pubkey.verify(&self.as_signable_text().as_bytes(), &sig) {
-                            Ok(())
-                        } else {
-                            Err(SigError::InvalidSig())
-                        }
-                        */
-                    }
+                    Sig::Ed25519(sig) => pubkey.verify(&self.as_signable_text().as_bytes(), &sig),
                     _ => Err(SigError::NotSameAlgo),
                 },
                 _ => Err(SigError::NotSameAlgo),
