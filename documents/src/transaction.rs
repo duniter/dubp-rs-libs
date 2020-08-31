@@ -249,7 +249,7 @@ pub(super) mod tests {
     pub(super) fn tx_output_v10(amount: isize, recv: &str) -> TransactionOutputV10 {
         TransactionOutputV10 {
             amount: SourceAmount::with_base0(amount),
-            conditions: UTXOConditions::from(WalletScriptV10::Single(WalletConditionV10::Sig(
+            conditions: UTXOConditions::from(WalletScriptV10::single(WalletConditionV10::Sig(
                 unwrap!(ed25519::PublicKey::from_base58(recv)),
             ))),
         }

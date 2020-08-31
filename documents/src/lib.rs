@@ -36,7 +36,7 @@ pub mod transaction;
 // Re-export crates
 pub use dubp_wallet;
 pub use dubp_wallet::dubp_common;
-pub use smallvec;
+pub use dubp_wallet::smallvec;
 
 // prelude
 pub mod prelude {

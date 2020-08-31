@@ -20,11 +20,13 @@ mod source;
 
 // re-export crates
 pub use dubp_common;
+pub use smallvec;
 
 // prelude
 pub mod prelude {
     pub use crate::script::v10::{
-        ScriptNeverUnlockableError, WalletConditionV10, WalletScriptV10, WalletUnlockProofV10,
+        ScriptNeverUnlockableError, WalletConditionV10, WalletScriptNodesV10, WalletScriptV10,
+        WalletSubScriptV10, WalletUnlockProofV10,
     };
     pub use crate::source::v10::{SourceIdV10, SourceV10, UdSourceIdV10, UtxoIdV10};
     pub use crate::source::SourceAmount;
@@ -36,6 +38,7 @@ pub(crate) use dubp_common::crypto::hashs::Hash;
 pub(crate) use dubp_common::crypto::keys::ed25519::PublicKey;
 pub(crate) use dubp_common::prelude::*;
 pub(crate) use serde::{Deserialize, Serialize};
+pub(crate) use smallvec::SmallVec;
 pub(crate) use std::{
     collections::HashSet,
     fmt::Debug,

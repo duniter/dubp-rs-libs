@@ -27,6 +27,17 @@ pub(crate) fn tx_output_v10_from_str(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dubp_documents::smallvec::smallvec as svec;
+
+    #[inline(always)]
+    fn h(hash_str: &str) -> Hash {
+        unwrap!(Hash::from_hex(hash_str))
+    }
+
+    #[inline(always)]
+    fn pk(pk_b58: &str) -> ed25519::PublicKey {
+        unwrap!(PublicKey::from_base58(pk_b58))
+    }
 
     #[test]
     fn parse_tx_output_v10_single() -> Result<(), RawTextParseError> {
@@ -38,7 +49,7 @@ mod tests {
                     amount: 49,
                     base: 2,
                 },
-                conditions: UTXOConditions::from(WalletScriptV10::Single(WalletConditionV10::Sig(
+                conditions: UTXOConditions::from(WalletScriptV10::single(WalletConditionV10::Sig(
                     unwrap!(PublicKey::from_base58(
                         "6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i"
                     ))
@@ -53,6 +64,19 @@ mod tests {
     #[test]
     fn parse_tx_output_v10_or() -> Result<(), RawTextParseError> {
         let output_v10_str = "49:2:SIG(6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i) || XHX(3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA)";
+        let expected_script = WalletScriptV10 {
+            root: WalletSubScriptV10::Or(0, 1),
+            nodes: svec![
+                WalletSubScriptV10::Single(WalletConditionV10::Sig(pk(
+                    "6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i"
+                ))),
+                WalletSubScriptV10::Single(WalletConditionV10::Xhx(h(
+                    "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
+                )))
+            ],
+        };
+
+        assert_eq!(output_v10_str[5..], expected_script.to_string(),);
 
         assert_eq!(
             TransactionOutputV10 {
@@ -60,16 +84,7 @@ mod tests {
                     amount: 49,
                     base: 2,
                 },
-                conditions: UTXOConditions::from(WalletScriptV10::Or(
-                    Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(unwrap!(
-                        PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
-                    )))),
-                    Box::new(WalletScriptV10::Single(WalletConditionV10::Xhx(unwrap!(
-                        Hash::from_hex(
-                            "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
-                        )
-                    ))))
-                ))
+                conditions: UTXOConditions::from(expected_script)
             },
             tx_output_v10_from_str(output_v10_str)?
         );
@@ -80,6 +95,20 @@ mod tests {
     #[test]
     fn parse_tx_output_v10_or_in_brakets() -> Result<(), RawTextParseError> {
         let output_v10_str = "49:2:(SIG(6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i) || XHX(3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA))";
+        let expected_script = WalletScriptV10 {
+            root: WalletSubScriptV10::Brackets(2),
+            nodes: svec![
+                WalletSubScriptV10::Single(WalletConditionV10::Sig(pk(
+                    "6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i"
+                ))),
+                WalletSubScriptV10::Single(WalletConditionV10::Xhx(h(
+                    "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
+                ))),
+                WalletSubScriptV10::Or(0, 1),
+            ],
+        };
+
+        assert_eq!(output_v10_str[5..], expected_script.to_string(),);
 
         assert_eq!(
             TransactionOutputV10 {
@@ -87,18 +116,7 @@ mod tests {
                     amount: 49,
                     base: 2,
                 },
-                conditions: UTXOConditions::from(WalletScriptV10::Brackets(Box::new(
-                    WalletScriptV10::Or(
-                        Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(unwrap!(
-                            PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
-                        )))),
-                        Box::new(WalletScriptV10::Single(WalletConditionV10::Xhx(unwrap!(
-                            Hash::from_hex(
-                                "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
-                            )
-                        ))))
-                    )
-                )))
+                conditions: UTXOConditions::from(expected_script)
             },
             tx_output_v10_from_str(output_v10_str)?
         );
@@ -110,6 +128,23 @@ mod tests {
     fn parse_tx_output_v10_or_and() -> Result<(), RawTextParseError> {
         let output_v10_str =
             "49:2:SIG(6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i) || XHX(3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA) && SIG(42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp)";
+        let expected_script = WalletScriptV10 {
+            root: WalletSubScriptV10::Or(0, 3),
+            nodes: svec![
+                WalletSubScriptV10::Single(WalletConditionV10::Sig(pk(
+                    "6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i"
+                ))),
+                WalletSubScriptV10::Single(WalletConditionV10::Xhx(h(
+                    "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
+                ))),
+                WalletSubScriptV10::Single(WalletConditionV10::Sig(pk(
+                    "42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp"
+                ))),
+                WalletSubScriptV10::And(1, 2),
+            ],
+        };
+
+        assert_eq!(output_v10_str[5..], expected_script.to_string(),);
 
         assert_eq!(
             TransactionOutputV10 {
@@ -117,21 +152,7 @@ mod tests {
                     amount: 49,
                     base: 2,
                 },
-                conditions: UTXOConditions::from(WalletScriptV10::Or(
-                    Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(unwrap!(
-                        PublicKey::from_base58("6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i")
-                    )))),
-                    Box::new(WalletScriptV10::And(
-                        Box::new(WalletScriptV10::Single(WalletConditionV10::Xhx(unwrap!(
-                            Hash::from_hex(
-                                "3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA"
-                            )
-                        )))),
-                        Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(unwrap!(
-                            PublicKey::from_base58("42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp")
-                        )))),
-                    )),
-                ))
+                conditions: UTXOConditions::from(expected_script)
             },
             tx_output_v10_from_str(output_v10_str)?
         );

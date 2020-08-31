@@ -41,45 +41,42 @@ impl ToString for WalletUnlockProofV10 {
     }
 }
 
-/// Wrap a wallet script (= conditions for unlocking the sources of this wallet)
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub enum WalletScriptV10 {
+/// Wrap a wallet sub script (= conditions for unlocking the sources of this wallet)
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub enum WalletSubScriptV10 {
     /// Single
     Single(WalletConditionV10),
     /// Brackets
-    Brackets(Box<WalletScriptV10>),
+    Brackets(usize),
     /// And operator
-    And(Box<WalletScriptV10>, Box<WalletScriptV10>),
+    And(usize, usize),
     /// Or operator
-    Or(Box<WalletScriptV10>, Box<WalletScriptV10>),
+    Or(usize, usize),
 }
 
-impl ToString for WalletScriptV10 {
-    fn to_string(&self) -> String {
-        match *self {
-            Self::Single(ref condition) => condition.to_string(),
-            Self::Brackets(ref sub_script) => format!("({})", sub_script.to_string()),
-            Self::And(ref sub_script_1, ref sub_script_2) => format!(
+impl WalletSubScriptV10 {
+    fn to_raw_text(self, nodes: &[WalletSubScriptV10]) -> String {
+        match self {
+            Self::Single(cond) => cond.to_string(),
+            Self::Brackets(sub_script) => format!("({})", nodes[sub_script].to_raw_text(nodes)),
+            Self::And(sub_script_1, sub_script_2) => format!(
                 "{} && {}",
-                sub_script_1.to_string(),
-                sub_script_2.to_string()
+                nodes[sub_script_1].to_raw_text(nodes),
+                nodes[sub_script_2].to_raw_text(nodes),
             ),
-            Self::Or(ref sub_script_1, ref sub_script_2) => format!(
+            Self::Or(sub_script_1, sub_script_2) => format!(
                 "{} || {}",
-                sub_script_1.to_string(),
-                sub_script_2.to_string()
+                nodes[sub_script_1].to_raw_text(nodes),
+                nodes[sub_script_2].to_raw_text(nodes),
             ),
         }
     }
 }
 
-#[derive(Debug, Error, PartialEq)]
-#[error("Script never unlockable")]
-pub struct ScriptNeverUnlockableError;
-
-impl WalletScriptV10 {
-    pub(crate) fn unlockable_on(
-        &self,
+impl WalletSubScriptV10 {
+    fn unlockable_on(
+        self,
+        nodes: &[WalletSubScriptV10],
         signers: &HashSet<PublicKey>,
         codes_hash: &HashSet<Hash>,
         source_written_on: u64,
@@ -96,12 +93,14 @@ impl WalletScriptV10 {
                         (cond_unlockable_on, HashSet::with_capacity(0))
                     }
                 }),
-            Self::Brackets(script) => script.unlockable_on(signers, codes_hash, source_written_on),
-            Self::And(script1, script2) => {
-                let (script1_unlockable_on, script1_used_proofs) =
-                    script1.unlockable_on(signers, codes_hash, source_written_on)?;
-                let (script2_unlockable_on, script2_used_proofs) =
-                    script2.unlockable_on(signers, codes_hash, source_written_on)?;
+            Self::Brackets(sub_script_index) => {
+                nodes[sub_script_index].unlockable_on(nodes, signers, codes_hash, source_written_on)
+            }
+            Self::And(sub_script1_index, sub_script2_index) => {
+                let (script1_unlockable_on, script1_used_proofs) = nodes[sub_script1_index]
+                    .unlockable_on(nodes, signers, codes_hash, source_written_on)?;
+                let (script2_unlockable_on, script2_used_proofs) = nodes[sub_script2_index]
+                    .unlockable_on(nodes, signers, codes_hash, source_written_on)?;
                 Ok((
                     std::cmp::max(script1_unlockable_on, script2_unlockable_on),
                     script1_used_proofs
@@ -110,11 +109,19 @@ impl WalletScriptV10 {
                         .collect(),
                 ))
             }
-            Self::Or(script1, script2) => {
-                let script1_unlockable_on_res =
-                    script1.unlockable_on(signers, codes_hash, source_written_on);
-                let script2_unlockable_on_res =
-                    script2.unlockable_on(signers, codes_hash, source_written_on);
+            Self::Or(sub_script1_index, sub_script2_index) => {
+                let script1_unlockable_on_res = nodes[sub_script1_index].unlockable_on(
+                    nodes,
+                    signers,
+                    codes_hash,
+                    source_written_on,
+                );
+                let script2_unlockable_on_res = nodes[sub_script2_index].unlockable_on(
+                    nodes,
+                    signers,
+                    codes_hash,
+                    source_written_on,
+                );
                 match script1_unlockable_on_res {
                     Ok((script1_unlockable_on, script1_used_proofs)) => {
                         match script2_unlockable_on_res {
@@ -135,6 +142,62 @@ impl WalletScriptV10 {
         }
     }
 }
+
+pub type WalletScriptNodesV10 = SmallVec<[WalletSubScriptV10; 8]>;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct WalletScriptV10 {
+    pub root: WalletSubScriptV10,
+    pub nodes: WalletScriptNodesV10,
+}
+
+impl ToString for WalletScriptV10 {
+    fn to_string(&self) -> String {
+        self.root.to_raw_text(&self.nodes)
+    }
+}
+
+impl WalletScriptV10 {
+    pub fn single(condition: WalletConditionV10) -> Self {
+        WalletScriptV10 {
+            root: WalletSubScriptV10::Single(condition),
+            nodes: SmallVec::new(),
+        }
+    }
+    pub fn and(cond1: WalletConditionV10, cond2: WalletConditionV10) -> Self {
+        let mut nodes = SmallVec::new();
+        nodes.push(WalletSubScriptV10::Single(cond1));
+        nodes.push(WalletSubScriptV10::Single(cond2));
+
+        WalletScriptV10 {
+            root: WalletSubScriptV10::And(0, 1),
+            nodes,
+        }
+    }
+    pub fn or(cond1: WalletConditionV10, cond2: WalletConditionV10) -> Self {
+        let mut nodes = SmallVec::new();
+        nodes.push(WalletSubScriptV10::Single(cond1));
+        nodes.push(WalletSubScriptV10::Single(cond2));
+
+        WalletScriptV10 {
+            root: WalletSubScriptV10::Or(0, 1),
+            nodes,
+        }
+    }
+    pub(crate) fn unlockable_on(
+        &self,
+        signers: &HashSet<PublicKey>,
+        codes_hash: &HashSet<Hash>,
+        source_written_on: u64,
+    ) -> Result<(u64, HashSet<UsedProofV10>), ScriptNeverUnlockableError> {
+        self.root
+            .unlockable_on(&self.nodes, signers, codes_hash, source_written_on)
+    }
+}
+
+#[derive(Debug, Error, PartialEq)]
+#[error("Script never unlockable")]
+pub struct ScriptNeverUnlockableError;
 
 /// Wrap wallet condition (= one condition in wallet script)
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
@@ -199,6 +262,7 @@ mod tests {
     use super::*;
     use dubp_common::crypto::keys::PublicKey as _;
     use maplit::hashset;
+    use smallvec::smallvec as svec;
     use unwrap::unwrap;
 
     #[test]
@@ -208,10 +272,7 @@ mod tests {
         ));
         let cond1 = WalletConditionV10::Sig(p1);
         let cond2 = WalletConditionV10::Cltv(123);
-        let script = WalletScriptV10::Or(
-            Box::new(WalletScriptV10::Single(cond1)),
-            Box::new(WalletScriptV10::Single(cond2)),
-        );
+        let script = WalletScriptV10::or(cond1, cond2);
 
         assert_eq!(
             Ok((0, hashset![])),
@@ -230,10 +291,7 @@ mod tests {
         ));
         let cond1 = WalletConditionV10::Sig(p1);
         let cond2 = WalletConditionV10::Cltv(123);
-        let script = WalletScriptV10::And(
-            Box::new(WalletScriptV10::Single(cond1)),
-            Box::new(WalletScriptV10::Single(cond2)),
-        );
+        let script = WalletScriptV10::and(cond1, cond2);
 
         assert_eq!(
             Ok((123, hashset![UsedProofV10::Sig(p1)])),
@@ -257,13 +315,16 @@ mod tests {
         let cond2 = WalletConditionV10::Cltv(123);
         let cond3 = WalletConditionV10::Xhx(h1);
 
-        let script = WalletScriptV10::Or(
-            Box::new(WalletScriptV10::Single(cond3)),
-            Box::new(WalletScriptV10::Brackets(Box::new(WalletScriptV10::And(
-                Box::new(WalletScriptV10::Single(cond1)),
-                Box::new(WalletScriptV10::Single(cond2)),
-            )))),
-        );
+        let script = WalletScriptV10 {
+            root: WalletSubScriptV10::Or(0, 4),
+            nodes: svec![
+                WalletSubScriptV10::Single(cond3),
+                WalletSubScriptV10::Single(cond1),
+                WalletSubScriptV10::Single(cond2),
+                WalletSubScriptV10::And(1, 2),
+                WalletSubScriptV10::Brackets(3),
+            ],
+        };
 
         assert_eq!(
             "XHX(3D8BF2B661155EA073D80A1E1171212261AD4D21F2E41737BDE192871C469ABE) || (SIG(D7CYHJXjaH4j7zRdWngUbsURPnSnjsCYtvo6f8dvW3C) && CLTV(123))",

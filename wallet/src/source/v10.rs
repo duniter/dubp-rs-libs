@@ -109,10 +109,7 @@ mod tests {
     fn test_source_unlockable_on() {
         let p1 = pk("D7CYHJXjaH4j7zRdWngUbsURPnSnjsCYtvo6f8dvW3C");
         let p2 = pk("42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp");
-        let script = WalletScriptV10::Or(
-            Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(p1))),
-            Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(p2))),
-        );
+        let script = WalletScriptV10::or(WalletConditionV10::Sig(p1), WalletConditionV10::Sig(p2));
         let signers = vec![p1, p2];
         let proofs = vec![WalletUnlockProofV10::Sig(0), WalletUnlockProofV10::Sig(1)];
 

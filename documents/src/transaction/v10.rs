@@ -234,8 +234,9 @@ impl TransactionDocumentV10 {
         if let Some(hash) = self.hash {
             hash
         } else {
-            self.hash = Some(self.compute_hash());
-            self.hash.expect("unreach")
+            let hash = self.compute_hash();
+            self.hash = Some(hash);
+            hash
         }
     }
     /// Lightens the transaction (for example to store it while minimizing the space required)

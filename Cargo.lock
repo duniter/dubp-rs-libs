@@ -363,7 +363,6 @@ dependencies = [
  "pretty_assertions",
  "serde",
  "serde_json",
- "smallvec",
  "thiserror",
  "unwrap",
 ]
@@ -389,6 +388,7 @@ dependencies = [
  "maplit",
  "pretty_assertions",
  "serde",
+ "smallvec",
  "thiserror",
  "unwrap",
 ]
