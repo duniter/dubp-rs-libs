@@ -1,6 +1,6 @@
 [package]
 name = "dubp-wallet"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["elois <elois@duniter.org>"]
 description = "Provide wallet definition for DUBP protocol"
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
