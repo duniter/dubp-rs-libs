@@ -74,7 +74,7 @@ impl ToString for WalletScriptV10 {
 }
 
 #[derive(Debug, Error, PartialEq)]
-#[error("Script never  unlockable")]
+#[error("Script never unlockable")]
 pub struct ScriptNeverUnlockableError;
 
 impl WalletScriptV10 {
@@ -83,30 +83,53 @@ impl WalletScriptV10 {
         signers: &HashSet<PublicKey>,
         codes_hash: &HashSet<Hash>,
         source_written_on: u64,
-    ) -> Result<u64, ScriptNeverUnlockableError> {
+    ) -> Result<(u64, HashSet<UsedProofV10>), ScriptNeverUnlockableError> {
         match self {
-            Self::Single(cond) => cond.unlockable_on(signers, codes_hash, source_written_on),
+            Self::Single(cond) => cond
+                .unlockable_on(signers, codes_hash, source_written_on)
+                .map(|(cond_unlockable_on, used_proof_opt)| {
+                    if let Some(used_proof) = used_proof_opt {
+                        let mut used_proofs_set = HashSet::with_capacity(1);
+                        used_proofs_set.insert(used_proof);
+                        (cond_unlockable_on, used_proofs_set)
+                    } else {
+                        (cond_unlockable_on, HashSet::with_capacity(0))
+                    }
+                }),
             Self::Brackets(script) => script.unlockable_on(signers, codes_hash, source_written_on),
-            Self::And(script1, script2) => Ok(std::cmp::max(
-                script1.unlockable_on(signers, codes_hash, source_written_on)?,
-                script2.unlockable_on(signers, codes_hash, source_written_on)?,
-            )),
+            Self::And(script1, script2) => {
+                let (script1_unlockable_on, script1_used_proofs) =
+                    script1.unlockable_on(signers, codes_hash, source_written_on)?;
+                let (script2_unlockable_on, script2_used_proofs) =
+                    script2.unlockable_on(signers, codes_hash, source_written_on)?;
+                Ok((
+                    std::cmp::max(script1_unlockable_on, script2_unlockable_on),
+                    script1_used_proofs
+                        .union(&script2_used_proofs)
+                        .copied()
+                        .collect(),
+                ))
+            }
             Self::Or(script1, script2) => {
                 let script1_unlockable_on_res =
                     script1.unlockable_on(signers, codes_hash, source_written_on);
                 let script2_unlockable_on_res =
                     script2.unlockable_on(signers, codes_hash, source_written_on);
                 match script1_unlockable_on_res {
-                    Ok(script1_unlockable_on) => match script2_unlockable_on_res {
-                        Ok(script2_unlockable_on) => {
-                            Ok(std::cmp::min(script1_unlockable_on, script2_unlockable_on))
+                    Ok((script1_unlockable_on, script1_used_proofs)) => {
+                        match script2_unlockable_on_res {
+                            Ok((script2_unlockable_on, script2_used_proofs)) => Ok((
+                                std::cmp::min(script1_unlockable_on, script2_unlockable_on),
+                                if script2_used_proofs.len() < script1_used_proofs.len() {
+                                    script2_used_proofs
+                                } else {
+                                    script1_used_proofs
+                                },
+                            )),
+                            Err(_) => Ok((script1_unlockable_on, script1_used_proofs)),
                         }
-                        Err(_) => Ok(script1_unlockable_on),
-                    },
-                    Err(e) => match script2_unlockable_on_res {
-                        Ok(script2_unlockable_on) => Ok(script2_unlockable_on),
-                        Err(_) => Err(e),
-                    },
+                    }
+                    Err(_) => script2_unlockable_on_res,
                 }
             }
         }
@@ -137,30 +160,36 @@ impl ToString for WalletConditionV10 {
     }
 }
 
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+pub(crate) enum UsedProofV10 {
+    Sig(PublicKey),
+    CodeHash(Hash),
+}
+
 impl WalletConditionV10 {
     pub(crate) fn unlockable_on(
         &self,
         signers: &HashSet<PublicKey>,
         codes_hash: &HashSet<Hash>,
         source_written_on: u64,
-    ) -> Result<u64, ScriptNeverUnlockableError> {
+    ) -> Result<(u64, Option<UsedProofV10>), ScriptNeverUnlockableError> {
         match self {
             Self::Sig(pubkey) => {
                 if signers.contains(pubkey) {
-                    Ok(0)
+                    Ok((0, Some(UsedProofV10::Sig(*pubkey))))
                 } else {
                     Err(ScriptNeverUnlockableError)
                 }
             }
             Self::Xhx(code_hash) => {
                 if codes_hash.contains(code_hash) {
-                    Ok(0)
+                    Ok((0, Some(UsedProofV10::CodeHash(*code_hash))))
                 } else {
                     Err(ScriptNeverUnlockableError)
                 }
             }
-            Self::Cltv(timestamp) => Ok(*timestamp),
-            Self::Csv(duration_secs) => Ok(source_written_on + *duration_secs),
+            Self::Cltv(timestamp) => Ok((*timestamp, None)),
+            Self::Csv(duration_secs) => Ok((source_written_on + *duration_secs, None)),
         }
     }
 }
@@ -184,9 +213,12 @@ mod tests {
             Box::new(WalletScriptV10::Single(cond2)),
         );
 
-        assert_eq!(Ok(0), script.unlockable_on(&hashset![p1], &hashset![], 0),);
         assert_eq!(
-            Ok(123),
+            Ok((0, hashset![])),
+            script.unlockable_on(&hashset![p1], &hashset![], 0),
+        );
+        assert_eq!(
+            Ok((123, hashset![])),
             script.unlockable_on(&hashset![PublicKey::default()], &hashset![], 0),
         );
     }
@@ -203,7 +235,10 @@ mod tests {
             Box::new(WalletScriptV10::Single(cond2)),
         );
 
-        assert_eq!(Ok(123), script.unlockable_on(&hashset![p1], &hashset![], 0),);
+        assert_eq!(
+            Ok((123, hashset![UsedProofV10::Sig(p1)])),
+            script.unlockable_on(&hashset![p1], &hashset![], 0)
+        );
         assert_eq!(
             Err(ScriptNeverUnlockableError),
             script.unlockable_on(&hashset![PublicKey::default()], &hashset![], 0),
@@ -234,7 +269,10 @@ mod tests {
             "XHX(3D8BF2B661155EA073D80A1E1171212261AD4D21F2E41737BDE192871C469ABE) || (SIG(D7CYHJXjaH4j7zRdWngUbsURPnSnjsCYtvo6f8dvW3C) && CLTV(123))",
             script.to_string()
         );
-        assert_eq!(Ok(123), script.unlockable_on(&hashset![p1], &hashset![], 0),);
+        assert_eq!(
+            Ok((123, hashset![UsedProofV10::Sig(p1)])),
+            script.unlockable_on(&hashset![p1], &hashset![], 0),
+        );
     }
 
     #[test]
@@ -244,7 +282,10 @@ mod tests {
         ));
         let cond = WalletConditionV10::Sig(p1);
 
-        assert_eq!(Ok(0), cond.unlockable_on(&hashset![p1], &hashset![], 0),);
+        assert_eq!(
+            Ok((0, Some(UsedProofV10::Sig(p1)))),
+            cond.unlockable_on(&hashset![p1], &hashset![], 0),
+        );
         assert_eq!(
             Err(ScriptNeverUnlockableError),
             cond.unlockable_on(&hashset![PublicKey::default()], &hashset![], 0),
@@ -256,7 +297,10 @@ mod tests {
         let h1 = Hash::compute_str("1");
         let cond = WalletConditionV10::Xhx(h1);
 
-        assert_eq!(Ok(0), cond.unlockable_on(&hashset![], &hashset![h1], 0),);
+        assert_eq!(
+            Ok((0, Some(UsedProofV10::CodeHash(h1)))),
+            cond.unlockable_on(&hashset![], &hashset![h1], 0),
+        );
         assert_eq!(
             Err(ScriptNeverUnlockableError),
             cond.unlockable_on(&hashset![PublicKey::default()], &hashset![], 0),
@@ -267,13 +311,19 @@ mod tests {
     fn test_cltv_cond_unlockable_on() {
         let cond = WalletConditionV10::Cltv(123);
 
-        assert_eq!(Ok(123), cond.unlockable_on(&hashset![], &hashset![], 0),);
+        assert_eq!(
+            Ok((123, None)),
+            cond.unlockable_on(&hashset![], &hashset![], 0),
+        );
     }
 
     #[test]
     fn test_csv_cond_unlockable_on() {
         let cond = WalletConditionV10::Csv(123);
 
-        assert_eq!(Ok(369), cond.unlockable_on(&hashset![], &hashset![], 246),);
+        assert_eq!(
+            Ok((369, None)),
+            cond.unlockable_on(&hashset![], &hashset![], 246),
+        );
     }
 }

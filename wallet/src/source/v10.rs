@@ -41,12 +41,14 @@ pub struct UtxoIdV10 {
     pub output_index: usize,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq)]
 pub enum SourceV10NotUnlockableError {
+    #[error("{0}")]
+    ScriptNeverUnlockable(ScriptNeverUnlockableError),
     #[error("Too long signer index: {0}")]
     TooLongSignerIndex(usize),
-    #[error("{0}")]
-    ScriptNotVerified(ScriptNeverUnlockableError),
+    #[error("Too many proofs: found {found}, used {used}")]
+    TooManyProofs { found: usize, used: usize },
 }
 
 impl SourceV10 {
@@ -77,8 +79,60 @@ impl SourceV10 {
             }
         }
 
-        utxo_script
+        let (script_unlockable_on, used_proofs) = utxo_script
             .unlockable_on(&signers, &codes_hash, source_written_on)
-            .map_err(SourceV10NotUnlockableError::ScriptNotVerified)
+            .map_err(SourceV10NotUnlockableError::ScriptNeverUnlockable)?;
+
+        if used_proofs.len() < proofs.len() {
+            Err(SourceV10NotUnlockableError::TooManyProofs {
+                found: proofs.len(),
+                used: used_proofs.len(),
+            })
+        } else {
+            Ok(script_unlockable_on)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dubp_common::crypto::keys::PublicKey as _;
+    use unwrap::unwrap;
+
+    #[inline(always)]
+    fn pk(pk_b58: &str) -> PublicKey {
+        unwrap!(PublicKey::from_base58(pk_b58))
+    }
+
+    #[test]
+    fn test_source_unlockable_on() {
+        let p1 = pk("D7CYHJXjaH4j7zRdWngUbsURPnSnjsCYtvo6f8dvW3C");
+        let p2 = pk("42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp");
+        let script = WalletScriptV10::Or(
+            Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(p1))),
+            Box::new(WalletScriptV10::Single(WalletConditionV10::Sig(p2))),
+        );
+        let signers = vec![p1, p2];
+        let proofs = vec![WalletUnlockProofV10::Sig(0), WalletUnlockProofV10::Sig(1)];
+
+        assert_eq!(
+            Err(SourceV10NotUnlockableError::TooManyProofs { found: 2, used: 1 }),
+            SourceV10::unlockable_on(&signers, &proofs, 0, &script)
+        );
+        assert_eq!(
+            Err(SourceV10NotUnlockableError::TooLongSignerIndex(2)),
+            SourceV10::unlockable_on(&signers, &[WalletUnlockProofV10::Sig(2)], 0, &script)
+        );
+        assert_eq!(
+            Err(SourceV10NotUnlockableError::ScriptNeverUnlockable(
+                ScriptNeverUnlockableError
+            )),
+            SourceV10::unlockable_on(&signers, &[], 0, &script)
+        );
+        assert_eq!(
+            Ok(0),
+            SourceV10::unlockable_on(&signers, &[WalletUnlockProofV10::Sig(1)], 0, &script)
+        );
     }
 }
