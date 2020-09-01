@@ -283,6 +283,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "cryptoxide"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da24927b5b899890bcb29205436c957b7892ec3a3fbffce81d710b9611e77778"
+
+[[package]]
 name = "csv"
 version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -405,7 +411,9 @@ dependencies = [
  "bs58",
  "byteorder",
  "criterion",
+ "cryptoxide",
  "curve25519-dalek",
+ "getrandom",
  "ring",
  "serde",
  "sodiumoxide",
@@ -466,6 +474,7 @@ dependencies = [
  "cfg-if",
  "libc",
  "wasi",
+ "wasm-bindgen",
 ]
 
 [[package]]

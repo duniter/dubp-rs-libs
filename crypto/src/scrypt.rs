@@ -19,10 +19,25 @@
 
 pub mod params;
 
-use ring::pbkdf2::{self, PBKDF2_HMAC_SHA256};
 use std::{iter::repeat, mem::MaybeUninit, num::NonZeroU32, ptr};
 
 const ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1) };
+
+#[cfg(target_arch = "wasm32")]
+fn pbkdf2(salt: &[u8], password: &[u8], output: &mut [u8]) {
+    let mut hmac = cryptoxide::hmac::Hmac::new(cryptoxide::sha2::Sha256::new(), password);
+    cryptoxide::pbkdf2::pbkdf2(&mut hmac, salt, ITERATIONS.get(), output);
+}
+#[cfg(not(target_arch = "wasm32"))]
+fn pbkdf2(salt: &[u8], password: &[u8], output: &mut [u8]) {
+    ring::pbkdf2::derive(
+        ring::pbkdf2::PBKDF2_HMAC_SHA256,
+        ITERATIONS,
+        salt,
+        password,
+        output,
+    );
+}
 
 /**
  * The scrypt key derivation function.
@@ -48,13 +63,8 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &params::ScryptParams, outpu
     let nr128 = n * r128;
 
     let mut b: Vec<u8> = repeat(0).take(pr128).collect();
-    pbkdf2::derive(
-        PBKDF2_HMAC_SHA256,
-        ITERATIONS,
-        salt,
-        password,
-        b.as_mut_slice(),
-    );
+
+    pbkdf2(salt, password, b.as_mut_slice());
 
     let mut v: Vec<u8> = repeat(0).take(nr128).collect();
     let mut t: Vec<u8> = repeat(0).take(r128).collect();
@@ -63,7 +73,7 @@ pub fn scrypt(password: &[u8], salt: &[u8], params: &params::ScryptParams, outpu
         scrypt_ro_mix(chunk, v.as_mut_slice(), t.as_mut_slice(), n);
     }
 
-    pbkdf2::derive(PBKDF2_HMAC_SHA256, ITERATIONS, &b, password, output);
+    pbkdf2(&b, password, output);
 }
 
 // Execute the ROMix operation in-place.
@@ -245,7 +255,7 @@ mod tests {
             &params::ScryptParams::default(),
             seed.as_mut(),
         );
-        println!("{}", now.elapsed().as_secs());
+        println!("{} ms", now.elapsed().as_millis());
 
         assert_eq!(
             seed,

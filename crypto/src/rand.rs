@@ -16,6 +16,9 @@
 //! Manage random generation.
 
 use byteorder::ByteOrder;
+#[cfg(target_arch = "wasm32")]
+use getrandom::getrandom;
+#[cfg(not(target_arch = "wasm32"))]
 use ring::rand::{generate, SystemRandom};
 
 /// An error with absolutely no details.
@@ -59,6 +62,15 @@ pub fn gen_random_bytes(buffer: &mut [u8]) -> Result<(), UnspecifiedRandError> {
     Ok(())
 }
 
+#[cfg(target_arch = "wasm32")]
+#[inline]
+/// Generate random u32
+pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
+    let mut random_bytes = [0u8; 4];
+    getrandom(&mut random_bytes[..]).map_err(|_| UnspecifiedRandError)?;
+    Ok(byteorder::BigEndian::read_u32(&random_bytes))
+}
+#[cfg(not(target_arch = "wasm32"))]
 #[inline]
 /// Generate random u32
 pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
@@ -68,6 +80,15 @@ pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
     Ok(byteorder::BigEndian::read_u32(&random_bytes.expose()))
 }
 
+#[cfg(target_arch = "wasm32")]
+#[inline]
+/// Generate random 16 bytes
+pub fn gen_16_bytes() -> Result<[u8; 16], UnspecifiedRandError> {
+    let mut random_bytes = [0u8; 16];
+    getrandom(&mut random_bytes[..]).map_err(|_| UnspecifiedRandError)?;
+    Ok(random_bytes)
+}
+#[cfg(not(target_arch = "wasm32"))]
 #[inline]
 /// Generate random 16 bytes
 pub fn gen_16_bytes() -> Result<[u8; 16], UnspecifiedRandError> {
@@ -77,6 +98,15 @@ pub fn gen_16_bytes() -> Result<[u8; 16], UnspecifiedRandError> {
     Ok(random_bytes.expose())
 }
 
+#[cfg(target_arch = "wasm32")]
+#[inline]
+/// Generate random 32 bytes
+pub fn gen_32_bytes() -> Result<[u8; 32], UnspecifiedRandError> {
+    let mut random_bytes = [0u8; 32];
+    getrandom(&mut random_bytes[..]).map_err(|_| UnspecifiedRandError)?;
+    Ok(random_bytes)
+}
+#[cfg(not(target_arch = "wasm32"))]
 #[inline]
 /// Generate random 32 bytes
 pub fn gen_32_bytes() -> Result<[u8; 32], UnspecifiedRandError> {

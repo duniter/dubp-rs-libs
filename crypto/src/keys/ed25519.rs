@@ -28,6 +28,7 @@ use crate::rand::UnspecifiedRandError;
 #[cfg(feature = "scrypt")]
 use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
+#[cfg(not(target_arch = "wasm32"))]
 use ring::signature::{Ed25519KeyPair as RingKeyPair, KeyPair, UnparsedPublicKey, ED25519};
 use serde::{
     de::{Deserializer, Error, SeqAccess, Visitor},
@@ -277,6 +278,15 @@ impl super::PublicKey for PublicKey {
         self.as_ref().to_vec()
     }
 
+    #[cfg(target_arch = "wasm32")]
+    fn verify(&self, message: &[u8], signature: &Self::Signature) -> Result<(), SigError> {
+        if cryptoxide::ed25519::verify(message, self.datas.as_ref(), &signature.0[..]) {
+            Ok(())
+        } else {
+            Err(SigError::InvalidSig)
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     fn verify(&self, message: &[u8], signature: &Self::Signature) -> Result<(), SigError> {
         Ok(UnparsedPublicKey::new(&ED25519, self.datas.as_ref())
             .verify(message, &signature.0)
@@ -284,12 +294,37 @@ impl super::PublicKey for PublicKey {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+#[inline]
+fn get_cryptoxide_ed25519_pubkey(pubkey_bytes: [u8; 32]) -> PublicKey {
+    unwrap!(PublicKey::try_from(&pubkey_bytes[..]))
+}
+#[cfg(not(target_arch = "wasm32"))]
 #[inline]
 fn get_ring_ed25519_pubkey(ring_key_pair: &RingKeyPair) -> PublicKey {
     let ring_pubkey: <RingKeyPair as KeyPair>::PublicKey = *ring_key_pair.public_key();
     unwrap!(PublicKey::try_from(ring_pubkey.as_ref()))
 }
 
+#[cfg(target_arch = "wasm32")]
+/// Store a ed25519 cryptographic signator
+#[allow(missing_copy_implementations)]
+pub struct Signator {
+    public_key: PublicKey,
+    secret_key: [u8; 64],
+}
+#[cfg(target_arch = "wasm32")]
+impl Debug for Signator {
+    // Signature { 1eubHHb... }
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(
+            f,
+            "Signator {{ public_key: {}, secret_key: hidden }}",
+            self.public_key
+        )
+    }
+}
+#[cfg(not(target_arch = "wasm32"))]
 /// Store a ed25519 cryptographic signator
 #[derive(Debug)]
 pub struct Signator(RingKeyPair);
@@ -298,9 +333,20 @@ impl super::Signator for Signator {
     type Signature = Signature;
     type PublicKey = PublicKey;
 
+    #[cfg(target_arch = "wasm32")]
+    fn public_key(&self) -> Self::PublicKey {
+        self.public_key
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     fn public_key(&self) -> Self::PublicKey {
         get_ring_ed25519_pubkey(&self.0)
     }
+    #[cfg(target_arch = "wasm32")]
+    fn sign(&self, message: &[u8]) -> Self::Signature {
+        let sig_bytes = cryptoxide::ed25519::signature(message, &self.secret_key[..]);
+        Signature(sig_bytes)
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     fn sign(&self, message: &[u8]) -> Self::Signature {
         let mut sig_bytes = [0u8; 64];
         sig_bytes.copy_from_slice(self.0.sign(message).as_ref());
@@ -343,6 +389,15 @@ impl PartialEq<Ed25519KeyPair> for Ed25519KeyPair {
 impl super::KeyPair for Ed25519KeyPair {
     type Signator = Signator;
 
+    #[cfg(target_arch = "wasm32")]
+    fn generate_signator(&self) -> Self::Signator {
+        let (secret_key, public_key) = cryptoxide::ed25519::keypair(self.seed.as_ref());
+        Signator {
+            public_key: get_cryptoxide_ed25519_pubkey(public_key),
+            secret_key,
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     fn generate_signator(&self) -> Self::Signator {
         Signator(RingKeyPair::from_seed_unchecked(self.seed.as_ref()).expect("invalid seed"))
     }
@@ -369,6 +424,18 @@ impl super::KeyPair for Ed25519KeyPair {
 pub struct KeyPairFromSeed32Generator {}
 
 impl KeyPairFromSeed32Generator {
+    #[cfg(target_arch = "wasm32")]
+    /// Create a keypair based on a given seed.
+    ///
+    /// The [`PublicKey`](struct.PublicKey.html) will be able to verify messaged signed with
+    /// the [`PrivateKey`](struct.PrivateKey.html).
+    pub fn generate(seed: Seed32) -> Ed25519KeyPair {
+        Ed25519KeyPair {
+            pubkey: get_cryptoxide_ed25519_pubkey(cryptoxide::ed25519::keypair(seed.as_ref()).1),
+            seed,
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     /// Create a keypair based on a given seed.
     ///
     /// The [`PublicKey`](struct.PublicKey.html) will be able to verify messaged signed with

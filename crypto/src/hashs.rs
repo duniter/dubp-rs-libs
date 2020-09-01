@@ -36,6 +36,9 @@
 use crate::bases::*;
 #[cfg(feature = "rand")]
 use crate::rand::UnspecifiedRandError;
+#[cfg(target_arch = "wasm32")]
+use cryptoxide::{digest::Digest, sha2::Sha256};
+#[cfg(not(target_arch = "wasm32"))]
 use ring::digest;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display, Error, Formatter};
@@ -82,6 +85,16 @@ impl Hash {
         Ok(Hash(random_bytes))
     }
 
+    #[cfg(target_arch = "wasm32")]
+    /// Compute hash of any binary datas
+    pub fn compute(datas: &[u8]) -> Hash {
+        let mut hasher = Sha256::new();
+        hasher.input(datas);
+        let mut hash_buffer = [0u8; 32];
+        hasher.result(&mut hash_buffer);
+        Hash(hash_buffer)
+    }
+    #[cfg(not(target_arch = "wasm32"))]
     /// Compute hash of any binary datas
     pub fn compute(datas: &[u8]) -> Hash {
         let mut hash_buffer = [0u8; 32];
