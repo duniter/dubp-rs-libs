@@ -119,6 +119,34 @@ impl ToStringObject for DubpDocument {
     }
 }
 
+macro_rules! dubp_document_fn {
+    ($fn_name:ident, $return_type:ty) => {
+        fn $fn_name(&self) -> $return_type {
+            match self {
+                Self::Certification(doc) => doc.$fn_name(),
+                Self::Identity(doc) => doc.$fn_name(),
+                Self::Membership(doc) => doc.$fn_name(),
+                Self::Revocation(doc) => doc.$fn_name(),
+                Self::Transaction(doc) => doc.$fn_name(),
+            }
+        }
+    };
+}
+
+impl Document for DubpDocument {
+    type PublicKey = PubKey;
+
+    dubp_document_fn!(as_bytes, &[u8]);
+    dubp_document_fn!(blockstamp, Blockstamp);
+    dubp_document_fn!(currency, &str);
+    dubp_document_fn!(issuers, SmallVec<[Self::PublicKey; 1]>);
+    dubp_document_fn!(
+        signatures,
+        SmallVec<[<Self::PublicKey as PublicKey>::Signature; 1]>
+    );
+    dubp_document_fn!(version, usize);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
