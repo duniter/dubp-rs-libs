@@ -75,7 +75,7 @@ impl IdentityDocumentV10 {
         &self.username
     }
 
-    /// Lightens the membership (for example to store it while minimizing the space required)
+    /// Lightens the identity (for example to store it while minimizing the space required)
     pub fn reduce(&mut self) {
         self.text = None;
     }
