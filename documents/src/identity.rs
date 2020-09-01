@@ -67,7 +67,7 @@ impl Document for IdentityDocument {
     }
 
     #[inline]
-    fn as_bytes(&self) -> &[u8] {
+    fn as_bytes(&self) -> BeefCow<[u8]> {
         match self {
             IdentityDocument::V10(idty_v10) => idty_v10.as_bytes(),
         }

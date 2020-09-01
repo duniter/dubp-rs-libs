@@ -71,7 +71,7 @@ impl Document for MembershipDocument {
     }
 
     #[inline]
-    fn as_bytes(&self) -> &[u8] {
+    fn as_bytes(&self) -> BeefCow<[u8]> {
         match self {
             MembershipDocument::V10(ms_v10) => ms_v10.as_bytes(),
         }

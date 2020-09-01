@@ -273,8 +273,8 @@ impl Document for TransactionDocumentV10 {
         self.signatures.iter().copied().collect()
     }
 
-    fn as_bytes(&self) -> &[u8] {
-        self.as_text_without_signature().as_bytes()
+    fn as_bytes(&self) -> BeefCow<[u8]> {
+        BeefCow::borrowed(self.as_text_without_signature().as_bytes())
     }
 }
 

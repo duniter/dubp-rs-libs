@@ -78,7 +78,7 @@ impl Document for CertificationDocument {
     }
 
     #[inline]
-    fn as_bytes(&self) -> &[u8] {
+    fn as_bytes(&self) -> BeefCow<[u8]> {
         match self {
             CertificationDocument::V10(cert_v10) => cert_v10.as_bytes(),
         }

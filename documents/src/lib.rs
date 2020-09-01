@@ -50,6 +50,7 @@ pub mod prelude {
 // Crate imports
 pub(crate) use crate::prelude::*;
 pub(crate) use crate::transaction::{TransactionDocumentTrait, UTXOConditions};
+pub(crate) use beef::lean::Cow as BeefCow;
 pub(crate) use dubp_common::crypto::bases::b58::ToBase58;
 pub(crate) use dubp_common::crypto::hashs::Hash;
 pub(crate) use dubp_common::crypto::keys::*;
@@ -136,7 +137,7 @@ macro_rules! dubp_document_fn {
 impl Document for DubpDocument {
     type PublicKey = PubKey;
 
-    dubp_document_fn!(as_bytes, &[u8]);
+    dubp_document_fn!(as_bytes, BeefCow<[u8]>);
     dubp_document_fn!(blockstamp, Blockstamp);
     dubp_document_fn!(currency, &str);
     dubp_document_fn!(issuers, SmallVec<[Self::PublicKey; 1]>);
@@ -184,8 +185,8 @@ mod tests {
             self.signatures.iter().copied().collect()
         }
 
-        fn as_bytes(&self) -> &[u8] {
-            self.text.as_bytes()
+        fn as_bytes(&self) -> BeefCow<[u8]> {
+            BeefCow::borrowed(self.text.as_bytes())
         }
     }
 

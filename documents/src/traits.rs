@@ -30,7 +30,11 @@ pub trait Document: Debug + Clone + PartialEq + Eq {
     type PublicKey: PublicKey;
 
     /// Get document as bytes for signature verification.
-    fn as_bytes(&self) -> &[u8];
+    ///
+    /// Some documents do not directly store the sequence of bytes that will be signed but generate
+    // it on request, so these types of documents cannot provide a reference to the signed bytes.
+    /// This is why this method must return a `Cow<[u8]>` (we use the beef implementation instead of the std implementation).
+    fn as_bytes(&self) -> BeefCow<[u8]>;
 
     /// Get document blockstamp
     fn blockstamp(&self) -> Blockstamp;
@@ -40,17 +44,6 @@ pub trait Document: Debug + Clone + PartialEq + Eq {
 
     /// Iterate over document issuers.
     fn issuers(&self) -> SmallVec<[Self::PublicKey; 1]>;
-
-    /// Some documents do not directly store the sequence of bytes that will be signed but generate
-    // it on request, so these types of documents cannot provide a reference to the signed bytes.
-    fn no_as_bytes(&self) -> bool {
-        false
-    }
-
-    /// Get document to bytes for signature verification.
-    fn to_bytes(&self) -> Vec<u8> {
-        self.as_bytes().to_vec()
-    }
 
     /// Iterate over document signatures.
     fn signatures(&self) -> SmallVec<[<Self::PublicKey as PublicKey>::Signature; 1]>;
@@ -62,11 +55,7 @@ pub trait Document: Debug + Clone + PartialEq + Eq {
         public_key: &Self::PublicKey,
         signature: &<Self::PublicKey as PublicKey>::Signature,
     ) -> Result<(), SigError> {
-        if self.no_as_bytes() {
-            public_key.verify(&self.to_bytes(), signature)
-        } else {
-            public_key.verify(self.as_bytes(), signature)
-        }
+        public_key.verify(self.as_bytes().as_ref(), signature)
     }
 
     /// Verify signatures of document content

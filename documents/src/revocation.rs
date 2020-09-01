@@ -81,7 +81,7 @@ impl Document for RevocationDocument {
     }
 
     #[inline]
-    fn as_bytes(&self) -> &[u8] {
+    fn as_bytes(&self) -> BeefCow<[u8]> {
         match self {
             RevocationDocument::V10(revoc_v10) => revoc_v10.as_bytes(),
         }

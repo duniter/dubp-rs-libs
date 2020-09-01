@@ -174,8 +174,8 @@ impl Document for CertificationDocumentV10 {
         svec![self.signature]
     }
 
-    fn as_bytes(&self) -> &[u8] {
-        self.as_text_without_signature().as_bytes()
+    fn as_bytes(&self) -> BeefCow<[u8]> {
+        BeefCow::borrowed(self.as_text_without_signature().as_bytes())
     }
 }
 

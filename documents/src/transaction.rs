@@ -166,7 +166,7 @@ impl Document for TransactionDocument {
         }
     }
 
-    fn as_bytes(&self) -> &[u8] {
+    fn as_bytes(&self) -> BeefCow<[u8]> {
         match self {
             TransactionDocument::V10(tx_v10) => tx_v10.as_bytes(),
         }
