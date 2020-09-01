@@ -56,6 +56,12 @@ pub const SIG_SIZE_IN_BYTES: usize = 64;
 #[derive(Clone, Copy)]
 pub struct Signature(pub [u8; 64]);
 
+impl Default for Signature {
+    fn default() -> Self {
+        Signature([0u8; 64])
+    }
+}
+
 impl Hash for Signature {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.0.hash(state);
