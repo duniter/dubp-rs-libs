@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.20.0] - 2020-09-01
+
+### Added
+
+- Add support for target wasm32-unknown-unknown
+
 ## [0.15.0] - 2020-04-03
 
 ### Added
@@ -78,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dup-crypto-rs/compare/v0.15.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.20.0...HEAD
+[0.20.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.15.0...v0.20.0
 [0.15.0]: https://git.duniter.org/libs/dup-crypto-rs/compare/v0.14.0...v0.15.0
 [0.14.0]: https://git.duniter.org/libs/dup-crypto-rs/compare/v0.13.0...v0.14.0
 [0.13.0]: https://git.duniter.org/libs/dup-crypto-rs/compare/v0.12.1...v0.13.0
