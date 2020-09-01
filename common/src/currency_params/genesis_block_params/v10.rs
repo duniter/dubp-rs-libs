@@ -159,6 +159,8 @@ mod tests {
 
         let genesis_params = BlockV10Parameters::from_str(genesis_params_str)?;
 
+        assert_eq!(genesis_params_str, genesis_params.to_string());
+
         assert_eq!(
             BlockV10Parameters {
                 c: 0.0488,
