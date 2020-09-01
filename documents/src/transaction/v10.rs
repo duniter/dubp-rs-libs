@@ -300,10 +300,11 @@ impl CompactTextDocument for TransactionDocumentV10 {
             outputs_str.push_str("\n");
             outputs_str.push_str(&output.to_string());
         }
-        let mut comment_str = self.comment.clone();
-        if !comment_str.is_empty() {
-            comment_str.push_str("\n");
-        }
+        let comment_str = if self.comment.is_empty() {
+            String::with_capacity(0)
+        } else {
+            format!("{}\n", self.comment)
+        };
         let mut signatures_str = String::from("");
         for sig in &self.signatures {
             signatures_str.push_str(&sig.to_string());
