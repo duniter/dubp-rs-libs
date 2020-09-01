@@ -13,7 +13,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-dubp-common = { path = "../common", version = "0.4.1" }
+dubp-common = { path = "../common", version = "0.4.2" }
 serde = { version = "1.0.*", features = ["derive"] }
 smallvec = { version = "1.4.2", features = ["serde"] }
 thiserror = "1.0.20"
