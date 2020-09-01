@@ -46,7 +46,7 @@ pub mod prelude {
         Blockstamp, BlockstampFromBytesError, BlockstampParseError, PreviousBlockstamp,
     };
     pub use crate::bytes_traits::{AsBytes, FromBytes};
-    pub use crate::currency_name::CurrencyName;
+    pub use crate::currency_name::{CurrencyName, DEFAULT_CURRENCY};
     pub use crate::errors::{DocumentSigsErr, StringErr};
     pub use crate::unescape_str::unescape_str;
     pub use thiserror::Error;

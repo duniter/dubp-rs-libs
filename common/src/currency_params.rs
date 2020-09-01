@@ -21,8 +21,6 @@ pub use genesis_block_params::{BlockV10Parameters, GenesisBlockParams, ParsePara
 
 use crate::*;
 
-/// Default currency name
-pub const DEFAULT_CURRENCY: &str = "default_currency";
 /// Default value for sig_renew_period parameter
 pub static DEFAULT_SIG_RENEW_PERIOD: &u64 = &5_259_600;
 /// Default value for ms_period parameter

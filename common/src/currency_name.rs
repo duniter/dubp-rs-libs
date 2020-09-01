@@ -17,9 +17,18 @@
 
 use crate::*;
 
+/// Default currency name
+pub const DEFAULT_CURRENCY: &str = "default_currency";
+
 /// Currency name
 #[derive(Debug, Clone, Eq, Hash, PartialEq, Deserialize, Serialize)]
 pub struct CurrencyName(pub String);
+
+impl Default for CurrencyName {
+    fn default() -> Self {
+        CurrencyName(DEFAULT_CURRENCY.to_owned())
+    }
+}
 
 impl Display for CurrencyName {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
