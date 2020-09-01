@@ -195,7 +195,7 @@ impl WalletScriptV10 {
     }
 }
 
-#[derive(Debug, Error, PartialEq)]
+#[derive(Clone, Copy, Debug, Error, PartialEq)]
 #[error("Script never unlockable")]
 pub struct ScriptNeverUnlockableError;
 

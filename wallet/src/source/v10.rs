@@ -41,7 +41,7 @@ pub struct UtxoIdV10 {
     pub output_index: usize,
 }
 
-#[derive(Debug, Error, PartialEq)]
+#[derive(Clone, Copy, Debug, Error, PartialEq)]
 pub enum SourceV10NotUnlockableError {
     #[error("{0}")]
     ScriptNeverUnlockable(ScriptNeverUnlockableError),
