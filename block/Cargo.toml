@@ -1,0 +1,29 @@
+[package]
+name = "dubp-block"
+version = "0.1.0"
+authors = ["elois <elois@duniter.org>"]
+description = "Handle DUBP block (DUBP: DUniter Blockhain Protocol)."
+repository = "https://git.duniter.org/libs/dubp-rs-libs"
+readme = "README.md"
+keywords = ["duniter", "blockchain", "cryptocurrency", "block"]
+license = "AGPL-3.0"
+edition = "2018"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+dubp-documents = { path = "../documents", version = "0.21.0" }
+dubp-documents-parser = { path = "../documents-parser", version = "0.6.0" }
+json-pest-parser = "0.3.0"
+serde = { version = "1.0.*", features = ["derive"] }
+serde_json = "1.0.*"
+log = "0.4.*"
+thiserror = "1.0.20"
+unwrap = "1.2.1"
+
+[dev-dependencies]
+pretty_assertions = "0.6.1"
+#dubp-user-docs-tests-tools = { path = "../../tests-tools/user-docs-tests-tools" }
+
+[features]

@@ -21,7 +21,7 @@ use crate::*;
 
 pub use v10::{
     TransactionDocumentV10, TransactionDocumentV10Builder, TransactionDocumentV10Stringified,
-    TransactionInputV10, TransactionOutputV10,
+    TransactionInputUnlocksV10, TransactionInputV10, TransactionOutputV10,
 };
 
 /// Wrap an utxo conditions

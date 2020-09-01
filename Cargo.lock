@@ -355,6 +355,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "dubp-block"
+version = "0.1.0"
+dependencies = [
+ "dubp-documents",
+ "dubp-documents-parser",
+ "json-pest-parser",
+ "log",
+ "pretty_assertions",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "unwrap",
+]
+
+[[package]]
 name = "dubp-common"
 version = "0.4.2"
 dependencies = [

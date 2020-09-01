@@ -45,9 +45,6 @@ pub mod prelude {
     pub use crate::raw_text::{ParseFromRawText, Rule};
 }
 
-// Export technical types
-pub use crate::json::serde_json_value_to_pest_json_value;
-
 // Export profession types
 pub use crate::raw_text::wallet_script::wallet_script_from_str;
 
@@ -84,14 +81,12 @@ pub(crate) use dubp_documents::transaction::{
     TransactionOutputV10, UTXOConditions,
 };
 pub(crate) use dubp_wallet::prelude::*;
-pub(crate) use json_pest_parser::{JSONValue, Number};
 pub(crate) use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
 pub(crate) use pest_derive::Parser;
-pub(crate) use serde_json::Value;
-pub(crate) use std::{collections::HashMap, net::AddrParseError, num::ParseIntError, str::FromStr};
+pub(crate) use std::{net::AddrParseError, num::ParseIntError, str::FromStr};
 pub(crate) use thiserror::Error;
 pub(crate) use unwrap::unwrap;
 
