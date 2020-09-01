@@ -26,5 +26,4 @@ pretty_assertions = "0.6.1"
 unwrap = "1.2.1"
 
 [features]
-crypto_rand = ["dubp-wallet/crypto_rand"]
 crypto_scrypt = ["dubp-wallet/crypto_scrypt"]

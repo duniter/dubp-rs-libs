@@ -44,6 +44,7 @@ harness = false
 required-features = ["criterion"]
 
 [features]
+default = ["rand"]
 #default = ["dewif", "private_message", "pubkey_check", "rand"]
 
 dewif = ["aes", "arrayvec", "scrypt"]
