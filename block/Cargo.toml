@@ -23,7 +23,9 @@ thiserror = "1.0.20"
 unwrap = "1.2.1"
 
 [dev-dependencies]
+bincode = "1.2.0"
 pretty_assertions = "0.6.1"
 #dubp-user-docs-tests-tools = { path = "../../tests-tools/user-docs-tests-tools" }
 
 [features]
+crypto_scrypt = ["dubp-documents/crypto_scrypt"]

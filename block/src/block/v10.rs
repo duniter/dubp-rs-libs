@@ -29,7 +29,7 @@ use unwrap::unwrap;
 /// Wrap a Block document.
 ///
 /// Must be created by parsing a text document or using a builder.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
 pub struct DubpBlockV10 {
     /// Version
     pub version: usize,
@@ -356,7 +356,8 @@ Transactions:{transactions}
 }
 
 impl DubpBlockV10 {
-    /// Needed only for BMA
+    /// Needed only for BMA (to be removed)
+    #[cfg(not(tarpaulin_include))]
     pub fn as_compact_text(&self) -> String {
         let compact_inner_text = self.generate_compact_inner_text();
         format!(
@@ -371,7 +372,7 @@ impl DubpBlockV10 {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct DubpBlockV10Stringified {
     /// Version
     pub version: u64,
@@ -520,7 +521,77 @@ mod tests {
     use dubp_documents::certification::CertificationDocument;
     use dubp_documents::membership::MembershipDocument;
     use dubp_documents::transaction::TransactionDocument;
+    use pretty_assertions::assert_eq;
     use unwrap::unwrap;
+
+    #[test]
+    fn test_default_block_v10() {
+        let mut default_block = DubpBlockV10::default();
+
+        let mut default_stringified_block = default_block.to_string_object();
+        default_stringified_block.currency = String::with_capacity(0);
+        default_stringified_block.issuer = String::with_capacity(0);
+        assert_eq!(
+            default_stringified_block,
+            DubpBlockV10Stringified::default()
+        );
+
+        assert_eq!(default_block.common_time(), 0);
+        assert_eq!(default_block.current_frame_size(), 0);
+        assert_eq!(default_block.hash(), None);
+        assert_eq!(default_block.inner_hash(), None);
+        assert_eq!(default_block.issuers_count(), 0);
+        assert_eq!(default_block.members_count(), 0);
+        assert_eq!(default_block.number(), BlockNumber(0));
+        assert_eq!(default_block.pow_min(), 0);
+        assert_eq!(default_block.previous_blockstamp(), Blockstamp::default());
+        assert_eq!(default_block.previous_hash(), None);
+
+        // Inner hash
+        assert_eq!(None, default_block.inner_hash());
+        assert_eq!(
+            Err(VerifyBlockHashError::MissingHash {
+                block_number: BlockNumber(0)
+            }),
+            default_block.verify_inner_hash()
+        );
+        default_block.inner_hash = Some(Hash::default());
+        assert_eq!(
+            Err(VerifyBlockHashError::InvalidHash {
+                block_number: BlockNumber(0),
+                actual_hash: Hash::default(),
+                expected_hash: default_block.compute_inner_hash(),
+            }),
+            default_block.verify_inner_hash()
+        );
+
+        // Signature
+        assert_eq!(Err(SigError::NotSig), default_block.verify_signature());
+        default_block.signature = Some(Sig::Ed25519(ed25519::Signature::default()));
+        assert_eq!(Err(SigError::InvalidSig), default_block.verify_signature());
+        let signator = unwrap!(ed25519::Ed25519KeyPair::generate_random()).generate_signator();
+        default_block.issuer = PubKey::Ed25519(signator.public_key());
+        default_block.sign(&SignatorEnum::Ed25519(signator));
+        assert_eq!(Ok(()), default_block.verify_signature());
+
+        // Hash
+        assert_eq!(None, default_block.hash());
+        assert_eq!(
+            Err(VerifyBlockHashError::MissingHash {
+                block_number: BlockNumber(0)
+            }),
+            default_block.verify_hash()
+        );
+        default_block.hash = Some(BlockHash(Hash::default()));
+        assert_eq!(
+            Err(VerifyBlockHashError::InvalidHash {
+                block_number: BlockNumber(0),
+                actual_hash: Hash::default(),
+                expected_hash: default_block.compute_hash().0,
+            }),
+            default_block.verify_hash()
+        );
+    }
 
     #[test]
     fn generate_and_verify_empty_block() {
@@ -558,6 +629,7 @@ mod tests {
         // test inner_hash computation
         block.generate_inner_hash();
         println!("{}", block.generate_compact_inner_text());
+        assert!(block.verify_inner_hash().is_ok());
         assert_eq!(
             block
                 .inner_hash
@@ -569,6 +641,7 @@ mod tests {
         assert!(block.verify_signature().is_ok());
         // Test hash computation
         block.generate_hash();
+        assert!(block.verify_hash().is_ok());
         assert_eq!(
             block
                 .hash
@@ -659,6 +732,8 @@ a9PHPuSfw7jW8FRQHXFsGi/bnLjbtDnTYvEVgUC9u0WlR7GVofa+Xb+l5iy6NwuEXiwvueAkf08wPVY8
         // test inner_hash computation
         block.generate_inner_hash();
         println!("{}", block.generate_compact_inner_text());
+        assert!(block.verify_inner_hash().is_ok());
+
         assert_eq!(
             block
                 .inner_hash
@@ -669,52 +744,13 @@ a9PHPuSfw7jW8FRQHXFsGi/bnLjbtDnTYvEVgUC9u0WlR7GVofa+Xb+l5iy6NwuEXiwvueAkf08wPVY8
         // test generate_compact_inner_text()
         assert_eq!(
             block.generate_compact_inner_text(),
-            "Version: 10
-Type: Block
-Currency: g1
-Number: 107984
-PoWMin: 88
-Time: 1522685861
-MedianTime: 1522683184
-UnitBase: 0
-Issuer: DA4PYtXdvQqk1nCaprXH52iMsK5Ahxs1nRWbWKLhpVkQ
-IssuersFrame: 211
-IssuersFrameVar: 0
-DifferentIssuersCount: 42
-PreviousHash: 000001144968D0C3516BE6225E4662F182E28956AF46DD7FB228E3D0F9413FEB
-PreviousIssuer: D3krfq6J9AmfpKnS3gQVYoy7NzGCc61vokteTS8LJ4YH
-MembersCount: 896
-Identities:
-Joiners:
-Actives:
-Leavers:
-Revoked:
-Excluded:
-Certifications:
-6TAzLWuNcSqgNDNpAutrKpPXcGJwy1ZEMeVvZSZNs2e3:CYPsYTdt87Tx6cCiZs9KD4jqPgYxbcVEqVZpRgJ9jjoV:106669:UmseG2XKNwKcY8RFi6gUCT91udGnnNmSh7se10J1jeRVlwf+O2Tyb2Cccot9Dt7BO4+Kx2P6vFJB3oVGGHMxBA==
-Transactions:
-TX:10:1:1:1:1:1:0
-107982-000001242F6DA51C06A915A96C58BAA37AB3D1EB51F6E1C630C707845ACF764B
-8dkCwvAqSczUjKsoVMDPVbQ3i6bBQeBQYawL87kqTSQ3
-1002:0:D:8dkCwvAqSczUjKsoVMDPVbQ3i6bBQeBQYawL87kqTSQ3:106345
-0:SIG(0)
-1002:0:SIG(CitdnuQgZ45tNFCagay7Wh12gwwHM8VLej1sWmfHWnQX)
-DU symbolique pour demander le codage de nouvelles fonctionnalites cf. https://forum.monnaie-libre.fr/t/creer-de-nouvelles-fonctionnalites-dans-cesium-les-autres-applications/2025  Merci
-T0LlCcbIn7xDFws48H8LboN6NxxwNXXTovG4PROLf7tkUAueHFWjfwZFKQXeZEHxfaL1eYs3QspGtLWUHPRVCQ==
-TX:10:1:1:1:1:1:0
-107982-000001242F6DA51C06A915A96C58BAA37AB3D1EB51F6E1C630C707845ACF764B
-8dkCwvAqSczUjKsoVMDPVbQ3i6bBQeBQYawL87kqTSQ3
-1002:0:D:8dkCwvAqSczUjKsoVMDPVbQ3i6bBQeBQYawL87kqTSQ3:106614
-0:SIG(0)
-1002:0:SIG(78ZwwgpgdH5uLZLbThUQH7LKwPgjMunYfLiCfUCySkM8)
-DU symbolique pour demander le codage de nouvelles fonctionnalites cf. https://forum.monnaie-libre.fr/t/creer-de-nouvelles-fonctionnalites-dans-cesium-les-autres-applications/2025  Merci
-a9PHPuSfw7jW8FRQHXFsGi/bnLjbtDnTYvEVgUC9u0WlR7GVofa+Xb+l5iy6NwuEXiwvueAkf08wPVY8xrNcCg==
-"
+            "Version: 10\nType: Block\nCurrency: g1\nNumber: 107984\nPoWMin: 88\nTime: 1522685861\nMedianTime: 1522683184\nUnitBase: 0\nIssuer: DA4PYtXdvQqk1nCaprXH52iMsK5Ahxs1nRWbWKLhpVkQ\nIssuersFrame: 211\nIssuersFrameVar: 0\nDifferentIssuersCount: 42\nPreviousHash: 000001144968D0C3516BE6225E4662F182E28956AF46DD7FB228E3D0F9413FEB\nPreviousIssuer: D3krfq6J9AmfpKnS3gQVYoy7NzGCc61vokteTS8LJ4YH\nMembersCount: 896\nIdentities:\nJoiners:\nActives:\nLeavers:\nRevoked:\nExcluded:\nCertifications:\n6TAzLWuNcSqgNDNpAutrKpPXcGJwy1ZEMeVvZSZNs2e3:CYPsYTdt87Tx6cCiZs9KD4jqPgYxbcVEqVZpRgJ9jjoV:106669:UmseG2XKNwKcY8RFi6gUCT91udGnnNmSh7se10J1jeRVlwf+O2Tyb2Cccot9Dt7BO4+Kx2P6vFJB3oVGGHMxBA==\nTransactions:\nTX:10:1:1:1:1:1:0\n107982-000001242F6DA51C06A915A96C58BAA37AB3D1EB51F6E1C630C707845ACF764B\n8dkCwvAqSczUjKsoVMDPVbQ3i6bBQeBQYawL87kqTSQ3\n1002:0:D:8dkCwvAqSczUjKsoVMDPVbQ3i6bBQeBQYawL87kqTSQ3:106345\n0:SIG(0)\n1002:0:SIG(CitdnuQgZ45tNFCagay7Wh12gwwHM8VLej1sWmfHWnQX)\nDU symbolique pour demander le codage de nouvelles fonctionnalites cf. https://forum.monnaie-libre.fr/t/creer-de-nouvelles-fonctionnalites-dans-cesium-les-autres-applications/2025  Merci\nT0LlCcbIn7xDFws48H8LboN6NxxwNXXTovG4PROLf7tkUAueHFWjfwZFKQXeZEHxfaL1eYs3QspGtLWUHPRVCQ==\nTX:10:1:1:1:1:1:0\n107982-000001242F6DA51C06A915A96C58BAA37AB3D1EB51F6E1C630C707845ACF764B\n8dkCwvAqSczUjKsoVMDPVbQ3i6bBQeBQYawL87kqTSQ3\n1002:0:D:8dkCwvAqSczUjKsoVMDPVbQ3i6bBQeBQYawL87kqTSQ3:106614\n0:SIG(0)\n1002:0:SIG(78ZwwgpgdH5uLZLbThUQH7LKwPgjMunYfLiCfUCySkM8)\nDU symbolique pour demander le codage de nouvelles fonctionnalites cf. https://forum.monnaie-libre.fr/t/creer-de-nouvelles-fonctionnalites-dans-cesium-les-autres-applications/2025  Merci\na9PHPuSfw7jW8FRQHXFsGi/bnLjbtDnTYvEVgUC9u0WlR7GVofa+Xb+l5iy6NwuEXiwvueAkf08wPVY8xrNcCg==\n"
         );
         // Test signature validity
         assert!(block.verify_signature().is_ok());
         // Test hash computation
         block.generate_hash();
+        assert!(block.verify_hash().is_ok());
         assert_eq!(
             block
                 .hash
@@ -722,6 +758,20 @@ a9PHPuSfw7jW8FRQHXFsGi/bnLjbtDnTYvEVgUC9u0WlR7GVofa+Xb+l5iy6NwuEXiwvueAkf08wPVY8
                 .0
                 .to_hex(),
             "000004F8B84A3590243BA562E5F2BA379F55A0B387C5D6FAC1022DFF7FFE6014"
+        );
+
+        // Test reduce factor
+        let block_size = bincode::serialize(&block)
+            .expect("fail to serialize block")
+            .len();
+        block.reduce();
+        let block_reduced_size = bincode::serialize(&block)
+            .expect("fail to serialize block")
+            .len();
+        assert!(block_reduced_size < block_size);
+        println!(
+            "block reduction: {} octets -> {} octets",
+            block_size, block_reduced_size
         );
     }
 
@@ -838,6 +888,7 @@ nxr4exGrt16jteN9ZX3XZPP9l+X0OUbZ1o/QjE1hbWQNtVU3HhH9SJoEvNj2iVl3gCRr9u2OA9uj9vCy
         // test inner_hash computation
         block.generate_inner_hash();
         println!("{}", block.generate_compact_inner_text());
+        assert!(block.verify_inner_hash().is_ok());
         assert_eq!(
             block
                 .inner_hash
@@ -855,6 +906,7 @@ nxr4exGrt16jteN9ZX3XZPP9l+X0OUbZ1o/QjE1hbWQNtVU3HhH9SJoEvNj2iVl3gCRr9u2OA9uj9vCy
         assert!(block.verify_signature().is_ok());
         // Test hash computation
         block.generate_hash();
+        assert!(block.verify_hash().is_ok());
         assert_eq!(
             block
                 .hash

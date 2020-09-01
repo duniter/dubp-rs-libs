@@ -358,6 +358,7 @@ dependencies = [
 name = "dubp-block"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "dubp-documents",
  "dubp-documents-parser",
  "json-pest-parser",

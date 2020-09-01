@@ -102,6 +102,16 @@ macro_rules! dubp_block_fn {
         }
     };
 }
+macro_rules! dubp_block_fn_mut {
+    ($fn_name:ident) => {
+        #[inline(always)]
+        fn $fn_name(&mut self) {
+            match self {
+                DubpBlock::V10(block) => block.$fn_name(),
+            }
+        }
+    };
+}
 
 impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(compute_hash, BlockHash);
@@ -109,18 +119,8 @@ impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(compute_will_signed_string, String);
     dubp_block_fn!(current_frame_size, usize);
     dubp_block_fn!(generate_compact_inner_text, String);
-    #[inline(always)]
-    fn generate_hash(&mut self) {
-        match self {
-            DubpBlock::V10(block) => block.generate_hash(),
-        }
-    }
-    #[inline]
-    fn generate_inner_hash(&mut self) {
-        match self {
-            DubpBlock::V10(block) => block.generate_inner_hash(),
-        }
-    }
+    dubp_block_fn_mut!(generate_hash);
+    dubp_block_fn_mut!(generate_inner_hash);
     dubp_block_fn!(hash, Option<BlockHash>);
     dubp_block_fn!(inner_hash, Option<Hash>);
     dubp_block_fn!(issuers_count, usize);
@@ -130,12 +130,7 @@ impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(pow_min, usize);
     dubp_block_fn!(previous_blockstamp, Blockstamp);
     dubp_block_fn!(previous_hash, Option<Hash>);
-    #[inline]
-    fn reduce(&mut self) {
-        match self {
-            DubpBlock::V10(block) => block.reduce(),
-        }
-    }
+    dubp_block_fn_mut!(reduce);
     dubp_block_fn!(verify_inner_hash, Result<(), VerifyBlockHashError>);
     dubp_block_fn!(verify_signature, Result<(), SigError>);
     dubp_block_fn!(verify_hash, Result<(), VerifyBlockHashError>);

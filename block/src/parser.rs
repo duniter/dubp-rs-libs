@@ -247,62 +247,72 @@ mod tests {
    "raw": "Version: 10\nType: Block\nCurrency: g1\nNumber: 7\nPoWMin: 70\nTime: 1488987677\nMedianTime: 1488987394\nUnitBase: 0\nIssuer: 2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ\nIssuersFrame: 6\nIssuersFrameVar: 0\nDifferentIssuersCount: 1\nPreviousHash: 0000379BBE6ABC18DCFD6E4733F9F76CB06593D10FAEDF722BE190C277AC16EA\nPreviousIssuer: 2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ\nMembersCount: 59\nIdentities:\nJoiners:\nActives:\nLeavers:\nRevoked:\nExcluded:\nCertifications:\nTransactions:\nInnerHash: CF2701092D5A34A55802E343B5F8D61D9B7E8089F1F13A19721234DF5B2F0F38\nNonce: 10200000037108\n"
   }"#;
 
-        let block_json_value = json_pest_parser::parse_json_string(block_json_str)
+        let block_json_pest = json_pest_parser::parse_json_string(block_json_str)
             .expect("Fail to parse json block !");
-        assert_eq!(
-            DubpBlock::V10(DubpBlockV10 {
-                version: 10,
-                nonce: 10_200_000_037_108,
-                number: BlockNumber(7),
-                pow_min: 70,
-                time: 1_488_987_677,
-                median_time: 1_488_987_394,
-                members_count: 59,
-                monetary_mass: 59000,
-                unit_base: 0,
-                issuers_count: 1,
-                issuers_frame: 6,
-                issuers_frame_var: 0,
-                currency: CurrencyName("g1".to_owned()),
-                issuer: PubKey::Ed25519(
-                    ed25519::PublicKey::from_base58("2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ")
-                        .expect("Fail to parse issuer !")
-                ),
-                signature: Some(Sig::Ed25519(
-                    ed25519::Signature::from_base64("xaWNjdFeE4yr9+AKckgR6QuAvMzmKUWfY+uIlC3HKjn2apJqG70Gf59A71W+Ucz6E9WPXRzDDF/xOrf6GCGHCA==").expect("Fail to parse sig !")
-                )),
-                hash: Some(BlockHash(
-                    Hash::from_hex(
-                        "0000407900D981FC17B5A6FBCF8E8AFA4C00FAD7AFC5BEA9A96FF505E5D105EC"
-                    )
-                    .expect("Fail to parse hash !")
-                )),
-                parameters: None,
-                previous_hash: Some(Hash::from_hex(
-                    "0000379BBE6ABC18DCFD6E4733F9F76CB06593D10FAEDF722BE190C277AC16EA"
+        let block_json_serde =
+            serde_json::Value::from_str(block_json_str).expect("Fail to parse json block !");
+
+        let expected_block =             DubpBlock::V10(DubpBlockV10 {
+            version: 10,
+            nonce: 10_200_000_037_108,
+            number: BlockNumber(7),
+            pow_min: 70,
+            time: 1_488_987_677,
+            median_time: 1_488_987_394,
+            members_count: 59,
+            monetary_mass: 59000,
+            unit_base: 0,
+            issuers_count: 1,
+            issuers_frame: 6,
+            issuers_frame_var: 0,
+            currency: CurrencyName("g1".to_owned()),
+            issuer: PubKey::Ed25519(
+                ed25519::PublicKey::from_base58("2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ")
+                    .expect("Fail to parse issuer !")
+            ),
+            signature: Some(Sig::Ed25519(
+                ed25519::Signature::from_base64("xaWNjdFeE4yr9+AKckgR6QuAvMzmKUWfY+uIlC3HKjn2apJqG70Gf59A71W+Ucz6E9WPXRzDDF/xOrf6GCGHCA==").expect("Fail to parse sig !")
+            )),
+            hash: Some(BlockHash(
+                Hash::from_hex(
+                    "0000407900D981FC17B5A6FBCF8E8AFA4C00FAD7AFC5BEA9A96FF505E5D105EC"
                 )
-                .expect("Fail to parse previous_hash !")),
-                previous_issuer: Some(PubKey::Ed25519(
-                    ed25519::PublicKey::from_base58("2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ")
-                        .expect("Fail to parse previous issuer !")
-                )),
-                inner_hash: Some(
-                    Hash::from_hex(
-                        "CF2701092D5A34A55802E343B5F8D61D9B7E8089F1F13A19721234DF5B2F0F38"
-                    )
-                    .expect("Fail to parse inner hash !")
-                ),
-                dividend: None,
-                identities: vec![],
-                joiners: vec![],
-                actives: vec![],
-                leavers: vec![],
-                revoked: vec![],
-                excluded: vec![],
-                certifications: vec![],
-                transactions: vec![],
-            }),
-            parse_json_block(&block_json_value).expect("Fail to parse block_json_value !")
+                .expect("Fail to parse hash !")
+            )),
+            parameters: None,
+            previous_hash: Some(Hash::from_hex(
+                "0000379BBE6ABC18DCFD6E4733F9F76CB06593D10FAEDF722BE190C277AC16EA"
+            )
+            .expect("Fail to parse previous_hash !")),
+            previous_issuer: Some(PubKey::Ed25519(
+                ed25519::PublicKey::from_base58("2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ")
+                    .expect("Fail to parse previous issuer !")
+            )),
+            inner_hash: Some(
+                Hash::from_hex(
+                    "CF2701092D5A34A55802E343B5F8D61D9B7E8089F1F13A19721234DF5B2F0F38"
+                )
+                .expect("Fail to parse inner hash !")
+            ),
+            dividend: None,
+            identities: vec![],
+            joiners: vec![],
+            actives: vec![],
+            leavers: vec![],
+            revoked: vec![],
+            excluded: vec![],
+            certifications: vec![],
+            transactions: vec![],
+        });
+
+        assert_eq!(
+            expected_block,
+            parse_json_block(&block_json_pest).expect("Fail to parse block_json_pest !")
+        );
+        assert_eq!(
+            expected_block,
+            parse_json_block_from_serde_value(&block_json_serde)
+                .expect("Fail to parse block_json_serde !")
         );
     }
 
