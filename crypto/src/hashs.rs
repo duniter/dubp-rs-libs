@@ -86,6 +86,7 @@ impl Hash {
     }
 
     #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     /// Compute hash of any binary datas
     pub fn compute(datas: &[u8]) -> Hash {
         let mut hasher = Sha256::new();

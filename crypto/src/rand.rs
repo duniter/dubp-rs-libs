@@ -63,6 +63,7 @@ pub fn gen_random_bytes(buffer: &mut [u8]) -> Result<(), UnspecifiedRandError> {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[cfg(not(tarpaulin_include))]
 #[inline]
 /// Generate random u32
 pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
@@ -81,6 +82,7 @@ pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[cfg(not(tarpaulin_include))]
 #[inline]
 /// Generate random 16 bytes
 pub fn gen_16_bytes() -> Result<[u8; 16], UnspecifiedRandError> {
@@ -99,6 +101,7 @@ pub fn gen_16_bytes() -> Result<[u8; 16], UnspecifiedRandError> {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[cfg(not(tarpaulin_include))]
 #[inline]
 /// Generate random 32 bytes
 pub fn gen_32_bytes() -> Result<[u8; 32], UnspecifiedRandError> {

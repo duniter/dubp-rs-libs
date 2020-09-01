@@ -279,6 +279,7 @@ impl super::PublicKey for PublicKey {
     }
 
     #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     fn verify(&self, message: &[u8], signature: &Self::Signature) -> Result<(), SigError> {
         if cryptoxide::ed25519::verify(message, self.datas.as_ref(), &signature.0[..]) {
             Ok(())
@@ -295,6 +296,7 @@ impl super::PublicKey for PublicKey {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[cfg(not(tarpaulin_include))]
 #[inline]
 fn get_cryptoxide_ed25519_pubkey(pubkey_bytes: [u8; 32]) -> PublicKey {
     unwrap!(PublicKey::try_from(&pubkey_bytes[..]))
@@ -307,6 +309,7 @@ fn get_ring_ed25519_pubkey(ring_key_pair: &RingKeyPair) -> PublicKey {
 }
 
 #[cfg(target_arch = "wasm32")]
+#[cfg(not(tarpaulin_include))]
 /// Store a ed25519 cryptographic signator
 #[allow(missing_copy_implementations)]
 pub struct Signator {
@@ -314,6 +317,7 @@ pub struct Signator {
     secret_key: [u8; 64],
 }
 #[cfg(target_arch = "wasm32")]
+#[cfg(not(tarpaulin_include))]
 impl Debug for Signator {
     // Signature { 1eubHHb... }
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -334,6 +338,7 @@ impl super::Signator for Signator {
     type PublicKey = PublicKey;
 
     #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     fn public_key(&self) -> Self::PublicKey {
         self.public_key
     }
@@ -342,11 +347,13 @@ impl super::Signator for Signator {
         get_ring_ed25519_pubkey(&self.0)
     }
     #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     fn sign(&self, message: &[u8]) -> Self::Signature {
         let sig_bytes = cryptoxide::ed25519::signature(message, &self.secret_key[..]);
         Signature(sig_bytes)
     }
     #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(tarpaulin_include))]
     fn sign(&self, message: &[u8]) -> Self::Signature {
         let mut sig_bytes = [0u8; 64];
         sig_bytes.copy_from_slice(self.0.sign(message).as_ref());
@@ -390,6 +397,7 @@ impl super::KeyPair for Ed25519KeyPair {
     type Signator = Signator;
 
     #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     fn generate_signator(&self) -> Self::Signator {
         let (secret_key, public_key) = cryptoxide::ed25519::keypair(self.seed.as_ref());
         Signator {
@@ -425,6 +433,7 @@ pub struct KeyPairFromSeed32Generator {}
 
 impl KeyPairFromSeed32Generator {
     #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     /// Create a keypair based on a given seed.
     ///
     /// The [`PublicKey`](struct.PublicKey.html) will be able to verify messaged signed with

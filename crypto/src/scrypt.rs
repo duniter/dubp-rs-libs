@@ -24,6 +24,7 @@ use std::{iter::repeat, mem::MaybeUninit, num::NonZeroU32, ptr};
 const ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1) };
 
 #[cfg(target_arch = "wasm32")]
+#[cfg(not(tarpaulin_include))]
 fn pbkdf2(salt: &[u8], password: &[u8], output: &mut [u8]) {
     let mut hmac = cryptoxide::hmac::Hmac::new(cryptoxide::sha2::Sha256::new(), password);
     cryptoxide::pbkdf2::pbkdf2(&mut hmac, salt, ITERATIONS.get(), output);
