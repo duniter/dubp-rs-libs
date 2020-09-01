@@ -60,10 +60,10 @@ pub(crate) use smallvec::{smallvec as svec, SmallVec, ToSmallVec};
 pub(crate) use std::{borrow::Cow, collections::HashMap, fmt::Debug};
 
 /// User document of DUBP (DUniter Blockhain Protocol)
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum DubpDocument {
     /// Transaction document.
-    Transaction(Box<transaction::TransactionDocument>),
+    Transaction(transaction::TransactionDocument),
 
     /// Identity document.
     Identity(identity::IdentityDocument),
@@ -72,10 +72,10 @@ pub enum DubpDocument {
     Membership(membership::MembershipDocument),
 
     /// Certification document.
-    Certification(Box<certification::CertificationDocument>),
+    Certification(certification::CertificationDocument),
 
     /// Revocation document.
-    Revocation(Box<revocation::RevocationDocument>),
+    Revocation(revocation::RevocationDocument),
 }
 
 /// List of stringified user document types.
