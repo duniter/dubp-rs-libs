@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
-## [0.20.0] - 2020-09-02
+## [0.23.0] - 2020-09-02
+
+### Changed
+
+- Feature `x25519` need feature `pubkey_check`
+
+## [0.21.0] - 2020-09-02
 
 ### Added
 
@@ -91,7 +97,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.21.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.23.0...HEAD
+[0.23.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.21.0...v0.23.0
 [0.21.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.20.0...v0.21.0
 [0.20.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.15.0...v0.20.0
 [0.15.0]: https://git.duniter.org/libs/dup-crypto-rs/compare/v0.14.0...v0.15.0
