@@ -18,7 +18,10 @@
 pub mod v10;
 
 use crate::*;
-pub use v10::{DubpBlockV10, DubpBlockV10Stringified};
+pub use v10::{
+    DubpBlockV10, DubpBlockV10AfterPowData, DubpBlockV10Builder, DubpBlockV10Content,
+    DubpBlockV10Stringified,
+};
 
 /// Wrap a Block document.
 ///
@@ -42,32 +45,30 @@ pub enum VerifyBlockHashError {
 }
 
 pub trait DubpBlockTrait {
+    type Signator: Signator;
+
     /// Common time in block (also known as 'blockchain time')
     fn common_time(&self) -> u64;
     /// Compute hash
     fn compute_hash(&self) -> BlockHash {
-        BlockHash(Hash::compute_str(&self.compute_will_hashed_string()))
+        BlockHash(Hash::compute_str(&self.compute_hashed_string()))
     }
     /// Compute inner hash
     fn compute_inner_hash(&self) -> Hash {
-        Hash::compute_str(&self.generate_compact_inner_text())
+        Hash::compute(&self.generate_compact_inner_text().as_bytes())
     }
-    /// Compute the character string that will be hashed
-    fn compute_will_hashed_string(&self) -> String;
+    /// Compute the character string that hashed
+    fn compute_hashed_string(&self) -> String;
     /// Compute the character string that will be signed
-    fn compute_will_signed_string(&self) -> String;
+    fn compute_signed_string(&self) -> String;
     /// Get current frame size (in blocks)
     fn current_frame_size(&self) -> usize;
     /// Generate compact inner text (for compute inner_hash)
     fn generate_compact_inner_text(&self) -> String;
-    /// Compute hash and save it in document
-    fn generate_hash(&mut self);
-    /// Compute inner hash and save it in document
-    fn generate_inner_hash(&mut self);
     /// Get block hash
-    fn hash(&self) -> Option<BlockHash>;
+    fn hash(&self) -> BlockHash;
     /// Get block inner hash
-    fn inner_hash(&self) -> Option<Hash>;
+    fn inner_hash(&self) -> Hash;
     /// Get number of compute members in the current frame
     fn issuers_count(&self) -> usize;
     /// Get number of members in wot
@@ -77,7 +78,7 @@ pub trait DubpBlockTrait {
     /// Get common difficulty (PoW)
     fn pow_min(&self) -> usize;
     /// Get previous hash
-    fn previous_hash(&self) -> Option<Hash>;
+    fn previous_hash(&self) -> Hash;
     /// Get previous blockstamp
     fn previous_blockstamp(&self) -> Blockstamp;
     /// Lightens the block (for example to store it while minimizing the space required)
@@ -89,7 +90,7 @@ pub trait DubpBlockTrait {
     /// Verify block hash
     fn verify_hash(&self) -> Result<(), VerifyBlockHashError>;
     /// Sign block
-    fn sign(&mut self, signator: &SignatorEnum);
+    fn sign(&mut self, signator: &Self::Signator) -> Result<(), SignError>;
 }
 
 macro_rules! dubp_block_fn {
@@ -114,30 +115,36 @@ macro_rules! dubp_block_fn_mut {
 }
 
 impl DubpBlockTrait for DubpBlock {
+    type Signator = SignatorEnum;
+
     dubp_block_fn!(compute_hash, BlockHash);
-    dubp_block_fn!(compute_will_hashed_string, String);
-    dubp_block_fn!(compute_will_signed_string, String);
+    dubp_block_fn!(compute_hashed_string, String);
+    dubp_block_fn!(compute_signed_string, String);
     dubp_block_fn!(current_frame_size, usize);
     dubp_block_fn!(generate_compact_inner_text, String);
-    dubp_block_fn_mut!(generate_hash);
-    dubp_block_fn_mut!(generate_inner_hash);
-    dubp_block_fn!(hash, Option<BlockHash>);
-    dubp_block_fn!(inner_hash, Option<Hash>);
+    dubp_block_fn!(hash, BlockHash);
+    dubp_block_fn!(inner_hash, Hash);
     dubp_block_fn!(issuers_count, usize);
     dubp_block_fn!(members_count, usize);
     dubp_block_fn!(common_time, u64);
     dubp_block_fn!(number, BlockNumber);
     dubp_block_fn!(pow_min, usize);
     dubp_block_fn!(previous_blockstamp, Blockstamp);
-    dubp_block_fn!(previous_hash, Option<Hash>);
+    dubp_block_fn!(previous_hash, Hash);
     dubp_block_fn_mut!(reduce);
     dubp_block_fn!(verify_inner_hash, Result<(), VerifyBlockHashError>);
     dubp_block_fn!(verify_signature, Result<(), SigError>);
     dubp_block_fn!(verify_hash, Result<(), VerifyBlockHashError>);
     #[inline]
-    fn sign(&mut self, signator: &SignatorEnum) {
+    fn sign(&mut self, signator: &Self::Signator) -> Result<(), SignError> {
         match self {
-            DubpBlock::V10(block) => block.sign(signator),
+            DubpBlock::V10(block) => {
+                if let SignatorEnum::Ed25519(ed25519_signator) = signator {
+                    block.sign(ed25519_signator)
+                } else {
+                    Err(SignError::WrongAlgo)
+                }
+            }
         }
     }
 }

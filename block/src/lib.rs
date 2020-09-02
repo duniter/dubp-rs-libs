@@ -52,7 +52,10 @@ pub(crate) use serde_json::Value;
 pub(crate) use std::{collections::HashMap, convert::TryFrom, str::FromStr};
 pub(crate) use thiserror::Error;
 
-pub use block::{DubpBlock, DubpBlockStringified, DubpBlockV10, DubpBlockV10Stringified};
+pub use block::{
+    DubpBlock, DubpBlockStringified, DubpBlockV10, DubpBlockV10AfterPowData, DubpBlockV10Builder,
+    DubpBlockV10Content, DubpBlockV10Stringified,
+};
 
 #[cfg(test)]
 pub(crate) mod tests {
