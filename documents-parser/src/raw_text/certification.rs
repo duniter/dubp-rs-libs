@@ -2,7 +2,10 @@ use crate::*;
 
 impl FromPestPair for CertificationDocument {
     fn from_pest_pair(cert_pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
-        let cert_vx_pair = unwrap!(cert_pair.into_inner().next()); // get and unwrap the `cert_vX` rule; never fails
+        let cert_vx_pair = cert_pair
+            .into_inner()
+            .next()
+            .unwrap_or_else(|| unreachable!()); // get and unwrap the `cert_vX` rule; never fails
 
         match cert_vx_pair.as_rule() {
             Rule::cert_v10 => CertificationDocumentV10::from_pest_pair(cert_vx_pair)
@@ -27,7 +30,8 @@ impl FromPestPair for CertificationDocumentV10 {
             match field.as_rule() {
                 Rule::currency => currency = field.as_str(),
                 Rule::pubkey => pubkeys.push(
-                    unwrap!(ed25519::PublicKey::from_base58(field.as_str())), // Grammar ensures that we have a base58 string.
+                    ed25519::PublicKey::from_base58(field.as_str())
+                        .unwrap_or_else(|_| unreachable!()), // Grammar ensures that we have a base58 string.
                 ),
                 Rule::uid => {
                     uid = field.as_str();
@@ -35,16 +39,27 @@ impl FromPestPair for CertificationDocumentV10 {
                 Rule::blockstamp => {
                     let mut inner_rules = field.into_inner(); // { integer ~ "-" ~ hash }
 
-                    let block_number: &str = unwrap!(inner_rules.next()).as_str();
-                    let block_hash: &str = unwrap!(inner_rules.next()).as_str();
+                    let block_number: &str = inner_rules
+                        .next()
+                        .unwrap_or_else(|| unreachable!())
+                        .as_str();
+                    let block_hash: &str = inner_rules
+                        .next()
+                        .unwrap_or_else(|| unreachable!())
+                        .as_str();
                     blockstamps.push(Blockstamp {
-                        number: BlockNumber(unwrap!(block_number.parse())), // Grammar ensures that we have a digits string.
-                        hash: BlockHash(unwrap!(Hash::from_hex(block_hash))), // Grammar ensures that we have an hexadecimal string.
+                        number: BlockNumber(
+                            block_number.parse().unwrap_or_else(|_| unreachable!()),
+                        ), // Grammar ensures that we have a digits string.
+                        hash: BlockHash(
+                            Hash::from_hex(block_hash).unwrap_or_else(|_| unreachable!()),
+                        ), // Grammar ensures that we have an hexadecimal string.
                     });
                 }
                 Rule::ed25519_sig => {
                     sigs.push(
-                        unwrap!(ed25519::Signature::from_base64(field.as_str())), // Grammar ensures that we have a base64 string.
+                        ed25519::Signature::from_base64(field.as_str())
+                            .unwrap_or_else(|_| unreachable!()), // Grammar ensures that we have a base64 string.
                     );
                 }
                 Rule::EOI => (),
@@ -68,6 +83,7 @@ impl FromPestPair for CertificationDocumentV10 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use unwrap::unwrap;
 
     #[test]
     fn parse_certification_document() {
@@ -82,8 +98,7 @@ IdtySignature: SmSweUD4lEMwiZfY8ux9maBjrQQDkC85oMNsin6oSQCPdXG8sFCZ4FisUaWqKsfOl
 CertTimestamp: 167884-0001DFCA28002A8C96575E53B8CEF8317453A7B0BA255542CCF0EC8AB5E99038
 wqZxPEGxLrHGv8VdEIfUGvUcf+tDdNTMXjLzVRCQ4UhlhDRahOMjfcbP7byNYr5OfIl83S1MBxF7VJgu8YasCA==";
 
-        let doc = CertificationDocument::parse_from_raw_text(doc)
-            .expect("fail to parse test certification document !");
+        let doc = unwrap!(CertificationDocument::parse_from_raw_text(doc));
         println!("Doc : {:?}", doc);
         assert!(doc.verify_signatures().is_ok());
         assert_eq!(

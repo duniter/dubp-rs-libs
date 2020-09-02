@@ -5,7 +5,8 @@ pub(crate) fn tx_input_v10_from_str(
 ) -> Result<TransactionInputV10, RawTextParseError> {
     let mut doc_pairs = RawDocumentsParser::parse(Rule::tx_input, source)
         .map_err(|e| RawTextParseError::PestError(e.into()))?;
-    TransactionInputV10::from_pest_pair(unwrap!(doc_pairs.next())) // get and unwrap the `tx_input` rule; never fails
+    TransactionInputV10::from_pest_pair(doc_pairs.next().unwrap_or_else(|| unreachable!()))
+    // get and unwrap the `tx_input` rule; never fails
 }
 
 pub(crate) fn tx_unlock_v10_from_str(
@@ -13,7 +14,8 @@ pub(crate) fn tx_unlock_v10_from_str(
 ) -> Result<TransactionInputUnlocksV10, RawTextParseError> {
     let mut doc_pairs = RawDocumentsParser::parse(Rule::tx_unlock, source)
         .map_err(|e| RawTextParseError::PestError(e.into()))?;
-    TransactionInputUnlocksV10::from_pest_pair(unwrap!(doc_pairs.next())) // get and unwrap the `tx_unlock` rule; never fails
+    TransactionInputUnlocksV10::from_pest_pair(doc_pairs.next().unwrap_or_else(|| unreachable!()))
+    // get and unwrap the `tx_unlock` rule; never fails
 }
 
 pub(crate) fn tx_output_v10_from_str(
@@ -21,7 +23,8 @@ pub(crate) fn tx_output_v10_from_str(
 ) -> Result<TransactionOutputV10, RawTextParseError> {
     let mut doc_pairs = RawDocumentsParser::parse(Rule::tx_output, source)
         .map_err(|e| RawTextParseError::PestError(e.into()))?;
-    TransactionOutputV10::from_pest_pair(unwrap!(doc_pairs.next())) // get and unwrap the `tx_output` rule; never fails
+    TransactionOutputV10::from_pest_pair(doc_pairs.next().unwrap_or_else(|| unreachable!()))
+    // get and unwrap the `tx_output` rule; never fails
 }
 
 #[cfg(test)]
@@ -29,6 +32,7 @@ mod tests {
     use super::*;
     use crate::tests::*;
     use dubp_documents::smallvec::smallvec as svec;
+    use unwrap::unwrap;
 
     #[test]
     fn parse_tx_output_v10_single() -> Result<(), RawTextParseError> {

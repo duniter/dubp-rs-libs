@@ -88,7 +88,6 @@ pub(crate) use pest::{
 pub(crate) use pest_derive::Parser;
 pub(crate) use std::{net::AddrParseError, num::ParseIntError, str::FromStr};
 pub(crate) use thiserror::Error;
-pub(crate) use unwrap::unwrap;
 
 /// Error with pest parser (grammar)
 #[derive(Debug, Clone, Eq, Error, PartialEq)]

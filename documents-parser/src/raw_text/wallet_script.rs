@@ -3,13 +3,14 @@ use crate::*;
 pub fn wallet_script_from_str(source: &str) -> Result<WalletScriptV10, RawTextParseError> {
     let mut pairs = RawDocumentsParser::parse(Rule::output_conds, source)
         .map_err(|e| RawTextParseError::PestError(e.into()))?;
-    WalletScriptV10::from_pest_pair(unwrap!(pairs.next())) // get and unwrap the `output_conds` rule; never fails
+    WalletScriptV10::from_pest_pair(pairs.next().unwrap_or_else(|| unreachable!()))
+    // get and unwrap the `output_conds` rule; never fails
 }
 
 impl FromPestPair for WalletScriptV10 {
     fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
         let mut pairs = pair.into_inner();
-        let term_left_pair = unwrap!(pairs.next());
+        let term_left_pair = pairs.next().unwrap_or_else(|| unreachable!());
 
         let mut nodes = SmallVec::new();
 
@@ -24,20 +25,40 @@ impl FromPestPair for WalletConditionV10 {
     #[inline]
     fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
         Ok(match pair.as_rule() {
-            Rule::output_cond_sig => WalletConditionV10::Sig(unwrap!(
-                ed25519::PublicKey::from_base58(unwrap!(pair.into_inner().next()).as_str())
-            )),
-            Rule::output_cond_xhx => WalletConditionV10::Xhx(unwrap!(Hash::from_hex(
-                unwrap!(pair.into_inner().next()).as_str()
-            ))),
-            Rule::output_cond_csv => {
-                WalletConditionV10::Csv(unwrap!(unwrap!(pair.into_inner().next()).as_str().parse()))
-            }
-            Rule::output_cond_cltv => {
-                WalletConditionV10::Cltv(unwrap!(unwrap!(pair.into_inner().next())
+            Rule::output_cond_sig => WalletConditionV10::Sig(
+                ed25519::PublicKey::from_base58(
+                    pair.into_inner()
+                        .next()
+                        .unwrap_or_else(|| unreachable!())
+                        .as_str(),
+                )
+                .unwrap_or_else(|_| unreachable!()),
+            ),
+            Rule::output_cond_xhx => WalletConditionV10::Xhx(
+                Hash::from_hex(
+                    pair.into_inner()
+                        .next()
+                        .unwrap_or_else(|| unreachable!())
+                        .as_str(),
+                )
+                .unwrap_or_else(|_| unreachable!()),
+            ),
+            Rule::output_cond_csv => WalletConditionV10::Csv(
+                pair.into_inner()
+                    .next()
+                    .unwrap_or_else(|| unreachable!())
                     .as_str()
-                    .parse()))
-            }
+                    .parse()
+                    .unwrap_or_else(|_| unreachable!()),
+            ),
+            Rule::output_cond_cltv => WalletConditionV10::Cltv(
+                pair.into_inner()
+                    .next()
+                    .unwrap_or_else(|| unreachable!())
+                    .as_str()
+                    .parse()
+                    .unwrap_or_else(|_| unreachable!()),
+            ),
             r => panic!("unexpected rule: {:?}", r), // Grammar ensures that we never reach this line
         })
     }
@@ -48,18 +69,19 @@ fn parse_term(pair: Pair<Rule>, nodes: &mut WalletScriptNodesV10) -> WalletSubSc
     match pair.as_rule() {
         Rule::output_conds_brackets_expr => {
             let mut pairs = pair.into_inner();
-            let term_left_pair = unwrap!(pairs.next());
+            let term_left_pair = pairs.next().unwrap_or_else(|| unreachable!());
             let term_left = parse_term(term_left_pair, nodes);
             let sub_root = parse_op(term_left, pairs, nodes);
             let sub_script = WalletSubScriptV10::Brackets(nodes.len());
             nodes.push(sub_root);
             sub_script
         }
-        Rule::output_single_cond => {
-            WalletSubScriptV10::Single(unwrap!(WalletConditionV10::from_pest_pair(unwrap!(pair
-                .into_inner()
-                .next()))))
-        }
+        Rule::output_single_cond => WalletSubScriptV10::Single(
+            WalletConditionV10::from_pest_pair(
+                pair.into_inner().next().unwrap_or_else(|| unreachable!()),
+            )
+            .unwrap_or_else(|_| unreachable!()),
+        ),
         r => panic!("unexpected rule: {:?}", r), // Grammar ensures that we never reach this line
     }
 }
@@ -72,7 +94,7 @@ fn parse_op(
     if let Some(pair) = pairs.next() {
         let left_index = nodes.len();
         nodes.push(left);
-        let next_left_term = parse_term(unwrap!(pairs.next()), nodes);
+        let next_left_term = parse_term(pairs.next().unwrap_or_else(|| unreachable!()), nodes);
         let right = parse_op(next_left_term, pairs, nodes);
         let right_index = nodes.len();
         nodes.push(right);

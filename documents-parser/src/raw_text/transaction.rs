@@ -5,7 +5,7 @@ pub(crate) mod v10;
 impl FromPestPair for TransactionDocument {
     #[inline]
     fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
-        let tx_vx_pair = unwrap!(pair.into_inner().next()); // get and unwrap the `tx_vX` rule; never fails
+        let tx_vx_pair = pair.into_inner().next().unwrap_or_else(|| unreachable!()); // get and unwrap the `tx_vX` rule; never fails
 
         match tx_vx_pair.as_rule() {
             Rule::tx_v10 => {
@@ -22,6 +22,7 @@ impl FromPestPair for TransactionDocument {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use unwrap::unwrap;
 
     #[test]
     fn parse_transaction_document() {
@@ -57,8 +58,7 @@ kL59C1izKjcRN429AlKdshwhWbasvyL7sthI757zm1DfZTdTIctDWlKbYeG/tS7QyAgI3gcfrTHPhu1E
 e3LpgB2RZ/E/BCxPJsn+TDDyxGYzrIsMyDt//KhJCjIQD6pNUxr5M5jrq2OwQZgwmz91YcmoQ2XRQAUDpe4BAw==
 w69bYgiQxDmCReB0Dugt9BstXlAKnwJkKCdWvCeZ9KnUCv0FJys6klzYk/O/b9t74tYhWZSX0bhETWHiwfpWBw==";
 
-        let doc = TransactionDocument::parse_from_raw_text(doc)
-            .expect("fail to parse test transaction document !");
+        let doc = unwrap!(TransactionDocument::parse_from_raw_text(doc));
         //println!("Doc : {:?}", doc);
         println!("{}", doc.generate_compact_text());
         assert!(doc.verify_signatures().is_ok());

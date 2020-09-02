@@ -30,7 +30,8 @@ macro_rules! impl_parse_from_raw_text {
             fn parse_from_raw_text(doc: &str) -> Result<Self, RawTextParseError> {
                 let mut doc_pairs = RawDocumentsParser::parse($Rule, doc)
                     .map_err(|e| RawTextParseError::PestError(e.into()))?;
-                Self::from_pest_pair(unwrap!(doc_pairs.next())) // get and unwrap the `$Rule` rule; never fails
+                Self::from_pest_pair(doc_pairs.next().unwrap_or_else(|| unreachable!()))
+                // get and unwrap the `$Rule` rule; never fails
             }
         }
     };

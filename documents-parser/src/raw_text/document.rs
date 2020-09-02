@@ -3,7 +3,7 @@ use crate::*;
 impl FromPestPair for DubpDocument {
     #[inline]
     fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
-        let doc_vx_pair = unwrap!(pair.into_inner().next()); // get and unwrap the `document_vX` rule; never fails
+        let doc_vx_pair = pair.into_inner().next().unwrap_or_else(|| unreachable!()); // get and unwrap the `document_vX` rule; never fails
 
         match doc_vx_pair.as_rule() {
             Rule::document_v10 => dubp_doc_from_pest_pair_v10(doc_vx_pair),
@@ -13,7 +13,7 @@ impl FromPestPair for DubpDocument {
 }
 
 pub fn dubp_doc_from_pest_pair_v10(pair: Pair<Rule>) -> Result<DubpDocument, RawTextParseError> {
-    let doc_type_v10_pair = unwrap!(pair.into_inner().next()); // get and unwrap the `{DOC_TYPE}_v10` rule; never fails
+    let doc_type_v10_pair = pair.into_inner().next().unwrap_or_else(|| unreachable!()); // get and unwrap the `{DOC_TYPE}_v10` rule; never fails
 
     match doc_type_v10_pair.as_rule() {
         Rule::idty_v10 => Ok(DubpDocument::Identity(IdentityDocument::V10(
@@ -50,7 +50,7 @@ IdtyTimestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B85
 IdtySignature: 1eubHHbuNfilHMM0G2bI30iZzebQ2cQ1PC7uPAw08FGMMmQCRerlF/3pc4sAcsnexsxBseA/3lY03KlONqJBAg==
 XXOgI++6qpY9O31ml/FcfbXCE6aixIrgkT5jL7kBle3YOMr+8wrp7Rt+z9hDVjrNfYX2gpeJsuMNfG4T/fzVDQ==";
 
-        let doc = DubpDocument::parse_from_raw_text(doc).expect("fail to parse any document");
+        let doc = DubpDocument::parse_from_raw_text(doc).unwrap_or_else(|_| unreachable!());
         println!("Doc : {:?}", doc);
         assert!(doc.verify_signatures().is_ok())
     }

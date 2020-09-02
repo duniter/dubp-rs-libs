@@ -62,14 +62,14 @@ pub fn parse_json_transactions(
 fn parse_json_transaction(
     json_tx: &JSONValue<DefaultHasher>,
 ) -> Result<TransactionDocument, ParseJsonTxError> {
-    if !json_tx.is_object() {
+    let json_tx = if let JSONValue::Object(json_tx) = json_tx {
+        json_tx
+    } else {
         return Err(ParseJsonError {
             cause: "Json transaction must be an object !".to_owned(),
         }
         .into());
-    }
-
-    let json_tx = json_tx.to_object().expect("safe unwrap");
+    };
 
     match get_u64(json_tx, "version")? {
         10 => Ok(
@@ -124,37 +124,37 @@ fn parse_json_transaction(
 mod tests {
     use super::*;
     use dubp_documents::smallvec::smallvec;
+    use unwrap::unwrap;
 
     pub fn first_g1_tx_doc() -> TransactionDocument {
         let expected_tx_builder = TransactionDocumentV10Builder {
             currency: &"g1",
-            blockstamp: Blockstamp::from_str(
+            blockstamp: unwrap!(Blockstamp::from_str(
                 "50-00001DAA4559FEDB8320D1040B0F22B631459F36F237A0D9BC1EB923C12A12E7",
-            )
-            .expect("Fail to parse blockstamp"),
+            )),
             locktime: 0,
-            issuers: &[ed25519::PublicKey::from_base58(
+            issuers: &[unwrap!(ed25519::PublicKey::from_base58(
                 "2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ",
-            )
-            .expect("Fail to parse issuer !")],
-            inputs: &[tx_input_v10_from_str(
+            ))],
+            inputs: &[unwrap!(tx_input_v10_from_str(
                 "1000:0:D:2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ:1",
-            )
-            .expect("Fail to parse inputs")],
-            unlocks: &[tx_unlock_v10_from_str("0:SIG(0)").expect("Fail to parse unlocks")],
+            ))],
+            unlocks: &[unwrap!(tx_unlock_v10_from_str("0:SIG(0)"))],
             outputs: smallvec![
-                tx_output_v10_from_str("1:0:SIG(Com8rJukCozHZyFao6AheSsfDQdPApxQRnz7QYFf64mm)",)
-                    .expect("Fail to parse outputs"),
-                tx_output_v10_from_str("999:0:SIG(2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ)",)
-                    .expect("Fail to parse outputs"),
+                unwrap!(tx_output_v10_from_str(
+                    "1:0:SIG(Com8rJukCozHZyFao6AheSsfDQdPApxQRnz7QYFf64mm)",
+                )),
+                unwrap!(tx_output_v10_from_str(
+                    "999:0:SIG(2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ)"
+                )),
             ],
             comment: "TEST",
             hash: None,
         };
 
         TransactionDocumentBuilder::V10(expected_tx_builder).build_with_signature(svec![Sig::Ed25519(
-                ed25519::Signature::from_base64("fAH5Gor+8MtFzQZ++JaJO6U8JJ6+rkqKtPrRr/iufh3MYkoDGxmjzj6jCADQL+hkWBt8y8QzlgRkz0ixBcKHBw==").expect("Fail to parse sig !")
-            )])
+            unwrap!(ed25519::Signature::from_base64("fAH5Gor+8MtFzQZ++JaJO6U8JJ6+rkqKtPrRr/iufh3MYkoDGxmjzj6jCADQL+hkWBt8y8QzlgRkz0ixBcKHBw=="))
+        )])
     }
 
     #[test]
@@ -186,12 +186,11 @@ mod tests {
      "time": 0
     }"#;
 
-        let tx_json_value =
-            json_pest_parser::parse_json_string(tx_json_str).expect("Fail to parse json tx !");
+        let tx_json_value = unwrap!(json_pest_parser::parse_json_string(tx_json_str));
 
         assert_eq!(
             first_g1_tx_doc(),
-            parse_json_transaction(&tx_json_value).expect("Fail to parse tx_json_value !")
+            unwrap!(parse_json_transaction(&tx_json_value))
         );
     }
 }

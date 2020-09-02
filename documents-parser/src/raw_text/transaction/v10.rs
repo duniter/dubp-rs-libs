@@ -19,16 +19,29 @@ impl FromPestPair for TransactionDocumentV10 {
                 Rule::blockstamp => {
                     let mut inner_rules = field.into_inner(); // ${ block_id ~ "-" ~ hash }
 
-                    let block_number: &str = unwrap!(inner_rules.next()).as_str();
-                    let block_hash: &str = unwrap!(inner_rules.next()).as_str();
+                    let block_number: &str = inner_rules
+                        .next()
+                        .unwrap_or_else(|| unreachable!())
+                        .as_str();
+                    let block_hash: &str = inner_rules
+                        .next()
+                        .unwrap_or_else(|| unreachable!())
+                        .as_str();
                     blockstamp = Blockstamp {
-                        number: BlockNumber(unwrap!(block_number.parse())), // Grammar ensures that we have a digits string.
-                        hash: BlockHash(unwrap!(Hash::from_hex(block_hash))), // Grammar ensures that we have an hexadecimal string.
+                        number: BlockNumber(
+                            block_number.parse().unwrap_or_else(|_| unreachable!()),
+                        ), // Grammar ensures that we have a digits string.
+                        hash: BlockHash(
+                            Hash::from_hex(block_hash).unwrap_or_else(|_| unreachable!()),
+                        ), // Grammar ensures that we have an hexadecimal string.
                     };
                 }
-                Rule::tx_locktime => locktime = unwrap!(field.as_str().parse()), // Grammar ensures that we have digits characters.
+                Rule::tx_locktime => {
+                    locktime = field.as_str().parse().unwrap_or_else(|_| unreachable!())
+                } // Grammar ensures that we have digits characters.
                 Rule::pubkey => issuers.push(
-                    unwrap!(ed25519::PublicKey::from_base58(field.as_str())), // Grammar ensures that we have a base58 string.
+                    ed25519::PublicKey::from_base58(field.as_str())
+                        .unwrap_or_else(|_| unreachable!()), // Grammar ensures that we have a base58 string.
                 ),
                 Rule::tx_input => inputs.push(TransactionInputV10::from_pest_pair(field)?),
                 Rule::tx_unlock => unlocks.push(TransactionInputUnlocksV10::from_pest_pair(field)?),
@@ -36,7 +49,9 @@ impl FromPestPair for TransactionDocumentV10 {
                 Rule::tx_comment => comment = field.as_str(),
                 Rule::ed25519_sig => {
                     sigs.push(
-                        unwrap!(ed25519::Signature::from_base64(field.as_str())), // Grammar ensures that we have a base64 string.
+                        ed25519::Signature::from_base64(field.as_str()).unwrap_or_else(
+                            |_| unreachable!(), // Grammar ensures that we have a base64 string.
+                        ),
                     );
                 }
                 Rule::EOI => (),
@@ -61,23 +76,42 @@ impl FromPestPair for TransactionDocumentV10 {
 
 impl FromPestPair for TransactionInputV10 {
     fn from_pest_pair(pairs: Pair<Rule>) -> Result<TransactionInputV10, RawTextParseError> {
-        let tx_input_type_pair = unwrap!(pairs.into_inner().next());
+        let tx_input_type_pair = pairs.into_inner().next().unwrap_or_else(|| unreachable!());
         Ok(match tx_input_type_pair.as_rule() {
             Rule::tx_input_du => {
                 let mut inner_rules = tx_input_type_pair.into_inner(); // ${ tx_amount ~ ":" ~ tx_amount_base ~ ":D:" ~ pubkey ~ ":" ~ du_block_id }
 
                 TransactionInputV10 {
                     amount: SourceAmount {
-                        amount: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
-                        base: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
+                        amount: inner_rules
+                            .next()
+                            .unwrap_or_else(|| unreachable!())
+                            .as_str()
+                            .parse()
+                            .unwrap_or_else(|_| unreachable!()),
+                        base: inner_rules
+                            .next()
+                            .unwrap_or_else(|| unreachable!())
+                            .as_str()
+                            .parse()
+                            .unwrap_or_else(|_| unreachable!()),
                     },
                     id: SourceIdV10::Ud(UdSourceIdV10 {
-                        issuer: unwrap!(ed25519::PublicKey::from_base58(
-                            unwrap!(inner_rules.next()).as_str()
-                        )),
-                        block_number: BlockNumber(unwrap!(unwrap!(inner_rules.next())
-                            .as_str()
-                            .parse())),
+                        issuer: ed25519::PublicKey::from_base58(
+                            inner_rules
+                                .next()
+                                .unwrap_or_else(|| unreachable!())
+                                .as_str(),
+                        )
+                        .unwrap_or_else(|_| unreachable!()),
+                        block_number: BlockNumber(
+                            inner_rules
+                                .next()
+                                .unwrap_or_else(|| unreachable!())
+                                .as_str()
+                                .parse()
+                                .unwrap_or_else(|_| unreachable!()),
+                        ),
                     }),
                 }
             }
@@ -86,12 +120,33 @@ impl FromPestPair for TransactionInputV10 {
 
                 TransactionInputV10 {
                     amount: SourceAmount {
-                        amount: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
-                        base: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
+                        amount: inner_rules
+                            .next()
+                            .unwrap_or_else(|| unreachable!())
+                            .as_str()
+                            .parse()
+                            .unwrap_or_else(|_| unreachable!()),
+                        base: inner_rules
+                            .next()
+                            .unwrap_or_else(|| unreachable!())
+                            .as_str()
+                            .parse()
+                            .unwrap_or_else(|_| unreachable!()),
                     },
                     id: SourceIdV10::Utxo(UtxoIdV10 {
-                        tx_hash: unwrap!(Hash::from_hex(unwrap!(inner_rules.next()).as_str())),
-                        output_index: unwrap!(unwrap!(inner_rules.next()).as_str().parse()),
+                        tx_hash: Hash::from_hex(
+                            inner_rules
+                                .next()
+                                .unwrap_or_else(|| unreachable!())
+                                .as_str(),
+                        )
+                        .unwrap_or_else(|_| unreachable!()),
+                        output_index: inner_rules
+                            .next()
+                            .unwrap_or_else(|| unreachable!())
+                            .as_str()
+                            .parse()
+                            .unwrap_or_else(|_| unreachable!()),
                     }),
                 }
             }
@@ -107,16 +162,27 @@ impl FromPestPair for TransactionInputUnlocksV10 {
         for unlock_field in pair.into_inner() {
             // ${ input_index ~ ":" ~ unlock_cond ~ (" " ~ unlock_cond)* }
             match unlock_field.as_rule() {
-                Rule::input_index => input_index = unwrap!(unlock_field.as_str().parse()),
-                Rule::unlock_sig => {
-                    unlock_conds.push(WalletUnlockProofV10::Sig(unwrap!(unwrap!(unlock_field
-                        .into_inner()
-                        .next())
-                    .as_str()
-                    .parse())))
+                Rule::input_index => {
+                    input_index = unlock_field
+                        .as_str()
+                        .parse()
+                        .unwrap_or_else(|_| unreachable!())
                 }
+                Rule::unlock_sig => unlock_conds.push(WalletUnlockProofV10::Sig(
+                    unlock_field
+                        .into_inner()
+                        .next()
+                        .unwrap_or_else(|| unreachable!())
+                        .as_str()
+                        .parse()
+                        .unwrap_or_else(|_| unreachable!()),
+                )),
                 Rule::unlock_xhx => unlock_conds.push(WalletUnlockProofV10::Xhx(String::from(
-                    unwrap!(unlock_field.into_inner().next()).as_str(),
+                    unlock_field
+                        .into_inner()
+                        .next()
+                        .unwrap_or_else(|| unreachable!())
+                        .as_str(),
                 ))),
                 _ => panic!("unexpected rule: {:?}", unlock_field.as_rule()), // Grammar ensures that we never reach this line
             }
@@ -132,10 +198,20 @@ impl FromPestPair for TransactionOutputV10 {
     fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionOutputV10, RawTextParseError> {
         let mut utxo_pairs = pair.into_inner();
         let amount = SourceAmount {
-            amount: unwrap!(unwrap!(utxo_pairs.next()).as_str().parse()),
-            base: unwrap!(unwrap!(utxo_pairs.next()).as_str().parse()),
+            amount: utxo_pairs
+                .next()
+                .unwrap_or_else(|| unreachable!())
+                .as_str()
+                .parse()
+                .unwrap_or_else(|_| unreachable!()),
+            base: utxo_pairs
+                .next()
+                .unwrap_or_else(|| unreachable!())
+                .as_str()
+                .parse()
+                .unwrap_or_else(|_| unreachable!()),
         };
-        let script_pairs = unwrap!(utxo_pairs.next());
+        let script_pairs = utxo_pairs.next().unwrap_or_else(|| unreachable!());
         let script_origin_str = script_pairs.as_str();
         let script = WalletScriptV10::from_pest_pair(script_pairs)?;
 
@@ -158,6 +234,7 @@ impl FromPestPair for TransactionOutputV10 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use unwrap::unwrap;
 
     #[test]
     fn parse_transaction_document() {
@@ -193,8 +270,7 @@ kL59C1izKjcRN429AlKdshwhWbasvyL7sthI757zm1DfZTdTIctDWlKbYeG/tS7QyAgI3gcfrTHPhu1E
 e3LpgB2RZ/E/BCxPJsn+TDDyxGYzrIsMyDt//KhJCjIQD6pNUxr5M5jrq2OwQZgwmz91YcmoQ2XRQAUDpe4BAw==
 w69bYgiQxDmCReB0Dugt9BstXlAKnwJkKCdWvCeZ9KnUCv0FJys6klzYk/O/b9t74tYhWZSX0bhETWHiwfpWBw==";
 
-        let doc = TransactionDocumentV10::parse_from_raw_text(doc)
-            .expect("fail to parse test transaction document !");
+        let doc = unwrap!(TransactionDocumentV10::parse_from_raw_text(doc));
         assert!(doc.verify_signatures().is_ok());
         assert_eq!(
             doc.generate_compact_text(),
