@@ -146,7 +146,7 @@ use crate::seeds::Seed32;
 use ring::aead::{LessSafeKey, Nonce, Tag, UnboundKey};
 use ring::pbkdf2;
 use std::convert::TryFrom;
-use std::num::NonZeroU32;
+use std::{hint::unreachable_unchecked, num::NonZeroU32};
 use zeroize::Zeroize;
 
 /// Metadata length
@@ -282,13 +282,13 @@ where
     )?;
 
     // write clear footer (tag and ephemeral_public_key)
-    let mut clear_footer = arrayvec::ArrayVec::<[u8; 64]>::new();
+    let mut clear_footer = arrayvec::ArrayVec::<[u8; 48]>::new();
     clear_footer
         .try_extend_from_slice(tag.as_ref())
-        .expect("too long tag");
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() }); // It's safe because the tag is 16 bytes long.
     clear_footer
         .try_extend_from_slice(ephemeral_keypair.public_key().datas.as_ref())
-        .expect("too long ephemeral_public_key");
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() }); // It's safe because the public key is 32 bytes long.
     message.extend(clear_footer.into_iter());
 
     Ok(())
@@ -376,7 +376,7 @@ fn derive(seed: &[u8], salt: &[u8]) -> SharedSecret {
     let mut shared_secret = SharedSecret::default();
     pbkdf2::derive(
         pbkdf2::PBKDF2_HMAC_SHA384,
-        NonZeroU32::new(ITERATIONS).expect("ITERATIONS must be > 0"),
+        unsafe { NonZeroU32::new_unchecked(ITERATIONS) },
         salt,
         seed,
         shared_secret.as_mut(),

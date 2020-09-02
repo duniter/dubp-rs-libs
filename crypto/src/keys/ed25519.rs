@@ -41,8 +41,8 @@ use std::{
     convert::TryFrom,
     fmt::{self, Debug, Display, Formatter},
     hash::{Hash, Hasher},
+    hint::unreachable_unchecked,
 };
-use unwrap::unwrap;
 #[cfg(feature = "scrypt")]
 use zeroize::Zeroize;
 
@@ -186,7 +186,6 @@ impl AsRef<[u8]> for PublicKey {
 }
 
 impl PublicKey {
-    #[inline]
     /// Verify if bytes represents a valid point on the Edwards form of Curve25519.
     #[cfg(feature = "pubkey_check")]
     fn check_bytes(bytes: &[u8]) -> bool {
@@ -303,15 +302,13 @@ impl super::PublicKey for PublicKey {
 
 #[cfg(target_arch = "wasm32")]
 #[cfg(not(tarpaulin_include))]
-#[inline]
 fn get_cryptoxide_ed25519_pubkey(pubkey_bytes: [u8; 32]) -> PublicKey {
-    unwrap!(PublicKey::try_from(&pubkey_bytes[..]))
+    PublicKey::try_from(&pubkey_bytes[..]).unwrap_or_else(|_| unsafe { unreachable_unchecked() })
 }
 #[cfg(not(target_arch = "wasm32"))]
-#[inline]
 fn get_ring_ed25519_pubkey(ring_key_pair: &RingKeyPair) -> PublicKey {
     let ring_pubkey: <RingKeyPair as KeyPair>::PublicKey = *ring_key_pair.public_key();
-    unwrap!(PublicKey::try_from(ring_pubkey.as_ref()))
+    PublicKey::try_from(ring_pubkey.as_ref()).unwrap_or_else(|_| unsafe { unreachable_unchecked() })
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -413,7 +410,10 @@ impl super::KeyPair for Ed25519KeyPair {
     }
     #[cfg(not(target_arch = "wasm32"))]
     fn generate_signator(&self) -> Self::Signator {
-        Signator(RingKeyPair::from_seed_unchecked(self.seed.as_ref()).expect("invalid seed"))
+        Signator(
+            RingKeyPair::from_seed_unchecked(self.seed.as_ref())
+                .unwrap_or_else(|_| unsafe { unreachable_unchecked() }),
+        )
     }
 
     fn public_key(&self) -> PublicKey {
@@ -457,7 +457,7 @@ impl KeyPairFromSeed32Generator {
     /// the [`PrivateKey`](struct.PrivateKey.html).
     pub fn generate(seed: Seed32) -> Ed25519KeyPair {
         let ring_key_pair = RingKeyPair::from_seed_unchecked(seed.as_ref())
-            .expect("dev error: fail to generate ed25519 keypair.");
+            .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
         Ed25519KeyPair {
             pubkey: get_ring_ed25519_pubkey(&ring_key_pair),
             seed,
@@ -540,13 +540,14 @@ mod tests {
     use crate::keys::{KeyPair, Sig, Signator, Signature};
     use crate::seeds::Seed32;
     use std::collections::hash_map::DefaultHasher;
+    use unwrap::unwrap;
 
     #[test]
     fn base58_seed() {
         let seed58 = "DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV";
 
         // Test base58 encoding/decoding (loop for every bytes)
-        let seed = Seed32::from_base58(seed58).expect("fail to parser seed !");
+        let seed = unwrap!(Seed32::from_base58(seed58));
         assert_eq!(seed.to_base58(), seed58);
 
         // Test seed display and debug
@@ -644,8 +645,9 @@ mod tests {
         );
 
         // Test pubkey with 43 characters
-        let pubkey43 = super::PublicKey::from_base58("2nV7Dv4nhTJ9dZUvRJpL34vFP9b2BkDjKWv9iBW2JaR")
-            .expect("invalid pubkey");
+        let pubkey43 = unwrap!(super::PublicKey::from_base58(
+            "2nV7Dv4nhTJ9dZUvRJpL34vFP9b2BkDjKWv9iBW2JaR"
+        ));
         println!("pubkey43={:?}", pubkey43.as_ref());
         assert_eq!(
             format!("{:?}", pubkey43),
@@ -696,13 +698,10 @@ mod tests {
         assert_eq!(hash1, hash2);
 
         // Test signature serialization/deserialization
-        let mut bin_sig = bincode::serialize(&signature).expect("Fail to serialize signature !");
+        let mut bin_sig = unwrap!(bincode::serialize(&signature));
         assert_eq!(SIG_SIZE_IN_BYTES, bin_sig.len());
         assert_eq!(signature.to_bytes_vector(), bin_sig);
-        assert_eq!(
-            signature,
-            bincode::deserialize(&bin_sig).expect("Fail to deserialize signature !"),
-        );
+        assert_eq!(signature, unwrap!(bincode::deserialize(&bin_sig)),);
         bin_sig.push(0); // add on byte to simulate invalid length
         bincode::deserialize::<Sig>(&bin_sig)
             .expect_err("Deserialization must be fail because length is invalid !");
@@ -853,9 +852,9 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
 
     #[test]
     fn test_parse_expanded_base58_private_key() {
-        let bytes = bs58::decode(
+        let bytes = unwrap!(bs58::decode(
             "31uSnvigJtJEUgG4YDqJB99awp4hkYgYqb3Yzu8P1LP5ZPMHtwNoCohVhm6jKcG9HFHbagDWdcoPgYBgHhdg5Efo"
-        ).into_vec().expect("fail to decode b58");
+        ).into_vec());
         let mut seed = [0u8; 32];
         seed.copy_from_slice(&bytes[..32]);
         let mut pubkey_bytes = [0u8; 32];

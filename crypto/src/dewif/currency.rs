@@ -116,6 +116,7 @@ impl FromStr for Currency {
 mod tests {
 
     use super::*;
+    use unwrap::unwrap;
 
     #[test]
     fn display_expected_currency() {
@@ -141,11 +142,11 @@ mod tests {
     fn currency_from_str() {
         assert_eq!(
             Currency::from(G1_CURRENCY),
-            Currency::from_str(G1_CURRENCY_STR).expect("unknown currency"),
+            unwrap!(Currency::from_str(G1_CURRENCY_STR)),
         );
         assert_eq!(
             Currency::from(G1_TEST_CURRENCY),
-            Currency::from_str(G1_TEST_CURRENCY_STR).expect("unknown currency"),
+            unwrap!(Currency::from_str(G1_TEST_CURRENCY_STR)),
         );
         assert_eq!(
             Err(UnknownCurrencyName),

@@ -513,10 +513,7 @@ mod tests {
         )));
 
         let pubkey_str_b58 = "11111111111111111111111111111111".to_owned();
-        assert_eq!(
-            pubkey_default,
-            PubKey::from_str(&pubkey_str_b58).expect("Fail to parse pubkey !")
-        );
+        assert_eq!(pubkey_default, unwrap!(PubKey::from_str(&pubkey_str_b58)));
 
         assert_eq!(pubkey.size_in_bytes(), ed25519::PUBKEY_SIZE_IN_BYTES + 3);
         assert_eq!("11111111111111111111111111111111", &format!("{}", pubkey));
@@ -554,10 +551,7 @@ mod tests {
         let seed = Seed32::new(seed_bytes);
 
         assert_eq!(seed_default, seed);
-        assert_eq!(
-            seed_default,
-            Seed32::from_base58(&seed_str_b58).expect("Fail to parse seed !")
-        );
+        assert_eq!(seed_default, unwrap!(Seed32::from_base58(&seed_str_b58)));
 
         assert_eq!("1111111111111111111111111111111", format!("{}", seed));
 

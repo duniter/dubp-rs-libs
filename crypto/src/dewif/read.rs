@@ -21,7 +21,10 @@ use crate::keys::{KeyPair, KeyPairEnum};
 use crate::seeds::{Seed32, SEED_32_SIZE_IN_BYTES};
 use arrayvec::ArrayVec;
 use byteorder::ByteOrder;
-use std::convert::{TryFrom, TryInto};
+use std::{
+    convert::{TryFrom, TryInto},
+    hint::unreachable_unchecked,
+};
 use thiserror::Error;
 
 const MAX_KEYPAIRS_COUNT: usize = 2;
@@ -137,10 +140,10 @@ fn bytes_to_checked_keypair(bytes: &[u8]) -> Result<KeyPairEnum, DewifReadError>
     let seed = Seed32::new(
         (&bytes[..SEED_32_SIZE_IN_BYTES])
             .try_into()
-            .expect("dev error"),
+            .unwrap_or_else(|_| unsafe { unreachable_unchecked() }),
     );
-    let expected_pubkey =
-        PublicKey::try_from(&bytes[PUBKEY_DATAS_SIZE_IN_BYTES..]).expect("dev error");
+    let expected_pubkey = PublicKey::try_from(&bytes[PUBKEY_DATAS_SIZE_IN_BYTES..])
+        .map_err(|_| DewifReadError::InvalidFormat)?;
 
     // Get keypair
     let keypair = KeyPairFromSeed32Generator::generate(seed);
@@ -157,6 +160,7 @@ fn bytes_to_checked_keypair(bytes: &[u8]) -> Result<KeyPairEnum, DewifReadError>
 mod tests {
 
     use super::*;
+    use unwrap::unwrap;
 
     #[test]
     fn read_unsupported_version() -> Result<(), ()> {
@@ -208,19 +212,18 @@ mod tests {
         let encryption_passphrase = "toto titi tata";
 
         // Expected currency
-        let expected_currency =
-            ExpectedCurrency::Specific(Currency::from_str("g1-test").expect("unknown currency"));
+        let expected_currency = ExpectedCurrency::Specific(unwrap!(Currency::from_str("g1-test")));
 
         // Read DEWIF file content
         // If the file content is correct, we get a key-pair iterator.
-        let mut key_pair_iter =
-            read_dewif_file_content(expected_currency, dewif_file_content, encryption_passphrase)
-                .expect("invalid DEWIF file");
+        let mut key_pair_iter = unwrap!(read_dewif_file_content(
+            expected_currency,
+            dewif_file_content,
+            encryption_passphrase
+        ));
 
         // Get first key-pair
-        let key_pair = key_pair_iter
-            .next()
-            .expect("DEWIF file must contain at least one keypair");
+        let key_pair = unwrap!(key_pair_iter.next());
 
         assert_eq!(
             "2cC9FrvRiN3uHHcd8S7wuureDS8CAmD5y4afEgSCLHtU",

@@ -32,6 +32,7 @@
 //!
 
 #![deny(
+    clippy::expect_used,
     clippy::unwrap_used,
     missing_docs,
     missing_copy_implementations,

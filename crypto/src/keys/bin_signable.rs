@@ -32,7 +32,7 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
     /// Get binary datas without signature
     fn get_bin_without_sig(&self) -> Result<Vec<u8>, Self::SerdeError>;
     /// Add signature to bin datas
-    fn add_sig_to_bin_datas(&self, bin_datas: &mut Vec<u8>);
+    fn add_sig_to_bin_datas(&self, bin_datas: &mut Vec<u8>) -> Result<(), Self::SerdeError>;
     /// Sign entity with a signator
     fn sign(&mut self, signator: &SignatorEnum) -> Result<Vec<u8>, SignError> {
         if self.signature().is_some() {
@@ -45,7 +45,8 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
                     .map_err(|e| SignError::SerdeError(e.to_string()))?;
                 let sig = signator.sign(&bin_msg);
                 self.set_signature(sig);
-                self.add_sig_to_bin_datas(&mut bin_msg);
+                self.add_sig_to_bin_datas(&mut bin_msg)
+                    .map_err(|e| SignError::SerdeError(e.to_string()))?;
                 Ok(bin_msg)
             }
             _ => Err(SignError::WrongAlgo),
@@ -76,6 +77,7 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
 mod tests {
 
     use super::*;
+    use unwrap::unwrap;
 
     #[derive(Deserialize, Serialize)]
     struct BinSignableTestImpl {
@@ -88,9 +90,9 @@ mod tests {
         type SerdeError = bincode::Error;
 
         #[inline]
-        fn add_sig_to_bin_datas(&self, bin_datas: &mut Vec<u8>) {
-            bin_datas
-                .extend_from_slice(&bincode::serialize(&self.sig).expect("Fail to binarize sig !"));
+        fn add_sig_to_bin_datas(&self, bin_datas: &mut Vec<u8>) -> Result<(), Self::SerdeError> {
+            bin_datas.extend_from_slice(&bincode::serialize(&self.sig)?);
+            Ok(())
         }
         #[inline]
         fn get_bin_without_sig(&self) -> Result<Vec<u8>, bincode::Error> {
@@ -128,9 +130,7 @@ mod tests {
 
         assert_eq!(Err(SigError::NotSig), bin_signable_datas.verify());
 
-        let _bin_msg = bin_signable_datas
-            .sign(&signator)
-            .expect("Fail to sign datas !");
+        let _bin_msg = unwrap!(bin_signable_datas.sign(&signator));
 
         assert_eq!(
             Err(SignError::AlreadySign),

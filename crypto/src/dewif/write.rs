@@ -19,7 +19,7 @@ use super::Currency;
 use crate::keys::ed25519::Ed25519KeyPair;
 use crate::keys::KeyPair;
 use arrayvec::ArrayVec;
-use unwrap::unwrap;
+use std::hint::unreachable_unchecked;
 
 /// Write dewif v1 file content with user passphrase
 pub fn write_dewif_v1_content(
@@ -28,11 +28,20 @@ pub fn write_dewif_v1_content(
     passphrase: &str,
 ) -> String {
     let mut bytes = ArrayVec::<[u8; super::V1_BYTES_LEN]>::new();
-    unwrap!(bytes.try_extend_from_slice(super::VERSION_V1));
+    bytes
+        .try_extend_from_slice(super::VERSION_V1) // 4
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
     let currency_code: u32 = currency.into();
-    unwrap!(bytes.try_extend_from_slice(&currency_code.to_be_bytes()));
-    unwrap!(bytes.try_extend_from_slice(keypair.seed().as_ref()));
-    unwrap!(bytes.try_extend_from_slice(keypair.public_key().datas.as_ref()));
+
+    bytes
+        .try_extend_from_slice(&currency_code.to_be_bytes()) // 4
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    bytes
+        .try_extend_from_slice(keypair.seed().as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    bytes
+        .try_extend_from_slice(keypair.public_key().datas.as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
 
     let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase));
     crate::aes256::encrypt::encrypt_n_blocks(
@@ -52,13 +61,25 @@ pub fn write_dewif_v2_content(
     passphrase: &str,
 ) -> String {
     let mut bytes = ArrayVec::<[u8; super::V2_BYTES_LEN]>::new();
-    unwrap!(bytes.try_extend_from_slice(super::VERSION_V2));
+    bytes
+        .try_extend_from_slice(super::VERSION_V2) // 4
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
     let currency_code: u32 = currency.into();
-    unwrap!(bytes.try_extend_from_slice(&currency_code.to_be_bytes()));
-    unwrap!(bytes.try_extend_from_slice(keypair1.seed().as_ref()));
-    unwrap!(bytes.try_extend_from_slice(keypair1.public_key().datas.as_ref()));
-    unwrap!(bytes.try_extend_from_slice(keypair2.seed().as_ref()));
-    unwrap!(bytes.try_extend_from_slice(keypair2.public_key().datas.as_ref()));
+    bytes
+        .try_extend_from_slice(&currency_code.to_be_bytes()) // 4
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    bytes
+        .try_extend_from_slice(keypair1.seed().as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    bytes
+        .try_extend_from_slice(keypair1.public_key().datas.as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    bytes
+        .try_extend_from_slice(keypair2.seed().as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    bytes
+        .try_extend_from_slice(keypair2.public_key().datas.as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
 
     let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase));
     crate::aes256::encrypt::encrypt_8_blocks(&cipher, &mut bytes[super::UNENCRYPTED_BYTES_LEN..]);
@@ -73,6 +94,7 @@ mod tests {
     use crate::keys::ed25519::KeyPairFromSeed32Generator;
     use crate::seeds::Seed32;
     use std::str::FromStr;
+    use unwrap::unwrap;
 
     #[test]
     fn write_dewif_v1() {
@@ -102,7 +124,7 @@ mod tests {
         let encryption_passphrase = "toto titi tata";
 
         // Expected currency
-        let expected_currency = Currency::from_str("g1-test").expect("unknown currency");
+        let expected_currency = unwrap!(Currency::from_str("g1-test"));
 
         // Serialize keypair in DEWIF format
         let dewif_content =

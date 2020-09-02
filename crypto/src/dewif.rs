@@ -109,7 +109,7 @@ use crate::hashs::Hash;
 use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
 use arrayvec::ArrayVec;
-use unwrap::unwrap;
+use std::hint::unreachable_unchecked;
 
 const UNENCRYPTED_BYTES_LEN: usize = 8;
 
@@ -126,9 +126,11 @@ const V2_ENCRYPTED_BYTES_LEN: usize = 128;
 
 fn gen_aes_seed(passphrase: &str) -> Seed32 {
     let mut salt = ArrayVec::<[u8; 37]>::new();
-    unwrap!(salt.try_extend_from_slice(b"dewif"));
+    salt.try_extend_from_slice(b"dewif")
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() }); // 5
     let hash = Hash::compute(passphrase.as_bytes());
-    unwrap!(salt.try_extend_from_slice(hash.as_ref()));
+    salt.try_extend_from_slice(hash.as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
 
     let mut aes_seed_bytes = [0u8; 32];
     scrypt(
@@ -147,6 +149,7 @@ mod tests {
     use crate::keys::ed25519::KeyPairFromSeed32Generator;
     use crate::keys::KeyPairEnum;
     use crate::seeds::Seed32;
+    use unwrap::unwrap;
 
     #[test]
     fn dewif_v1() {
@@ -155,10 +158,12 @@ mod tests {
 
         let dewif_content = write_dewif_v1_content(currency, &written_keypair, "toto");
 
-        let mut keypairs_iter =
-            read_dewif_file_content(ExpectedCurrency::Specific(currency), &dewif_content, "toto")
-                .expect("dewif content must be readed successfully");
-        let keypair_read = keypairs_iter.next().expect("Must read one keypair");
+        let mut keypairs_iter = unwrap!(read_dewif_file_content(
+            ExpectedCurrency::Specific(currency),
+            &dewif_content,
+            "toto"
+        ));
+        let keypair_read = unwrap!(keypairs_iter.next());
 
         assert_eq!(KeyPairEnum::Ed25519(written_keypair), keypair_read,)
     }
@@ -192,11 +197,13 @@ mod tests {
         let dewif_content =
             write_dewif_v2_content(currency, &written_keypair1, &written_keypair2, "toto");
 
-        let mut keypairs_iter =
-            read_dewif_file_content(ExpectedCurrency::Specific(currency), &dewif_content, "toto")
-                .expect("dewif content must be readed successfully");
-        let keypair1_read = keypairs_iter.next().expect("Must read one keypair");
-        let keypair2_read = keypairs_iter.next().expect("Must read one keypair");
+        let mut keypairs_iter = unwrap!(read_dewif_file_content(
+            ExpectedCurrency::Specific(currency),
+            &dewif_content,
+            "toto"
+        ));
+        let keypair1_read = unwrap!(keypairs_iter.next());
+        let keypair2_read = unwrap!(keypairs_iter.next());
 
         assert_eq!(KeyPairEnum::Ed25519(written_keypair1), keypair1_read,);
         assert_eq!(KeyPairEnum::Ed25519(written_keypair2), keypair2_read,);

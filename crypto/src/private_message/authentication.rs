@@ -20,7 +20,7 @@ use crate::keys::ed25519::{Ed25519KeyPair, PublicKey as Ed25519PublicKey, Signat
 use crate::keys::x25519::{diffie_hellman, X25519PublicKey, X25519SecretKey};
 use crate::keys::{KeyPair, PublicKey, Signator};
 use ring::digest;
-use std::convert::TryFrom;
+use std::{convert::TryFrom, hint::unreachable_unchecked};
 
 #[derive(Clone, Copy, Debug)]
 /// Authentication policy.
@@ -73,13 +73,13 @@ pub(crate) fn write_anthentication_datas(
     authent_proof: AuthenticationProof,
     authent_policy: AuthenticationPolicy,
 ) -> impl AsRef<[u8]> + IntoIterator<Item = u8> {
-    let mut authent_datas = arrayvec::ArrayVec::<[u8; 128]>::new();
+    let mut authent_datas = arrayvec::ArrayVec::<[u8; 97]>::new();
     authent_datas
         .try_extend_from_slice(sender_public_key.datas.as_ref())
-        .expect("too long sender public key");
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() }); // It's safe because the public key is 32 bytes long.
     authent_datas
         .try_extend_from_slice(authent_proof.as_ref())
-        .expect("too long authent_proof");
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() }); // It's safe because the authent_proof is 64 bytes long.
     authent_datas.push(authent_policy.into());
     authent_datas
 }

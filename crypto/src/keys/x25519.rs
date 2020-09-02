@@ -23,6 +23,7 @@ use curve25519_dalek::edwards::CompressedEdwardsY;
 use curve25519_dalek::montgomery::MontgomeryPoint;
 use curve25519_dalek::scalar::Scalar;
 use ring::digest;
+use std::hint::unreachable_unchecked;
 use zeroize::Zeroize;
 
 /// x25519 public key
@@ -35,7 +36,7 @@ impl From<&PublicKey> for X25519PublicKey {
             CompressedEdwardsY::from_slice(ed25519_public_key.datas.as_ref());
         let edwards_point = compressed_edwards_y
             .decompress()
-            .expect("dev error: invalid ed25519 public key");
+            .unwrap_or_else(|| unsafe { unreachable_unchecked() }); // It's safe because `x25519` feature depend on `pubkey_check` feature.
         X25519PublicKey(edwards_point.to_montgomery())
     }
 }

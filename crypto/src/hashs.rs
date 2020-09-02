@@ -133,6 +133,7 @@ impl Hash {
 mod tests {
 
     use super::*;
+    use unwrap::unwrap;
 
     #[cfg(feature = "rand")]
     #[test]
@@ -164,14 +165,16 @@ mod tests {
     #[test]
     fn test_hash_computation() {
         assert_eq!(
-            Hash::from_hex("2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824")
-                .expect("dev err"),
+            unwrap!(Hash::from_hex(
+                "2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824"
+            )),
             Hash::compute(b"hello"),
         );
 
         assert_eq!(
-            Hash::from_hex("2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824")
-                .expect("dev err"),
+            unwrap!(Hash::from_hex(
+                "2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824"
+            )),
             Hash::compute_str("hello"),
         );
     }
