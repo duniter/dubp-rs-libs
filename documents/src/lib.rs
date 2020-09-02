@@ -16,6 +16,7 @@
 //! Define DUBP Documents.
 
 #![deny(
+    clippy::expect_used,
     clippy::unwrap_used,
     missing_debug_implementations,
     missing_copy_implementations,
