@@ -359,8 +359,9 @@ pub(super) mod tests {
         assert!(tx_doc.get_hash_opt().is_none());
         assert_eq!(
             tx_doc.get_hash(),
-            Hash::from_hex("876D2430E0B66E2CE4467866D8F923D68896CACD6AA49CDD8BDD0096B834DEF1")
-                .expect("fail to parse hash")
+            unwrap!(Hash::from_hex(
+                "876D2430E0B66E2CE4467866D8F923D68896CACD6AA49CDD8BDD0096B834DEF1"
+            ))
         );
     }
 }
