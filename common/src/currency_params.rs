@@ -30,6 +30,14 @@ pub static DEFAULT_TX_WINDOW: &u64 = &604_800;
 /// Default maximum roolback length
 pub static DEFAULT_FORK_WINDOW_SIZE: &usize = &100;
 
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+/// Currency name and parameters in genesis block
+pub struct CurrencyNameAndGenesisBlockParams {
+    pub currency_name: CurrencyName,
+    #[serde(rename = "currency_parameters")]
+    pub genesis_block_params: GenesisBlockParams,
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 /// Currency parameters
 pub struct CurrencyParameters {
@@ -85,6 +93,23 @@ pub struct CurrencyParameters {
     pub dt_reeval: u64,
     /// Maximum roolback length
     pub fork_window_size: usize,
+}
+
+impl Default for CurrencyParameters {
+    fn default() -> Self {
+        Self::from((&CurrencyName::default(), BlockV10Parameters::default()))
+    }
+}
+
+impl From<CurrencyNameAndGenesisBlockParams> for CurrencyParameters {
+    fn from(currency_name_and_genesis_block_params: CurrencyNameAndGenesisBlockParams) -> Self {
+        match currency_name_and_genesis_block_params.genesis_block_params {
+            GenesisBlockParams::V10(genesis_params_v10) => CurrencyParameters::from((
+                &currency_name_and_genesis_block_params.currency_name,
+                genesis_params_v10,
+            )),
+        }
+    }
 }
 
 impl From<(&CurrencyName, BlockV10Parameters)> for CurrencyParameters {

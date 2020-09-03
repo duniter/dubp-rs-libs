@@ -28,6 +28,12 @@ pub enum GenesisBlockParams {
     V10(BlockV10Parameters),
 }
 
+impl Default for GenesisBlockParams {
+    fn default() -> Self {
+        GenesisBlockParams::V10(BlockV10Parameters::default())
+    }
+}
+
 #[derive(Debug, Clone, Error)]
 /// Store error in block parameters parsing
 pub enum ParseParamsError {
