@@ -102,7 +102,7 @@ impl Ord for Blockstamp {
     }
 }
 
-impl FromBytes for Blockstamp {
+impl crate::bytes_traits::FromBytes for Blockstamp {
     type Err = BlockstampFromBytesError;
 
     /// Create a `Blockstamp` from bytes.
@@ -156,6 +156,7 @@ impl FromStr for Blockstamp {
 mod tests {
 
     use super::*;
+    use crate::bytes_traits::FromBytes;
     use unwrap::unwrap;
 
     #[test]

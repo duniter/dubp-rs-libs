@@ -30,7 +30,7 @@ pub mod bin_file;
 mod block_hash;
 mod block_number;
 mod blockstamp;
-mod bytes_traits;
+pub mod bytes_traits;
 mod currency_name;
 pub mod currency_params;
 pub mod errors;
@@ -46,9 +46,8 @@ pub mod prelude {
     pub use crate::blockstamp::{
         Blockstamp, BlockstampFromBytesError, BlockstampParseError, PreviousBlockstamp,
     };
-    pub use crate::bytes_traits::{AsBytes, FromBytes};
     pub use crate::currency_name::{CurrencyName, DEFAULT_CURRENCY};
-    pub use crate::errors::{DocumentSigsErr, StringErr};
+    pub use crate::errors::DocumentSigsErr;
     pub use crate::unescape_str::unescape_str;
     pub use thiserror::Error;
 }
