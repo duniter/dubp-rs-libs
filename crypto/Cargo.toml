@@ -23,9 +23,6 @@ serde = { version = "1.0.114", features = ["derive"] }
 thiserror = "1.0.11"
 zeroize = { version = "1.1.0", features = ["zeroize_derive"] }
 
-# Benches dependencies
-criterion = { version = "0.3.1", optional = true }
-
 # Crypto backend depend on the target
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 cryptoxide = "0.2.1"
@@ -38,10 +35,12 @@ bincode = "1.2.0"
 sodiumoxide = "0.2.5"
 unwrap = "1.2.1"
 
+# Benches dependencies
+criterion = { version = "0.3.1" }
+
 [[bench]]
 name = "ring_vs_sodium"
 harness = false
-required-features = ["criterion"]
 
 [features]
 default = ["rand"]
