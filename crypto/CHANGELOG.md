@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.24.0] - 2020-09-12
+
+### Fixed
+
+- benches not executed by latest cargo
+
 ## [0.23.0] - 2020-09-02
 
 ### Changed
