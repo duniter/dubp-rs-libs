@@ -26,7 +26,7 @@ pub mod b58;
 /// Base64 conversion tools
 pub mod b64;
 
-/// Errors enumeration for Base58/64 strings convertion.
+/// Errors enumeration for Base 16/58/64 strings convertion.
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum BaseConversionError {
     #[error("Data have invalid key length : expected {expected:?}, found {found:?}.")]
