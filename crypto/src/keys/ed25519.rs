@@ -871,4 +871,35 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
             &bs58::encode(&pubkey_bytes).into_string(),
         );
     }
+
+    #[test]
+    fn tmp_find_key_42() {
+        loop {
+            let mut seed = unwrap!(crate::rand::gen_32_bytes());
+            for _ in 0..8 {
+                for i in 0..32 {
+                    let ring_key_pair = RingKeyPair::from_seed_unchecked(seed.as_ref())
+                        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+                    let pubkey = get_ring_ed25519_pubkey(&ring_key_pair);
+                    if pubkey.to_base58().len() < 43 {
+                        println!("pubkey_b58={:?}", pubkey.to_base58());
+                        println!("seed={:?}", seed);
+                        let mut expanded_secret_key_bytes = [0u8; 64];
+                        expanded_secret_key_bytes[0..32].copy_from_slice(seed.as_ref());
+                        expanded_secret_key_bytes[32..64].copy_from_slice(&pubkey.as_ref()[..32]);
+                        println!("seed={}", Seed32::new(seed));
+
+                        let expanded_base58_secret_key =
+                            bs58::encode(expanded_secret_key_bytes.as_ref()).into_string();
+                        println!(
+                            "expanded_base58_secret_key={:?}",
+                            expanded_base58_secret_key
+                        );
+                        return;
+                    }
+                    seed[i] <<= 1;
+                }
+            }
+        }
+    }
 }
