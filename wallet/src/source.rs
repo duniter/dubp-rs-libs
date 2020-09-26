@@ -20,10 +20,23 @@ pub mod v10;
 use crate::*;
 
 /// Wrap a source amount
-#[derive(Debug, Copy, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Hash, Serialize)]
+#[derive(Debug, Copy, Clone, Eq, Ord, PartialOrd, Deserialize, Serialize)]
 pub struct SourceAmount {
     pub amount: isize,
     pub base: usize,
+}
+
+impl PartialEq for SourceAmount {
+    #[allow(clippy::comparison_chain)]
+    fn eq(&self, other: &Self) -> bool {
+        if self.base == other.base {
+            self.amount.eq(&other.amount)
+        } else if self.base > other.base {
+            self.eq(&(*other).increment_base())
+        } else {
+            self.increment_base().eq(other)
+        }
+    }
 }
 
 impl SourceAmount {
