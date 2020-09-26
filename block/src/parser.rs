@@ -422,7 +422,7 @@ mod tests {
                 "50-00001DAA4559FEDB8320D1040B0F22B631459F36F237A0D9BC1EB923C12A12E7",
             )),
             locktime: 0,
-            issuers: &[pk("2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ")],
+            issuers: smallvec![pk("2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ")],
             inputs: &[TransactionInputV10 {
                 amount: SourceAmount::with_base0(1_000),
                 id: SourceIdV10::Ud(UdSourceIdV10 {
