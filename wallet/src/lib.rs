@@ -54,6 +54,7 @@ pub(crate) use smallvec::SmallVec;
 pub(crate) use std::{
     collections::HashSet,
     fmt::Debug,
+    iter::Sum,
     ops::{Add, Sub},
 };
 pub(crate) use thiserror::Error;

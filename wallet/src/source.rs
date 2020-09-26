@@ -74,6 +74,12 @@ impl Sub for SourceAmount {
     }
 }
 
+impl Sum for SourceAmount {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(SourceAmount::with_base0(0), Add::add)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
