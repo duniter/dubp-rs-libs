@@ -77,7 +77,7 @@ impl WalletSubScriptV10 {
     fn unlockable_on(
         self,
         nodes: &[WalletSubScriptV10],
-        signers: &HashSet<PublicKey>,
+        signers: &HashSet<&[u8]>,
         codes_hash: &HashSet<Hash>,
         source_written_on: u64,
     ) -> Result<(u64, HashSet<UsedProofV10>), ScriptNeverUnlockableError> {
@@ -186,7 +186,7 @@ impl WalletScriptV10 {
     }
     pub(crate) fn unlockable_on(
         &self,
-        signers: &HashSet<PublicKey>,
+        signers: &HashSet<&[u8]>,
         codes_hash: &HashSet<Hash>,
         source_written_on: u64,
     ) -> Result<(u64, HashSet<UsedProofV10>), ScriptNeverUnlockableError> {
@@ -232,13 +232,13 @@ pub(crate) enum UsedProofV10 {
 impl WalletConditionV10 {
     pub(crate) fn unlockable_on(
         &self,
-        signers: &HashSet<PublicKey>,
+        signers: &HashSet<&[u8]>,
         codes_hash: &HashSet<Hash>,
         source_written_on: u64,
     ) -> Result<(u64, Option<UsedProofV10>), ScriptNeverUnlockableError> {
         match self {
             Self::Sig(pubkey) => {
-                if signers.contains(pubkey) {
+                if signers.contains(&pubkey.as_ref()[..32]) {
                     Ok((0, Some(UsedProofV10::Sig(*pubkey))))
                 } else {
                     Err(ScriptNeverUnlockableError)
@@ -276,11 +276,11 @@ mod tests {
 
         assert_eq!(
             Ok((0, hashset![])),
-            script.unlockable_on(&hashset![p1], &hashset![], 0),
+            script.unlockable_on(&hashset![&p1.as_ref()[..32]], &hashset![], 0),
         );
         assert_eq!(
             Ok((123, hashset![])),
-            script.unlockable_on(&hashset![PublicKey::default()], &hashset![], 0),
+            script.unlockable_on(&hashset![&[0u8; 32][..]], &hashset![], 0),
         );
     }
 
@@ -295,11 +295,11 @@ mod tests {
 
         assert_eq!(
             Ok((123, hashset![UsedProofV10::Sig(p1)])),
-            script.unlockable_on(&hashset![p1], &hashset![], 0)
+            script.unlockable_on(&hashset![&p1.as_ref()[..32]], &hashset![], 0)
         );
         assert_eq!(
             Err(ScriptNeverUnlockableError),
-            script.unlockable_on(&hashset![PublicKey::default()], &hashset![], 0),
+            script.unlockable_on(&hashset![&[0u8; 32][..]], &hashset![], 0),
         );
     }
 
@@ -332,7 +332,7 @@ mod tests {
         );
         assert_eq!(
             Ok((123, hashset![UsedProofV10::Sig(p1)])),
-            script.unlockable_on(&hashset![p1], &hashset![], 0),
+            script.unlockable_on(&hashset![&p1.as_ref()[..32]], &hashset![], 0),
         );
     }
 
@@ -345,11 +345,11 @@ mod tests {
 
         assert_eq!(
             Ok((0, Some(UsedProofV10::Sig(p1)))),
-            cond.unlockable_on(&hashset![p1], &hashset![], 0),
+            cond.unlockable_on(&hashset![&p1.as_ref()[..32]], &hashset![], 0),
         );
         assert_eq!(
             Err(ScriptNeverUnlockableError),
-            cond.unlockable_on(&hashset![PublicKey::default()], &hashset![], 0),
+            cond.unlockable_on(&hashset![&[0u8; 32][..]], &hashset![], 0),
         );
     }
 
@@ -364,7 +364,7 @@ mod tests {
         );
         assert_eq!(
             Err(ScriptNeverUnlockableError),
-            cond.unlockable_on(&hashset![PublicKey::default()], &hashset![], 0),
+            cond.unlockable_on(&hashset![&[0u8; 32][..]], &hashset![], 0),
         );
     }
 

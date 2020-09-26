@@ -59,7 +59,7 @@ impl SourceV10 {
         source_written_on: u64,
         utxo_script: &WalletScriptV10,
     ) -> Result<u64, SourceV10NotUnlockableError> {
-        let mut signers = HashSet::with_capacity(proofs.len());
+        let mut input_signers = HashSet::with_capacity(proofs.len());
         let mut codes_hash = HashSet::with_capacity(proofs.len());
 
         for proof in proofs {
@@ -70,7 +70,7 @@ impl SourceV10 {
                             *tx_signers_index,
                         ));
                     } else {
-                        signers.insert(tx_signers[*tx_signers_index]);
+                        input_signers.insert(&tx_signers[*tx_signers_index].as_ref()[..32]);
                     }
                 }
                 WalletUnlockProofV10::Xhx(code) => {
@@ -80,7 +80,7 @@ impl SourceV10 {
         }
 
         let (script_unlockable_on, used_proofs) = utxo_script
-            .unlockable_on(&signers, &codes_hash, source_written_on)
+            .unlockable_on(&input_signers, &codes_hash, source_written_on)
             .map_err(SourceV10NotUnlockableError::ScriptNeverUnlockable)?;
 
         if used_proofs.len() < proofs.len() {
@@ -103,6 +103,26 @@ mod tests {
     #[inline(always)]
     fn pk(pk_b58: &str) -> PublicKey {
         unwrap!(PublicKey::from_base58(pk_b58))
+    }
+
+    #[test]
+    fn test_source_unlockable_on_invariant_with_leading_1() {
+        let p43 = pk("XoFs76G4yidvVY3FZBwYyLXTMjabryhFD8mNQPkQKHk");
+        let p43_with_leading_1 = pk("1XoFs76G4yidvVY3FZBwYyLXTMjabryhFD8mNQPkQKHk");
+        let script = WalletScriptV10::single(WalletConditionV10::Sig(p43));
+        let script_with_leading_1 =
+            WalletScriptV10::single(WalletConditionV10::Sig(p43_with_leading_1));
+        let proofs = vec![WalletUnlockProofV10::Sig(0)];
+
+        assert_eq!(
+            Ok(0),
+            SourceV10::unlockable_on(&[p43_with_leading_1], &proofs, 0, &script)
+        );
+
+        assert_eq!(
+            Ok(0),
+            SourceV10::unlockable_on(&[p43], &proofs, 0, &script_with_leading_1)
+        );
     }
 
     #[test]

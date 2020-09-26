@@ -40,7 +40,9 @@ pub mod prelude {
         ScriptNeverUnlockableError, WalletConditionV10, WalletScriptNodesV10, WalletScriptV10,
         WalletSubScriptV10, WalletUnlockProofV10,
     };
-    pub use crate::source::v10::{SourceIdV10, SourceV10, UdSourceIdV10, UtxoIdV10};
+    pub use crate::source::v10::{
+        SourceIdV10, SourceV10, SourceV10NotUnlockableError, UdSourceIdV10, UtxoIdV10,
+    };
     pub use crate::source::SourceAmount;
 }
 
