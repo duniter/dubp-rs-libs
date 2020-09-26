@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.25.0] - 2020-09-26
+
+- doc: `BaseConversionError` is used for base 16 too
+
 ## [0.24.0] - 2020-09-12
 
 ### Fixed
@@ -103,7 +107,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.23.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.25.0...HEAD
+[0.25.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.24.0...v0.25.0
+[0.24.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.23.0...v0.24.0
 [0.23.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.21.0...v0.23.0
 [0.21.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.20.0...v0.21.0
 [0.20.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.15.0...v0.20.0
