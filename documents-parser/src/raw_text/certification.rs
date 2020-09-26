@@ -76,7 +76,7 @@ impl FromPestPair for CertificationDocumentV10 {
             identity_sig: sigs[0],
             blockstamp: blockstamps[1],
         }
-        .build_with_text_and_sigs(doc.to_owned(), svec![sigs[1]]))
+        .build_with_signature(svec![sigs[1]]))
     }
 }
 

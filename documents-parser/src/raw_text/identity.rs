@@ -62,10 +62,9 @@ impl FromPestPair for IdentityDocumentV10 {
             blockstamp,
             issuer: ed25519::PublicKey::from_base58(pubkey_str).unwrap_or_else(|_| unreachable!()), // Grammar ensures that we have a base58 string.
         }
-        .build_with_text_and_sigs(
-            doc.to_owned(),
-            svec![ed25519::Signature::from_base64(sig_str).unwrap_or_else(|_| unreachable!())],
-        ))
+        .build_with_signature(svec![
+            ed25519::Signature::from_base64(sig_str).unwrap_or_else(|_| unreachable!())
+        ]))
     }
 }
 

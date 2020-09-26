@@ -274,7 +274,7 @@ impl Document for TransactionDocumentV10 {
     }
 
     fn as_bytes(&self) -> BeefCow<[u8]> {
-        BeefCow::borrowed(self.as_text_without_signature().as_bytes())
+        BeefCow::borrowed(self.as_text().as_bytes())
     }
 }
 

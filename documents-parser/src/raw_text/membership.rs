@@ -67,10 +67,9 @@ impl FromPestPair for MembershipDocumentV10 {
             identity_username: uid,
             identity_blockstamp: blockstamps[1],
         }
-        .build_with_text_and_sigs(
-            doc.to_owned(),
-            svec![ed25519::Signature::from_base64(sig_str).unwrap_or_else(|_| unreachable!())],
-        ))
+        .build_with_signature(svec![
+            ed25519::Signature::from_base64(sig_str).unwrap_or_else(|_| unreachable!())
+        ]))
     }
 }
 

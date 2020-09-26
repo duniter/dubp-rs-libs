@@ -60,20 +60,8 @@ pub trait TextDocument: Document {
     /// Type of associated compact document.
     type CompactTextDocument_: CompactTextDocument;
 
-    /// Return document as text.
+    /// Return document as text without leading signatures.
     fn as_text(&self) -> &str;
-
-    /// Return document as text without signature.
-    fn as_text_without_signature(&self) -> &str {
-        let text = self.as_text();
-        let mut lines: Vec<&str> = self.as_text().split('\n').collect();
-        let sigs = self.signatures();
-        let mut sigs_str_len = sigs.len() - 1;
-        for _ in sigs {
-            sigs_str_len += lines.pop().unwrap_or("").len();
-        }
-        &text[0..(text.len() - sigs_str_len)]
-    }
 
     /// Return document as text with leading signatures.
     fn as_text_with_signatures(&self) -> String {
@@ -83,6 +71,7 @@ pub trait TextDocument: Document {
             text.push_str(&sig.to_base64());
             text.push('\n');
         }
+        text.pop(); // remove the last line break
 
         text
     }

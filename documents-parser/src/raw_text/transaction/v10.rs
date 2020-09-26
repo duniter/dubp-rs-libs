@@ -70,7 +70,7 @@ impl FromPestPair for TransactionDocumentV10 {
             comment,
             hash: None,
         }
-        .build_with_text_and_sigs(doc.to_owned(), sigs))
+        .build_with_signature(sigs))
     }
 }
 

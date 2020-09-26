@@ -72,7 +72,7 @@ impl FromPestPair for RevocationDocumentV10 {
             identity_blockstamp: blockstamps[0],
             identity_sig: sigs[0],
         }
-        .build_with_text_and_sigs(doc.to_owned(), svec![sigs[1]]))
+        .build_with_signature(svec![sigs[1]]))
     }
 }
 
