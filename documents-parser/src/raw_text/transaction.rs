@@ -4,14 +4,14 @@ pub(crate) mod v10;
 
 impl FromPestPair for TransactionDocument {
     #[inline]
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, TextParseError> {
         let tx_vx_pair = pair.into_inner().next().unwrap_or_else(|| unreachable!()); // get and unwrap the `tx_vX` rule; never fails
 
         match tx_vx_pair.as_rule() {
             Rule::tx_v10 => {
                 TransactionDocumentV10::from_pest_pair(tx_vx_pair).map(TransactionDocument::V10)
             }
-            _ => Err(RawTextParseError::UnexpectedRule(format!(
+            _ => Err(TextParseError::UnexpectedRule(format!(
                 "{:#?}",
                 tx_vx_pair.as_rule()
             ))),
@@ -58,8 +58,8 @@ kL59C1izKjcRN429AlKdshwhWbasvyL7sthI757zm1DfZTdTIctDWlKbYeG/tS7QyAgI3gcfrTHPhu1E
 e3LpgB2RZ/E/BCxPJsn+TDDyxGYzrIsMyDt//KhJCjIQD6pNUxr5M5jrq2OwQZgwmz91YcmoQ2XRQAUDpe4BAw==
 w69bYgiQxDmCReB0Dugt9BstXlAKnwJkKCdWvCeZ9KnUCv0FJys6klzYk/O/b9t74tYhWZSX0bhETWHiwfpWBw==";
 
-        let doc = unwrap!(TransactionDocument::parse_from_raw_text(doc));
-        //println!("Doc : {:?}", doc);
+        let mut doc = unwrap!(TransactionDocument::parse_from_raw_text(doc));
+        println!("Doc hash : {:?}", doc.get_hash());
         println!("{}", doc.generate_compact_text());
         assert!(doc.verify_signatures().is_ok());
         assert_eq!(

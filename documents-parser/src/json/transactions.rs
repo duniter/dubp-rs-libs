@@ -25,11 +25,11 @@ pub enum ParseJsonTxError {
     #[error("wrong issuer : {0}")]
     Issuer(BaseConversionError),
     #[error("wrong input : {0}")]
-    Input(RawTextParseError),
+    Input(TextParseError),
     #[error("wrong unlock : {0}")]
-    Unlock(RawTextParseError),
+    Unlock(TextParseError),
     #[error("wrong output : {0}")]
-    Output(RawTextParseError),
+    Output(TextParseError),
     #[error("wrong sig : {0}")]
     Sig(BaseConversionError),
     #[error("json error: {0}")]
@@ -78,25 +78,25 @@ fn parse_json_transaction(
                 blockstamp: Blockstamp::from_str(get_str(json_tx, "blockstamp")?)
                     .map_err(ParseJsonTxError::Blockstamp)?,
                 locktime: (get_number(json_tx, "locktime")?.trunc() as u64),
-                issuers: &get_str_array(json_tx, "issuers")?
+                issuers: get_str_array(json_tx, "issuers")?
                     .iter()
                     .map(|p| ed25519::PublicKey::from_base58(p))
-                    .collect::<Result<Vec<ed25519::PublicKey>, BaseConversionError>>()
-                    .map_err(ParseJsonTxError::Issuer)?[..],
+                    .collect::<Result<SmallVec<_>, BaseConversionError>>()
+                    .map_err(ParseJsonTxError::Issuer)?,
                 inputs: &get_str_array(json_tx, "inputs")?
                     .iter()
                     .map(|i| tx_input_v10_from_str(i))
-                    .collect::<Result<Vec<TransactionInputV10>, RawTextParseError>>()
+                    .collect::<Result<Vec<TransactionInputV10>, TextParseError>>()
                     .map_err(ParseJsonTxError::Input)?[..],
                 unlocks: &get_str_array(json_tx, "unlocks")?
                     .iter()
                     .map(|i| tx_unlock_v10_from_str(i))
-                    .collect::<Result<Vec<TransactionInputUnlocksV10>, RawTextParseError>>()
+                    .collect::<Result<Vec<TransactionInputUnlocksV10>, TextParseError>>()
                     .map_err(ParseJsonTxError::Unlock)?[..],
                 outputs: get_str_array(json_tx, "outputs")?
                     .iter()
                     .map(|i| tx_output_v10_from_str(i))
-                    .collect::<Result<SmallVec<_>, RawTextParseError>>()
+                    .collect::<Result<SmallVec<_>, TextParseError>>()
                     .map_err(ParseJsonTxError::Output)?,
                 comment: &unescape_str(get_str(json_tx, "comment")?),
                 hash: get_optional_str(json_tx, "hash")?
@@ -133,7 +133,7 @@ mod tests {
                 "50-00001DAA4559FEDB8320D1040B0F22B631459F36F237A0D9BC1EB923C12A12E7",
             )),
             locktime: 0,
-            issuers: &[unwrap!(ed25519::PublicKey::from_base58(
+            issuers: svec![unwrap!(ed25519::PublicKey::from_base58(
                 "2ny7YAdmzReQxAayyJZsyVYwYhVyax2thKcGknmQy5nQ",
             ))],
             inputs: &[unwrap!(tx_input_v10_from_str(

@@ -30,6 +30,7 @@
 mod compact_text;
 mod json;
 mod raw_text;
+mod stringified_object;
 mod transaction_utils;
 
 // Re-export crates
@@ -44,18 +45,18 @@ pub mod prelude {
     pub use crate::compact_text::ParseCompactDocError;
     pub use crate::json::transactions::{parse_json_transactions, ParseJsonTxError};
     pub use crate::raw_text::{ParseFromRawText, Rule};
+    pub use crate::stringified_object::FromStringObject;
 }
 
 // Export profession types
 pub use crate::raw_text::wallet_script::wallet_script_from_str;
+pub use crate::transaction_utils::tx_unlock_v10_from_str;
 
 // Crate imports
 pub(crate) use crate::json::DefaultHasher;
 pub(crate) use crate::prelude::*;
 pub(crate) use crate::raw_text::{FromPestPair, RawDocumentsParser};
-pub(crate) use crate::transaction_utils::{
-    tx_input_v10_from_str, tx_output_v10_from_str, tx_unlock_v10_from_str,
-};
+pub(crate) use crate::transaction_utils::{tx_input_v10_from_str, tx_output_v10_from_str};
 pub(crate) use dubp_documents::certification::{
     v10::CertificationDocumentV10Builder, CertificationDocument, CertificationDocumentV10,
     CompactCertificationDocumentV10,
@@ -78,8 +79,8 @@ pub(crate) use dubp_documents::revocation::{
 pub(crate) use dubp_documents::smallvec::{smallvec as svec, SmallVec};
 pub(crate) use dubp_documents::transaction::{
     v10::TransactionInputUnlocksV10, TransactionDocument, TransactionDocumentBuilder,
-    TransactionDocumentV10, TransactionDocumentV10Builder, TransactionInputV10,
-    TransactionOutputV10, UTXOConditions,
+    TransactionDocumentV10, TransactionDocumentV10Builder, TransactionDocumentV10Stringified,
+    TransactionInputV10, TransactionOutputV10, UTXOConditions,
 };
 pub(crate) use dubp_wallet::prelude::*;
 pub(crate) use pest::{
@@ -103,7 +104,16 @@ impl<T: pest::RuleType> From<pest::error::Error<T>> for PestError {
 
 /// List of possible errors while parsing a text document.
 #[derive(Debug, Clone, Eq, Error, PartialEq)]
-pub enum RawTextParseError {
+pub enum TextParseError {
+    /// Base 16/58/64 convertion error
+    #[error("field {field}: {error}")]
+    BaseConversionError {
+        field: &'static str,
+        error: BaseConversionError,
+    },
+    /// Fail to parse blockstamp
+    #[error("BlockstampParseError: {0}")]
+    BlockstampParseError(BlockstampParseError),
     /// The given source don't have a valid specific document format (document type).
     #[error("TextDocumentParseError: Invalid inner format: {0}")]
     InvalidInnerFormat(String),
@@ -124,21 +134,21 @@ pub enum RawTextParseError {
     UnknownType,
 }
 
-impl From<AddrParseError> for RawTextParseError {
+impl From<AddrParseError> for TextParseError {
     fn from(e: AddrParseError) -> Self {
-        RawTextParseError::IpAddrError(e)
+        TextParseError::IpAddrError(e)
     }
 }
 
-impl From<PestError> for RawTextParseError {
+impl From<PestError> for TextParseError {
     fn from(e: PestError) -> Self {
-        RawTextParseError::PestError(e)
+        TextParseError::PestError(e)
     }
 }
 
-impl<T: pest::RuleType> From<pest::error::Error<T>> for RawTextParseError {
+impl<T: pest::RuleType> From<pest::error::Error<T>> for TextParseError {
     fn from(e: pest::error::Error<T>) -> Self {
-        RawTextParseError::PestError(e.into())
+        TextParseError::PestError(e.into())
     }
 }
 

@@ -1,7 +1,7 @@
 use crate::*;
 
 impl FromPestPair for CertificationDocument {
-    fn from_pest_pair(cert_pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
+    fn from_pest_pair(cert_pair: Pair<Rule>) -> Result<Self, TextParseError> {
         let cert_vx_pair = cert_pair
             .into_inner()
             .next()
@@ -10,7 +10,7 @@ impl FromPestPair for CertificationDocument {
         match cert_vx_pair.as_rule() {
             Rule::cert_v10 => CertificationDocumentV10::from_pest_pair(cert_vx_pair)
                 .map(CertificationDocument::V10),
-            _ => Err(RawTextParseError::UnexpectedVersion(format!(
+            _ => Err(TextParseError::UnexpectedVersion(format!(
                 "{:#?}",
                 cert_vx_pair.as_rule()
             ))),
@@ -19,8 +19,7 @@ impl FromPestPair for CertificationDocument {
 }
 
 impl FromPestPair for CertificationDocumentV10 {
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<CertificationDocumentV10, RawTextParseError> {
-        let doc = pair.as_str();
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<CertificationDocumentV10, TextParseError> {
         let mut currency = "";
         let mut pubkeys = Vec::with_capacity(2);
         let mut uid = "";

@@ -2,14 +2,14 @@ use crate::*;
 
 impl FromPestPair for IdentityDocument {
     #[inline]
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, TextParseError> {
         let idty_vx_pair = pair.into_inner().next().unwrap_or_else(|| unreachable!()); // get and unwrap the `idty_vx` rule; never fails
 
         match idty_vx_pair.as_rule() {
             Rule::idty_v10 => Ok(IdentityDocument::V10(IdentityDocumentV10::from_pest_pair(
                 idty_vx_pair,
             )?)),
-            _ => Err(RawTextParseError::UnexpectedVersion(format!(
+            _ => Err(TextParseError::UnexpectedVersion(format!(
                 "{:#?}",
                 idty_vx_pair.as_rule()
             ))),
@@ -18,8 +18,7 @@ impl FromPestPair for IdentityDocument {
 }
 
 impl FromPestPair for IdentityDocumentV10 {
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<IdentityDocumentV10, RawTextParseError> {
-        let doc = pair.as_str();
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<IdentityDocumentV10, TextParseError> {
         let mut currency = "";
         let mut pubkey_str = "";
         let mut uid = "";

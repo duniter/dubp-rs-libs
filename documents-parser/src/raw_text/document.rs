@@ -2,7 +2,7 @@ use crate::*;
 
 impl FromPestPair for DubpDocument {
     #[inline]
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, TextParseError> {
         let doc_vx_pair = pair.into_inner().next().unwrap_or_else(|| unreachable!()); // get and unwrap the `document_vX` rule; never fails
 
         match doc_vx_pair.as_rule() {
@@ -12,7 +12,7 @@ impl FromPestPair for DubpDocument {
     }
 }
 
-pub fn dubp_doc_from_pest_pair_v10(pair: Pair<Rule>) -> Result<DubpDocument, RawTextParseError> {
+pub fn dubp_doc_from_pest_pair_v10(pair: Pair<Rule>) -> Result<DubpDocument, TextParseError> {
     let doc_type_v10_pair = pair.into_inner().next().unwrap_or_else(|| unreachable!()); // get and unwrap the `{DOC_TYPE}_v10` rule; never fails
 
     match doc_type_v10_pair.as_rule() {

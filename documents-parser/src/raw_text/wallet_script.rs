@@ -1,14 +1,14 @@
 use crate::*;
 
-pub fn wallet_script_from_str(source: &str) -> Result<WalletScriptV10, RawTextParseError> {
+pub fn wallet_script_from_str(source: &str) -> Result<WalletScriptV10, TextParseError> {
     let mut pairs = RawDocumentsParser::parse(Rule::output_conds, source)
-        .map_err(|e| RawTextParseError::PestError(e.into()))?;
+        .map_err(|e| TextParseError::PestError(e.into()))?;
     WalletScriptV10::from_pest_pair(pairs.next().unwrap_or_else(|| unreachable!()))
     // get and unwrap the `output_conds` rule; never fails
 }
 
 impl FromPestPair for WalletScriptV10 {
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, TextParseError> {
         let mut pairs = pair.into_inner();
         let term_left_pair = pairs.next().unwrap_or_else(|| unreachable!());
 
@@ -23,7 +23,7 @@ impl FromPestPair for WalletScriptV10 {
 
 impl FromPestPair for WalletConditionV10 {
     #[inline]
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, TextParseError> {
         Ok(match pair.as_rule() {
             Rule::output_cond_sig => WalletConditionV10::Sig(
                 ed25519::PublicKey::from_base58(
@@ -114,7 +114,7 @@ mod tests {
     use crate::tests::*;
 
     #[test]
-    fn parse_complex_wallet_script_v10() -> Result<(), RawTextParseError> {
+    fn parse_complex_wallet_script_v10() -> Result<(), TextParseError> {
         let script_v10_str =
             "SIG(6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i) || (XHX(3EB4702F2AC2FD3FA4FDC46A4FC05AE8CDEE1A85F2AC2FD3FA4FDC46A4FC01CA) && SIG(42jMJtb8chXrpHMAMcreVdyPJK7LtWjEeRqkPw4eSEVp))";
         let expected_script = WalletScriptV10 {

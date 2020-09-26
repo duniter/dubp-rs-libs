@@ -2,14 +2,14 @@ use crate::*;
 
 impl FromPestPair for RevocationDocument {
     #[inline]
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, RawTextParseError> {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<Self, TextParseError> {
         let revoc_vx_pair = pair.into_inner().next().unwrap_or_else(|| unreachable!()); // get and unwrap the `revoc_vX` rule; never fails
 
         match revoc_vx_pair.as_rule() {
             Rule::revoc_v10 => {
                 RevocationDocumentV10::from_pest_pair(revoc_vx_pair).map(RevocationDocument::V10)
             }
-            _ => Err(RawTextParseError::UnexpectedVersion(format!(
+            _ => Err(TextParseError::UnexpectedVersion(format!(
                 "{:#?}",
                 revoc_vx_pair.as_rule()
             ))),
@@ -18,8 +18,7 @@ impl FromPestPair for RevocationDocument {
 }
 
 impl FromPestPair for RevocationDocumentV10 {
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<RevocationDocumentV10, RawTextParseError> {
-        let doc = pair.as_str();
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<RevocationDocumentV10, TextParseError> {
         let mut currency = "";
         let mut pubkeys = Vec::with_capacity(1);
         let mut uid = "";

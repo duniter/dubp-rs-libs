@@ -1,12 +1,11 @@
 use crate::*;
 
 impl FromPestPair for TransactionDocumentV10 {
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionDocumentV10, RawTextParseError> {
-        let doc = pair.as_str();
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionDocumentV10, TextParseError> {
         let mut currency = "";
         let mut blockstamp = Blockstamp::default();
         let mut locktime = 0;
-        let mut issuers = Vec::new();
+        let mut issuers = SmallVec::new();
         let mut inputs = Vec::new();
         let mut unlocks = Vec::new();
         let mut outputs = SmallVec::new();
@@ -63,7 +62,7 @@ impl FromPestPair for TransactionDocumentV10 {
             currency,
             blockstamp,
             locktime,
-            issuers: &issuers[..],
+            issuers,
             inputs: &inputs[..],
             unlocks: &unlocks[..],
             outputs,
@@ -75,7 +74,7 @@ impl FromPestPair for TransactionDocumentV10 {
 }
 
 impl FromPestPair for TransactionInputV10 {
-    fn from_pest_pair(pairs: Pair<Rule>) -> Result<TransactionInputV10, RawTextParseError> {
+    fn from_pest_pair(pairs: Pair<Rule>) -> Result<TransactionInputV10, TextParseError> {
         let tx_input_type_pair = pairs.into_inner().next().unwrap_or_else(|| unreachable!());
         Ok(match tx_input_type_pair.as_rule() {
             Rule::tx_input_du => {
@@ -156,7 +155,7 @@ impl FromPestPair for TransactionInputV10 {
 }
 
 impl FromPestPair for TransactionInputUnlocksV10 {
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionInputUnlocksV10, RawTextParseError> {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionInputUnlocksV10, TextParseError> {
         let mut input_index = 0;
         let mut unlock_conds = Vec::new();
         for unlock_field in pair.into_inner() {
@@ -195,7 +194,7 @@ impl FromPestPair for TransactionInputUnlocksV10 {
 }
 
 impl FromPestPair for TransactionOutputV10 {
-    fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionOutputV10, RawTextParseError> {
+    fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionOutputV10, TextParseError> {
         let mut utxo_pairs = pair.into_inner();
         let amount = SourceAmount {
             amount: utxo_pairs
@@ -237,7 +236,30 @@ mod tests {
     use unwrap::unwrap;
 
     #[test]
-    fn parse_transaction_document() {
+    fn parse_simple_transaction_document() {
+        let doc = "Version: 10
+Type: Transaction
+Currency: BETA_BROUZOUF2
+Blockstamp: 3-94C1E4508A314E31B28ECCE4E21C65EBCD7F3267D2A468D65D9278B73AE0A0DA
+Locktime: 0
+Issuers:
+DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV
+Inputs:
+120:0:T:71A1E79DD17762A9869D7FBD2FEBAC2738CBB7506CB758C7B3C2DD548BAA42D2:0
+Unlocks:
+0:XHX(1872767826647264) SIG(0)
+Outputs:
+120:0:SIG(DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV)
+Comment: tic takes money on BETA_BROUZOUF
+hfncr3i2TMfyu+SFgUQOkE9Hfw23Sxgk/WF2SR3jXfaaEhM8wFYEVyJsgSWPAKrBqQl+jhVkXMQc6lnzjD/EDA==
+";
+        let doc = unwrap!(TransactionDocumentV10::parse_from_raw_text(doc));
+        println!("doc={:?}", doc);
+        assert!(doc.verify_signatures().is_ok());
+    }
+
+    #[test]
+    fn parse_complex_transaction_document() {
         let doc = "Version: 10
 Type: Transaction
 Currency: duniter_unit_test_currency
