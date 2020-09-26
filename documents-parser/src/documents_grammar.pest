@@ -125,8 +125,8 @@ term = _{ output_single_cond | output_conds_brackets_expr }
 tx_output = ${ tx_amount ~ ":" ~ tx_amount_base ~ ":" ~ output_conds }
 
 tx_comment_char = {
-    ASCII_ALPHANUMERIC | "\\" | ":" | "/" | ";" | "*" | "[" | "]" | "(" | ")" | "?" | "!" | "^" 
-    | "+" | "=" | "@" | "&" | "~" | "#" | "{" | "}" | "|" | "<" | ">" | "%" | "." | " " | "-" 
+    ASCII_ALPHANUMERIC | "." | " " | "-" | "_" | "\\" | ":" | "/" | ";" | "*" | "[" | "]" | "(" | ")" | "?" | "!" | "^" 
+    | "+" | "=" | "@" | "&" | "~" | "#" | "{" | "}" | "|" | "<" | ">" | "%"
 }
 tx_comment = @{ tx_comment_char{0,255} }
 
