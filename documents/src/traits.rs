@@ -20,11 +20,6 @@ pub mod text;
 use crate::*;
 
 /// trait providing commun methods for any documents of any protocol version.
-///
-/// # Design choice
-///
-/// Allow only ed25519 for protocol 10 and many differents
-/// schemes for protocol 11 through a proxy type.
 pub trait Document: Debug + Clone + PartialEq + Eq {
     /// Type of the `PublicKey` used by the document.
     type PublicKey: PublicKey;

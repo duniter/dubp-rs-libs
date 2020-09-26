@@ -45,16 +45,69 @@ impl ToString for TransactionInputV10 {
     }
 }
 
+const TX_V10_MAX_LINES: usize = 100;
+
 impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
     type Input = TransactionInputV10;
     type Inputs = &'a [TransactionInputV10];
+    type InputUnlocks = TransactionInputUnlocksV10;
+    type InputsUnlocks = &'a [TransactionInputUnlocksV10];
     type Output = TransactionOutputV10;
     type Outputs = &'a [TransactionOutputV10];
     fn get_inputs(&'a self) -> Self::Inputs {
         &self.inputs
     }
+    fn get_inputs_unlocks(&'a self) -> Self::InputsUnlocks {
+        &self.unlocks
+    }
     fn get_outputs(&'a self) -> Self::Outputs {
         &self.outputs
+    }
+
+    fn verify(&self, expected_currency_opt: Option<String>) -> Result<(), super::TxVerifyErr> {
+        if let Some(expected_currency) = expected_currency_opt {
+            if self.currency != expected_currency {
+                return Err(super::TxVerifyErr::WrongCurrency {
+                    expected: expected_currency,
+                    found: self.currency.clone(),
+                });
+            }
+        }
+        if self.inputs.is_empty() {
+            return Err(super::TxVerifyErr::NoInput);
+        }
+        if self.issuers.is_empty() {
+            return Err(super::TxVerifyErr::NoIssuer);
+        }
+        if self.outputs.is_empty() {
+            return Err(super::TxVerifyErr::NoOutput);
+        }
+        if self.inputs.len() != self.unlocks.len() {
+            return Err(super::TxVerifyErr::NotSameAmountOfInputsAndUnlocks(
+                self.inputs.len(),
+                self.unlocks.len(),
+            ));
+        }
+        self.verify_signatures().map_err(super::TxVerifyErr::Sigs)?;
+        let lines_count = self.compact_size_in_lines();
+        if lines_count > TX_V10_MAX_LINES {
+            return Err(super::TxVerifyErr::TooManyLines {
+                found: lines_count,
+                max: TX_V10_MAX_LINES,
+            });
+        }
+        let inputs_amount: SourceAmount = self.inputs.iter().map(|input| input.amount).sum();
+        let outputs_amount: SourceAmount = self.outputs.iter().map(|output| output.amount).sum();
+        if inputs_amount != outputs_amount {
+            return Err(
+                super::TxVerifyErr::NotSameSumOfInputsAmountAndOutputsAmount(
+                    inputs_amount,
+                    outputs_amount,
+                ),
+            );
+        }
+
+        Ok(())
     }
 }
 
@@ -212,6 +265,20 @@ impl ToStringObject for TransactionDocumentV10 {
 }
 
 impl TransactionDocumentV10 {
+    /// Compute  compact size in lines
+    pub fn compact_size_in_lines(&self) -> usize {
+        let compact_lines = 2  + // Header + blockstamp
+        self.issuers.len() +
+        self.inputs.len() +
+        self.unlocks.len() +
+        self.outputs.len() +
+        self.signatures.len();
+        if !self.comment.is_empty() {
+            compact_lines + 1
+        } else {
+            compact_lines
+        }
+    }
     /// Compute transaction hash
     pub fn compute_hash(&self) -> Hash {
         let mut hashing_text = if let Some(ref text) = self.text {
@@ -247,6 +314,28 @@ impl TransactionDocumentV10 {
         for output in &mut self.outputs {
             output.reduce()
         }
+    }
+    /// Indicates from which blockchain timestamp the transaction can be writable.
+    pub fn writable_on(
+        &self,
+        inputs_written_on: &[u64],
+        inputs_scripts: &[WalletScriptV10],
+    ) -> Result<u64, SourceV10NotUnlockableError> {
+        assert_eq!(self.inputs.len(), inputs_written_on.len());
+        let mut tx_unlockable_on = 0;
+        #[allow(clippy::needless_range_loop)]
+        for i in 0..self.inputs.len() {
+            let source_unlockable_on = SourceV10::unlockable_on(
+                self.issuers.as_ref(),
+                self.unlocks[i].unlocks.as_ref(),
+                inputs_written_on[i],
+                &inputs_scripts[i],
+            )?;
+            if source_unlockable_on > tx_unlockable_on {
+                tx_unlockable_on = source_unlockable_on;
+            }
+        }
+        Ok(tx_unlockable_on)
     }
 }
 
@@ -358,7 +447,7 @@ pub struct TransactionDocumentV10Builder<'a> {
     /// Locktime
     pub locktime: u64,
     /// Transaction Document issuers.
-    pub issuers: &'a [ed25519::PublicKey],
+    pub issuers: SmallVec<[ed25519::PublicKey; 1]>,
     /// Transaction inputs.
     pub inputs: &'a [TransactionInputV10],
     /// Inputs unlocks.
@@ -402,7 +491,7 @@ impl<'a> TextDocumentBuilder for TransactionDocumentV10Builder<'a> {
         let mut inputs_string: String = "".to_owned();
         let mut unlocks_string: String = "".to_owned();
         let mut outputs_string: String = "".to_owned();
-        for issuer in self.issuers {
+        for issuer in &self.issuers {
             issuers_string.push_str(&format!("{}\n", issuer.to_string()))
         }
         for input in self.inputs {
@@ -470,7 +559,7 @@ mod tests {
             currency: "duniter_unit_test_currency",
             blockstamp: block,
             locktime: 0,
-            issuers: &[pubkey],
+            issuers: svec![pubkey],
             inputs: &[TransactionInputV10 {
                 amount: SourceAmount::with_base0(10),
                 id: SourceIdV10::Ud(UdSourceIdV10 {
@@ -527,7 +616,7 @@ mod tests {
             currency: "g1",
             blockstamp: block,
             locktime: 0,
-            issuers: &[pubkey],
+            issuers: svec![pubkey],
             inputs: &[TransactionInputV10 {
                 amount: SourceAmount::with_base0(950),
                 id: SourceIdV10::Utxo(UtxoIdV10 {

@@ -70,13 +70,37 @@ impl ToString for UTXOConditions {
     }
 }
 
+#[derive(Debug, Error)]
+pub enum TxVerifyErr {
+    #[error("Transaction must have at least one input")]
+    NoInput,
+    #[error("Transaction must have at least one issuer")]
+    NoIssuer,
+    #[error("Transaction must have at least one output")]
+    NoOutput,
+    #[error("Not same amount of inputs and unlocks: found {0} inputs and {1} unlocks.")]
+    NotSameAmountOfInputsAndUnlocks(usize, usize),
+    #[error("Not same sum of inputs amount and outputs amount: ({0:?}, {1:?}).")]
+    NotSameSumOfInputsAmountAndOutputsAmount(SourceAmount, SourceAmount),
+    #[error("{0}")]
+    Sigs(DocumentSigsErr),
+    #[error("Transaction too long: found {found} lines (max {max}).")]
+    TooManyLines { found: usize, max: usize },
+    #[error("Wrong currency: expected \'{expected}\' found \'{found}\'.")]
+    WrongCurrency { expected: String, found: String },
+}
+
 pub trait TransactionDocumentTrait<'a> {
     type Input: 'a;
     type Inputs: AsRef<[Self::Input]>;
+    type InputUnlocks: 'a;
+    type InputsUnlocks: AsRef<[Self::InputUnlocks]>;
     type Output: 'a;
     type Outputs: AsRef<[Self::Output]>;
     fn get_inputs(&'a self) -> Self::Inputs;
+    fn get_inputs_unlocks(&'a self) -> Self::InputsUnlocks;
     fn get_outputs(&'a self) -> Self::Outputs;
+    fn verify(&self, expected_currency: Option<String>) -> Result<(), TxVerifyErr>;
 }
 
 /// Wrap a Transaction document.
@@ -279,7 +303,7 @@ pub(super) mod tests {
             currency: "duniter_unit_test_currency",
             blockstamp,
             locktime: 0,
-            issuers: &[pubkey],
+            issuers: svec![pubkey],
             inputs: &[TransactionInputV10 {
                 amount: SourceAmount::with_base0(10),
                 id: SourceIdV10::Ud(UdSourceIdV10 {
@@ -336,7 +360,7 @@ pub(super) mod tests {
             currency: "g1",
             blockstamp,
             locktime: 0,
-            issuers: &[pubkey],
+            issuers: svec![pubkey],
             inputs: &[TransactionInputV10 {
                 amount: SourceAmount::with_base0(950),
                 id: SourceIdV10::Utxo(UtxoIdV10 {
