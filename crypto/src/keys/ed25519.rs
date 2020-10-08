@@ -705,20 +705,16 @@ mod tests {
                  2V2Z3BpaHNlamVwZ25qZXNqb2dwZWpnaW9zZXNkdnNic3JicmJyZGJyZGI=",
             )
             .unwrap_err(),
-            BaseConversionError::InvalidLength {
-                found: 86,
-                expected: 64
-            }
+            BaseConversionError::InvalidBaseConverterLength
         );
         assert_eq!(
             super::Signature::from_base64(
-                "1eubHHbuNfilHMM0G2bI30iZzebQ2cQ1PC7uPAw08FGMM\
-                 mQCRerlF/3pc4sAcsnexsxBseA/3lY03KlONqJBAgdha<<",
+                "ziv50X9Ch7rWiN87BG0QWzjHu/VKqJVYStC3G4pd8ck8jT0XAeN0mMxZ5LE2IRs/B81L7GsQWjKA/eiTocsCAw<<",
             )
             .unwrap_err(),
             BaseConversionError::InvalidCharacter {
                 character: '<',
-                offset: 89
+                offset: 86
             }
         );
         assert_eq!(

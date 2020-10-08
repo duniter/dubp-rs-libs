@@ -30,34 +30,44 @@ pub fn str_hex_to_32bytes(text: &str) -> Result<[u8; 32], BaseConversionError> {
     } else {
         let mut bytes = [0u8; 32];
 
-        let chars: Vec<char> = text.chars().collect();
+        let chars = text.as_bytes();
 
         for i in 0..64 {
             if i % 2 != 0 {
                 continue;
             }
 
-            let byte1 = chars[i].to_digit(16);
-            let byte2 = chars[i + 1].to_digit(16);
+            let byte1 = hex_char_byte_to_byte(chars[i], i)?;
+            let byte2 = hex_char_byte_to_byte(chars[i + 1], i + 1)?;
 
-            if let Some(byte1) = byte1 {
-                if let Some(byte2) = byte2 {
-                    let byte = ((byte1 as u8) << 4) | byte2 as u8;
-                    bytes[i / 2] = byte;
-                } else {
-                    return Err(BaseConversionError::InvalidCharacter {
-                        character: chars[i + 1],
-                        offset: i + 1,
-                    });
-                }
-            } else {
-                return Err(BaseConversionError::InvalidCharacter {
-                    character: chars[i],
-                    offset: i,
-                });
-            }
+            bytes[i / 2] = (byte1 << 4) | byte2;
         }
 
         Ok(bytes)
+    }
+}
+
+fn hex_char_byte_to_byte(hex_char: u8, pos: usize) -> Result<u8, BaseConversionError> {
+    match hex_char {
+        b'0' => Ok(0),
+        b'1' => Ok(1),
+        b'2' => Ok(2),
+        b'3' => Ok(3),
+        b'4' => Ok(4),
+        b'5' => Ok(5),
+        b'6' => Ok(6),
+        b'7' => Ok(7),
+        b'8' => Ok(8),
+        b'9' => Ok(9),
+        b'A' => Ok(10),
+        b'B' => Ok(11),
+        b'C' => Ok(12),
+        b'D' => Ok(13),
+        b'E' => Ok(14),
+        b'F' => Ok(15),
+        c => Err(BaseConversionError::InvalidCharacter {
+            character: c as char,
+            offset: pos,
+        }),
     }
 }

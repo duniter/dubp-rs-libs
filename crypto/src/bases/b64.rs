@@ -19,17 +19,19 @@ use crate::bases::BaseConversionError;
 
 /// Create an array of 64 bytes from a Base64 string.
 pub fn str_base64_to64bytes(base64_data: &str) -> Result<[u8; 64], BaseConversionError> {
-    let result = base64::decode(base64_data)?;
+    if base64_data.len() > 88 {
+        return Err(BaseConversionError::InvalidBaseConverterLength);
+    }
 
-    if result.len() == 64 {
-        let mut u8_array = [0; 64];
-        u8_array[..64].clone_from_slice(&base64::decode(base64_data)?[..64]);
+    let mut u8_array = [0; 64];
+    let written_len = base64::decode_config_slice(base64_data, base64::STANDARD, &mut u8_array)?;
 
+    if written_len == 64 {
         Ok(u8_array)
     } else {
         Err(BaseConversionError::InvalidLength {
-            found: result.len(),
             expected: 64,
+            found: written_len,
         })
     }
 }

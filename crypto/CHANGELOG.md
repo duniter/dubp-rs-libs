@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- optimization: decode bases 16/58/64 strings without heap allocation
 - ref: [u8; 64] now implement `Hash` and `PartialEq` (rust 1.47)
 
 ## [0.25.0] - 2020-09-26

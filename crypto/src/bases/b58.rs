@@ -32,17 +32,22 @@ pub fn str_base58_to_32bytes(base58_data: &str) -> Result<([u8; 32], u8), BaseCo
         count_leading_1 += 1;
     }
 
-    match bs58::decode(source).into_vec() {
-        Ok(result) => {
-            let mut len = result.len();
-            if len > 32 {
-                len = 32;
+    let mut u8_array = [0; 32];
+    match bs58::decode(source).into(&mut u8_array) {
+        Ok(written_len) => {
+            if written_len == 32 {
+                Ok((u8_array, count_leading_1))
+            } else {
+                let delta = 32 - written_len;
+                for i in (0..written_len).rev() {
+                    u8_array[i + delta] = u8_array[i];
+                }
+                #[allow(clippy::needless_range_loop)]
+                for i in 0..delta {
+                    u8_array[i] = 0;
+                }
+                Ok((u8_array, count_leading_1))
             }
-            let mut u8_array = [0; 32];
-
-            u8_array[(32 - len)..].clone_from_slice(&result[..len]);
-
-            Ok((u8_array, count_leading_1))
         }
         Err(bs58::decode::Error::InvalidCharacter { character, index }) => {
             Err(BaseConversionError::InvalidCharacter {
