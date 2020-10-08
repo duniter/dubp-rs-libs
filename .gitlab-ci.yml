@@ -4,12 +4,12 @@ stages:
   - quality
 
 .rust_stable_lin64:
-  image: registry.duniter.org/docker/rust/rust-x64-stable-ci:latest
+  image: xd009642/tarpaulin:latest
   tags:
     - redshift
   before_script:
     - export PATH="$HOME/.cargo/bin:$PATH"
-    - rustup update
+    - rustup update stable
     - rustup show
     - rustc --version && cargo --version
 
@@ -17,6 +17,7 @@ fmt:
   extends: .rust_stable_lin64
   stage: fmt
   script:
+    - rustup component add rustfmt
     - cargo fmt -- --version
     - cargo fmt -- --check
         
@@ -28,6 +29,7 @@ tests:linux64:stable:
   script: 
     - RUSTFLAGS="-D warnings" cargo build
     - cargo test --doc
+    - cargo install cargo-tarpaulin
     - cargo tarpaulin --all-features --ignore-tests -iv --out Xml
     - bash <(curl -s https://codecov.io/bash)
 
@@ -35,6 +37,7 @@ clippy:
   extends: .rust_stable_lin64
   stage: quality
   script:
+    - rustup component add clippy
     - cargo clippy -- -V
     - cargo clippy --all --tests -- -D warnings --verbose
     
@@ -42,5 +45,6 @@ audit_dependencies:
   extends: .rust_stable_lin64
   stage: quality
   script:
+    - cargo install cargo-deny
     - cargo deny -V
     - cargo deny check
