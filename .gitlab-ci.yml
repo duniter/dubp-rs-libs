@@ -9,7 +9,6 @@ stages:
     - redshift
   before_script:
     - export PATH="$HOME/.cargo/bin:$PATH"
-    - rustup update
     - rustup show
     - rustc --version && cargo --version
 
