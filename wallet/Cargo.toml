@@ -1,6 +1,6 @@
 [package]
 name = "dubp-wallet"
-version = "0.25.0"
+version = "0.25.1"
 authors = ["elois <elois@duniter.org>"]
 description = "Provide wallet definition for DUBP protocol"
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
@@ -13,7 +13,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-dubp-common = { path = "../common", version = "0.25.0" }
+dubp-common = { path = "../common", version = "0.25.1" }
 serde = { version = "1.0.*", features = ["derive"] }
 smallvec = { version = "1.4.2", features = ["serde"] }
 thiserror = "1.0.20"

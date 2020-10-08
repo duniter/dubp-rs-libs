@@ -9,10 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.25.1] - 2020-10-08
+
 - optimization: decode bases 16/58/64 strings without heap allocation
 - ref: [u8; 64] now implement `Hash` and `PartialEq` (rust 1.47)
 
-## [0.25.0] - 2020-09-26
+## [0.25.1] - 2020-09-26
 
 - doc: `BaseConversionError` is used for base 16 too
 
@@ -110,7 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.25.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.25.1...HEAD
+[0.25.1]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.25.0...v0.25.1
 [0.25.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.24.0...v0.25.0
 [0.24.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.23.0...v0.24.0
 [0.23.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.21.0...v0.23.0
