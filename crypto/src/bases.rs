@@ -29,7 +29,7 @@ pub mod b64;
 /// Errors enumeration for Base 16/58/64 strings convertion.
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum BaseConversionError {
-    #[error("Data have invalid key length : expected {expected:?}, found {found:?}.")]
+    #[error("Data have invalid length : expected {expected:?}, found {found:?}.")]
     /// Data have invalid length.
     InvalidLength {
         /// Expected length

@@ -694,10 +694,7 @@ mod tests {
         // Test signature parsing
         assert_eq!(
             super::Signature::from_base64("YmhlaW9iaHNlcGlvaGVvaXNlcGl2ZXBvdm5pc2U=").unwrap_err(),
-            BaseConversionError::InvalidLength {
-                found: 29,
-                expected: 64
-            }
+            BaseConversionError::InvalidBaseConverterLength
         );
         assert_eq!(
             super::Signature::from_base64(
