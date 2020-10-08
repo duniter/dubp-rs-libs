@@ -2,7 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/dup-crypto.svg)](https://crates.io/crates/dup-crypto)
 [![docs](https://docs.rs/dup-crypto/badge.svg)](https://docs.rs/dup-crypto)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.41.0+-yellow.svg)](https://github.com/rust-lang/rust/blob/master/RELEASES.md)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.47.0+-yellow.svg)](https://github.com/rust-lang/rust/blob/master/RELEASES.md)
 
 Manage cryptographic operations for DUniter Protocols and the Duniter eco-system most broadly.
 

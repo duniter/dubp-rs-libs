@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- ref: [u8; 64] now implement `Hash` and `PartialEq` (rust 1.47)
+
 ## [0.25.0] - 2020-09-26
 
 - doc: `BaseConversionError` is used for base 16 too

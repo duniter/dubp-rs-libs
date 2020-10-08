@@ -40,7 +40,7 @@ use std::{
     cmp::Ordering,
     convert::TryFrom,
     fmt::{self, Debug, Display, Formatter},
-    hash::{Hash, Hasher},
+    hash::Hash,
     hint::unreachable_unchecked,
 };
 #[cfg(feature = "scrypt")]
@@ -53,18 +53,12 @@ pub(crate) const PUBKEY_DATAS_SIZE_IN_BYTES: usize = 32;
 pub const SIG_SIZE_IN_BYTES: usize = 64;
 
 /// Store a ed25519 signature.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub struct Signature(pub [u8; 64]);
 
 impl Default for Signature {
     fn default() -> Self {
         Signature([0u8; 64])
-    }
-}
-
-impl Hash for Signature {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.hash(state);
     }
 }
 
@@ -149,15 +143,6 @@ impl Debug for Signature {
         write!(f, "Signature {{ {} }}", self)
     }
 }
-
-impl PartialEq<Signature> for Signature {
-    fn eq(&self, other: &Signature) -> bool {
-        // No PartialEq for [u8;64], need to use 2 [u8;32]
-        self.0[0..32] == other.0[0..32] && self.0[32..64] == other.0[32..64]
-    }
-}
-
-impl Eq for Signature {}
 
 /// Store a Ed25519 public key.
 ///
@@ -539,7 +524,7 @@ mod tests {
     use super::*;
     use crate::keys::{KeyPair, Sig, Signator, Signature};
     use crate::seeds::Seed32;
-    use std::collections::hash_map::DefaultHasher;
+    use std::{collections::hash_map::DefaultHasher, hash::Hasher};
     use unwrap::unwrap;
 
     #[test]
