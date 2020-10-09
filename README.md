@@ -16,3 +16,31 @@ Set of libraries implementing the [DUBP] protocol.
 [DUBP]: https://git.duniter.org/documents/rfcs/-/blob/master/rfc/0010_Duniter_Blockchain_Protocol_V12.md
 [PEG grammar]: https://en.wikipedia.org/wiki/Parsing_expression_grammar
 [pest]: https://pest.rs
+
+## Versioning policy
+
+All crates in this repository are always at the same version. Even if only one crate is modified, they all change version and are all republished. If you need all crates, use the `dubp` meta-crate directly, it re-exports all the others.
+
+Changes between two versions are listed in [CHANGELOG](CHANGELOG.md).
+
+Also, this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## How to publish a new release
+
+Everything is automated via the [cargo-release](https://github.com/sunng87/cargo-release) utility, if you don't already have it, install it:
+
+```bash
+cargo install cargo-release
+```
+
+Then, to release the version `x.y.z`:
+
+```bash
+git checkout master
+cargo release x.y.z
+git push origin
+```
+
+Finally, the gitlab CI will automatically publish all crates on [crates.io](https://crates.io) (if all tests pass of course).

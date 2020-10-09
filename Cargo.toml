@@ -5,6 +5,7 @@ edition = "2018"
 keywords = ["duniter", "dubp"]
 license = "AGPL-3.0"
 name = "dubp"
+readme = "README.md"
 repository = "https://git.duniter.org/libs-dupb-rs-libs"
 version = "0.25.2"
 
