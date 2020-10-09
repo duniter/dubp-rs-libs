@@ -1,3 +1,24 @@
+[package]
+authors = ["elois <elois@duniter.org>"]
+description = "Set of libraries implementing the DUBP protocol."
+edition = "2018"
+keywords = ["duniter", "dubp"]
+license = "AGPL-3.0"
+name = "dubp"
+repository = "https://git.duniter.org/libs-dupb-rs-libs"
+version = "0.25.2"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+dup-crypto = { path = "crypto", version = "0.25.2" }
+dubp-common = { path = "common", version = "0.25.2" }
+dubp-wallet = { path = "wallet", version = "0.25.2" }
+dubp-documents = { path = "documents", version = "0.25.2" }
+dubp-documents-parser = { path = "documents-parser", version = "0.25.2" }
+dubp-block = { path = "block", version = "0.25.2" }
+
 [workspace]
 members = [
     "block",

@@ -355,6 +355,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "dubp"
+version = "0.25.2"
+dependencies = [
+ "dubp-block",
+ "dubp-common",
+ "dubp-documents",
+ "dubp-documents-parser",
+ "dubp-wallet",
+ "dup-crypto",
+]
+
+[[package]]
 name = "dubp-block"
 version = "0.25.2"
 dependencies = [
