@@ -28,7 +28,7 @@ tests:linux64:stable:
   script: 
     - RUSTFLAGS="-D warnings" cargo build
     - cargo test --doc
-    - cargo tarpaulin --all-features --ignore-tests -iv --out Xml
+    - cargo tarpaulin --all --all-features --ignore-tests -iv --out Xml
     - bash <(curl -s https://codecov.io/bash)
 
 clippy:
