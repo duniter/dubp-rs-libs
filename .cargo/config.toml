@@ -1,0 +1,4 @@
+[alias]
+br = "build --release"
+t = "test -p"
+ta = "test --all"
