@@ -59,7 +59,12 @@ pub(crate) use dubp_common::prelude::*;
 pub(crate) use dubp_wallet::prelude::*;
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use smallvec::{smallvec as svec, SmallVec, ToSmallVec};
-pub(crate) use std::{borrow::Cow, collections::HashMap, fmt::Debug};
+pub(crate) use std::{
+    borrow::Cow,
+    collections::{BTreeSet, HashMap},
+    fmt::Debug,
+    iter::FromIterator,
+};
 
 /// User document of DUBP (DUniter Blockhain Protocol)
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
