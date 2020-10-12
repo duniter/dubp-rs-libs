@@ -238,10 +238,11 @@ pub enum PubKey {
     Schnorr(),
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Error, Hash, PartialEq)]
 /// Error when parsing pubkey bytes
 pub enum PubkeyFromBytesError {
     /// Invalid bytes length
+    #[error("Invalid bytes len: expected {expected}, found {found}")]
     InvalidBytesLen {
         /// Expected length
         expected: usize,
@@ -249,6 +250,7 @@ pub enum PubkeyFromBytesError {
         found: usize,
     },
     /// Invalid bytes content
+    #[error("Invalid bytes content")]
     InvalidBytesContent,
 }
 
