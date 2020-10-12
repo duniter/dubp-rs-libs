@@ -127,6 +127,13 @@ impl Hash {
     pub fn from_hex(text: &str) -> Result<Hash, BaseConversionError> {
         Ok(Hash(b16::str_hex_to_32bytes(text)?))
     }
+
+    /// Return tha maximum hash value
+    ///
+    /// Hexadecimal representation is `FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF`
+    pub const fn max() -> Hash {
+        Hash([255; 32])
+    }
 }
 
 #[cfg(test)]
