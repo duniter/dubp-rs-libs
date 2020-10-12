@@ -46,6 +46,7 @@ pub mod prelude {
     pub use crate::json::transactions::{parse_json_transactions, ParseJsonTxError};
     pub use crate::raw_text::{ParseFromRawText, Rule};
     pub use crate::stringified_object::FromStringObject;
+    pub use crate::TextParseError;
 }
 
 // Export profession types
