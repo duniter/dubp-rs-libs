@@ -251,6 +251,15 @@ impl PartialOrd for PublicKey {
         })
     }
 }
+impl Ord for PublicKey {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.datas.cmp(&other.datas) {
+            Ordering::Equal => self.count_leading_zero.cmp(&other.count_leading_zero),
+            Ordering::Less => Ordering::Less,
+            Ordering::Greater => Ordering::Greater,
+        }
+    }
+}
 
 impl super::PublicKey for PublicKey {
     type Signature = Signature;
