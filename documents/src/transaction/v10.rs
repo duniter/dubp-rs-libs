@@ -174,7 +174,7 @@ impl ToString for TransactionOutputV10 {
 /// Wrap a Transaction document.
 ///
 /// Must be created by parsing a text document or using a builder.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TransactionDocumentV10 {
     /// Document as text.
     ///
