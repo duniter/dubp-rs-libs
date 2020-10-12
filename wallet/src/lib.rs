@@ -54,7 +54,7 @@ pub(crate) use dubp_common::prelude::*;
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use smallvec::SmallVec;
 pub(crate) use std::{
-    collections::HashSet,
+    collections::{BTreeSet, HashSet},
     fmt::Debug,
     iter::Sum,
     ops::{Add, Sub},

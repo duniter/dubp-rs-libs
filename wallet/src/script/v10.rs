@@ -184,6 +184,18 @@ impl WalletScriptV10 {
             nodes,
         }
     }
+    pub fn pubkeys(&self) -> BTreeSet<PublicKey> {
+        let mut pubkeys = BTreeSet::new();
+        if let WalletSubScriptV10::Single(WalletConditionV10::Sig(pubkey)) = self.root {
+            pubkeys.insert(pubkey);
+        }
+        for node in &self.nodes {
+            if let WalletSubScriptV10::Single(WalletConditionV10::Sig(pubkey)) = node {
+                pubkeys.insert(*pubkey);
+            }
+        }
+        pubkeys
+    }
     pub(crate) fn unlockable_on(
         &self,
         signers: &HashSet<&[u8]>,
