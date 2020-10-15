@@ -41,12 +41,28 @@ use cryptoxide::{digest::Digest, sha2::Sha256};
 #[cfg(not(target_arch = "wasm32"))]
 use ring::digest;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Debug, Display, Error, Formatter};
+use std::{
+    fmt::{Debug, Display, Error, Formatter},
+    str::FromStr,
+};
 
 /// A hash wrapper.
 ///
 /// A hash is often provided as string composed of 64 hexadecimal character (0 to 9 then A to F).
-#[derive(Copy, Clone, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+#[derive(
+    Copy,
+    Clone,
+    Deserialize,
+    Eq,
+    Hash,
+    Ord,
+    PartialEq,
+    PartialOrd,
+    Serialize,
+    zerocopy::AsBytes,
+    zerocopy::FromBytes,
+)]
+#[repr(transparent)]
 pub struct Hash(pub [u8; 32]);
 
 impl AsRef<[u8]> for Hash {
@@ -70,6 +86,14 @@ impl Debug for Hash {
 impl Default for Hash {
     fn default() -> Hash {
         Hash([0; 32])
+    }
+}
+
+impl FromStr for Hash {
+    type Err = BaseConversionError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Hash::from_hex(s)
     }
 }
 
