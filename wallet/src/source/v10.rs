@@ -41,6 +41,12 @@ pub struct UtxoIdV10 {
     pub output_index: usize,
 }
 
+impl std::fmt::Display for UtxoIdV10 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}", self.tx_hash, self.output_index)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Error, PartialEq)]
 pub enum SourceV10NotUnlockableError {
     #[error("{0}")]

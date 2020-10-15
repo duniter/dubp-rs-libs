@@ -32,14 +32,20 @@ impl ToString for TransactionInputV10 {
                 block_number,
             }) => format!(
                 "{}:{}:D:{}:{}",
-                self.amount.amount, self.amount.base, issuer, block_number.0
+                self.amount.amount(),
+                self.amount.base(),
+                issuer,
+                block_number.0
             ),
             SourceIdV10::Utxo(UtxoIdV10 {
                 tx_hash,
                 output_index,
             }) => format!(
                 "{}:{}:T:{}:{}",
-                self.amount.amount, self.amount.base, tx_hash, output_index
+                self.amount.amount(),
+                self.amount.base(),
+                tx_hash,
+                output_index
             ),
         }
     }
@@ -165,8 +171,8 @@ impl ToString for TransactionOutputV10 {
     fn to_string(&self) -> String {
         format!(
             "{}:{}:{}",
-            self.amount.amount,
-            self.amount.base,
+            self.amount.amount(),
+            self.amount.base(),
             self.conditions.to_string()
         )
     }

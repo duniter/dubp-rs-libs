@@ -270,7 +270,7 @@ pub(super) mod tests {
     use unwrap::unwrap;
     use v10::{TransactionInputUnlocksV10, TransactionOutputV10};
 
-    pub(super) fn tx_output_v10(amount: isize, recv: &str) -> TransactionOutputV10 {
+    pub(super) fn tx_output_v10(amount: i64, recv: &str) -> TransactionOutputV10 {
         TransactionOutputV10 {
             amount: SourceAmount::with_base0(amount),
             conditions: UTXOConditions::from(WalletScriptV10::single(WalletConditionV10::Sig(

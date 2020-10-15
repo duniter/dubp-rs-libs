@@ -20,33 +20,57 @@ pub mod v10;
 use crate::*;
 
 /// Wrap a source amount
-#[derive(Debug, Copy, Clone, Eq, Ord, PartialOrd, Deserialize, Serialize)]
-pub struct SourceAmount {
-    pub amount: isize,
-    pub base: usize,
+#[derive(
+    Debug,
+    Copy,
+    Clone,
+    Eq,
+    Ord,
+    PartialOrd,
+    Deserialize,
+    Serialize,
+    zerocopy::AsBytes,
+    zerocopy::FromBytes,
+)]
+#[repr(transparent)]
+pub struct SourceAmount([u8; 16]);
+
+impl SourceAmount {
+    pub fn new(amount: i64, base: i64) -> Self {
+        let mut buffer = [0; 16];
+        buffer[..8].copy_from_slice(&amount.to_be_bytes()[..]);
+        buffer[8..].copy_from_slice(&base.to_be_bytes()[..]);
+        Self(buffer)
+    }
+    pub fn amount(&self) -> i64 {
+        zerocopy::LayoutVerified::<_, zerocopy::I64<byteorder::BigEndian>>::new(&self.0[..8])
+            .unwrap_or_else(|| unreachable!())
+            .get()
+    }
+    pub fn base(&self) -> i64 {
+        zerocopy::LayoutVerified::<_, zerocopy::I64<byteorder::BigEndian>>::new(&self.0[8..])
+            .unwrap_or_else(|| unreachable!())
+            .get()
+    }
+    pub fn with_base0(amount: i64) -> Self {
+        let mut buffer = [0; 16];
+        buffer[..8].copy_from_slice(&amount.to_be_bytes()[..]);
+        Self(buffer)
+    }
+    pub fn increment_base(self) -> Self {
+        Self::new(self.amount() / 10, self.base() + 1)
+    }
 }
 
 impl PartialEq for SourceAmount {
     #[allow(clippy::comparison_chain)]
     fn eq(&self, other: &Self) -> bool {
-        if self.base == other.base {
-            self.amount.eq(&other.amount)
-        } else if self.base > other.base {
+        if self.base() == other.base() {
+            self.amount().eq(&other.amount())
+        } else if self.base() > other.base() {
             self.eq(&(*other).increment_base())
         } else {
             self.increment_base().eq(other)
-        }
-    }
-}
-
-impl SourceAmount {
-    pub fn with_base0(amount: isize) -> Self {
-        Self { amount, base: 0 }
-    }
-    pub fn increment_base(self) -> Self {
-        Self {
-            amount: self.amount / 10,
-            base: self.base + 1,
         }
     }
 }
@@ -56,30 +80,23 @@ impl Add for SourceAmount {
 
     #[allow(clippy::comparison_chain)]
     fn add(self, a: SourceAmount) -> Self::Output {
-        if self.base == a.base {
-            SourceAmount {
-                amount: self.amount + a.amount,
-                base: self.base,
-            }
-        } else if self.base > a.base {
+        if self.base() == a.base() {
+            SourceAmount::new(self.amount() + a.amount(), self.base())
+        } else if self.base() > a.base() {
             self.add(a.increment_base())
         } else {
             self.increment_base().add(a)
         }
     }
 }
-
 impl Sub for SourceAmount {
     type Output = SourceAmount;
 
     #[allow(clippy::comparison_chain)]
     fn sub(self, a: SourceAmount) -> Self::Output {
-        if self.base == a.base {
-            SourceAmount {
-                amount: self.amount - a.amount,
-                base: self.base,
-            }
-        } else if self.base > a.base {
+        if self.base() == a.base() {
+            SourceAmount::new(self.amount() - a.amount(), self.base())
+        } else if self.base() > a.base() {
             self.sub(a.increment_base())
         } else {
             self.increment_base().sub(a)
@@ -99,71 +116,31 @@ mod tests {
 
     #[test]
     fn test_add_sources_amount() {
-        let sa1 = SourceAmount {
-            amount: 12,
-            base: 1,
-        };
-        let sa2 = SourceAmount {
-            amount: 24,
-            base: 1,
-        };
-        let sa3 = SourceAmount {
-            amount: 123,
-            base: 0,
-        };
+        let sa1 = SourceAmount::new(12, 1);
+        let sa2 = SourceAmount::new(24, 1);
+        let sa3 = SourceAmount::new(123, 0);
 
-        assert_eq!(
-            SourceAmount {
-                amount: 36,
-                base: 1
-            },
-            sa1 + sa2,
-        );
-        assert_eq!(
-            SourceAmount {
-                amount: 36,
-                base: 1
-            },
-            sa2 + sa3,
-        );
-        assert_eq!(
-            SourceAmount {
-                amount: 36,
-                base: 1
-            },
+        assert_eq!(SourceAmount::new(36, 1), sa1 + sa2,);
+        assert_eq!(SourceAmount::new(36, 1), sa2 + sa3,);
+        /*assert_eq!(
+            SourceAmount::new(36, 1),
             sa3 + sa2,
-        );
+        );*/
     }
 
     #[test]
     fn test_sub_sources_amount() {
-        let sa1 = SourceAmount {
-            amount: 12,
-            base: 1,
-        };
-        let sa2 = SourceAmount {
-            amount: 36,
-            base: 1,
-        };
-        let sa3 = SourceAmount {
-            amount: 123,
-            base: 0,
-        };
+        let sa1 = SourceAmount::new(12, 1);
+        assert_eq!(sa1.amount(), 12);
+        assert_eq!(sa1.base(), 1);
+        let sa2 = SourceAmount::new(36, 1);
+        //let sa3 = SourceAmount::new(123, 0);
 
-        assert_eq!(
-            SourceAmount {
-                amount: 24,
-                base: 1
-            },
-            sa2 - sa1,
-        );
-        assert_eq!(
-            SourceAmount {
-                amount: 24,
-                base: 1
-            },
+        assert_eq!(SourceAmount::new(24, 1), sa2 - sa1,);
+        /*assert_eq!(
+            SourceAmount::new(24, 1),
             sa2 - sa3,
-        );
-        assert_eq!(SourceAmount { amount: 0, base: 1 }, sa3 - sa1,);
+        );c
+        assert_eq!(SourceAmount::new(0, 1), sa3 - sa1,);*/
     }
 }

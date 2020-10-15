@@ -34,10 +34,7 @@ mod tests {
 
         assert_eq!(
             TransactionOutputV10 {
-                amount: SourceAmount {
-                    amount: 49,
-                    base: 2,
-                },
+                amount: SourceAmount::new(49, 2),
                 conditions: UTXOConditions::from(WalletScriptV10::single(WalletConditionV10::Sig(
                     unwrap!(PublicKey::from_base58(
                         "6DyGr5LFtFmbaJYRvcs9WmBsr4cbJbJ1EV9zBbqG7A6i"
@@ -69,10 +66,7 @@ mod tests {
 
         assert_eq!(
             TransactionOutputV10 {
-                amount: SourceAmount {
-                    amount: 49,
-                    base: 2,
-                },
+                amount: SourceAmount::new(49, 2),
                 conditions: UTXOConditions::from(expected_script)
             },
             tx_output_v10_from_str(output_v10_str)?
@@ -101,10 +95,7 @@ mod tests {
 
         assert_eq!(
             TransactionOutputV10 {
-                amount: SourceAmount {
-                    amount: 49,
-                    base: 2,
-                },
+                amount: SourceAmount::new(49, 2),
                 conditions: UTXOConditions::from(expected_script)
             },
             tx_output_v10_from_str(output_v10_str)?
@@ -137,10 +128,7 @@ mod tests {
 
         assert_eq!(
             TransactionOutputV10 {
-                amount: SourceAmount {
-                    amount: 49,
-                    base: 2,
-                },
+                amount: SourceAmount::new(49, 2),
                 conditions: UTXOConditions::from(expected_script)
             },
             tx_output_v10_from_str(output_v10_str)?

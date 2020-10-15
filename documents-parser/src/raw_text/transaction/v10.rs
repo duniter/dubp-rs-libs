@@ -81,20 +81,20 @@ impl FromPestPair for TransactionInputV10 {
                 let mut inner_rules = tx_input_type_pair.into_inner(); // ${ tx_amount ~ ":" ~ tx_amount_base ~ ":D:" ~ pubkey ~ ":" ~ du_block_id }
 
                 TransactionInputV10 {
-                    amount: SourceAmount {
-                        amount: inner_rules
+                    amount: SourceAmount::new(
+                        inner_rules
                             .next()
                             .unwrap_or_else(|| unreachable!())
                             .as_str()
                             .parse()
                             .unwrap_or_else(|_| unreachable!()),
-                        base: inner_rules
+                        inner_rules
                             .next()
                             .unwrap_or_else(|| unreachable!())
                             .as_str()
                             .parse()
                             .unwrap_or_else(|_| unreachable!()),
-                    },
+                    ),
                     id: SourceIdV10::Ud(UdSourceIdV10 {
                         issuer: ed25519::PublicKey::from_base58(
                             inner_rules
@@ -118,20 +118,20 @@ impl FromPestPair for TransactionInputV10 {
                 let mut inner_rules = tx_input_type_pair.into_inner(); // ${ tx_amount ~ ":" ~ tx_amount_base ~ ":D:" ~ pubkey ~ ":" ~ du_block_id }
 
                 TransactionInputV10 {
-                    amount: SourceAmount {
-                        amount: inner_rules
+                    amount: SourceAmount::new(
+                        inner_rules
                             .next()
                             .unwrap_or_else(|| unreachable!())
                             .as_str()
                             .parse()
                             .unwrap_or_else(|_| unreachable!()),
-                        base: inner_rules
+                        inner_rules
                             .next()
                             .unwrap_or_else(|| unreachable!())
                             .as_str()
                             .parse()
                             .unwrap_or_else(|_| unreachable!()),
-                    },
+                    ),
                     id: SourceIdV10::Utxo(UtxoIdV10 {
                         tx_hash: Hash::from_hex(
                             inner_rules
@@ -196,20 +196,20 @@ impl FromPestPair for TransactionInputUnlocksV10 {
 impl FromPestPair for TransactionOutputV10 {
     fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionOutputV10, TextParseError> {
         let mut utxo_pairs = pair.into_inner();
-        let amount = SourceAmount {
-            amount: utxo_pairs
+        let amount = SourceAmount::new(
+            utxo_pairs
                 .next()
                 .unwrap_or_else(|| unreachable!())
                 .as_str()
                 .parse()
                 .unwrap_or_else(|_| unreachable!()),
-            base: utxo_pairs
+            utxo_pairs
                 .next()
                 .unwrap_or_else(|| unreachable!())
                 .as_str()
                 .parse()
                 .unwrap_or_else(|_| unreachable!()),
-        };
+        );
         let script_pairs = utxo_pairs.next().unwrap_or_else(|| unreachable!());
         let script_origin_str = script_pairs.as_str();
         let script = WalletScriptV10::from_pest_pair(script_pairs)?;

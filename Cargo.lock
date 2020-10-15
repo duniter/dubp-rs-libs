@@ -427,6 +427,7 @@ dependencies = [
 name = "dubp-wallet"
 version = "0.27.0"
 dependencies = [
+ "byteorder",
  "dubp-common",
  "maplit",
  "pretty_assertions",
@@ -434,6 +435,7 @@ dependencies = [
  "smallvec",
  "thiserror",
  "unwrap",
+ "zerocopy",
 ]
 
 [[package]]
@@ -455,6 +457,7 @@ dependencies = [
  "sodiumoxide",
  "thiserror",
  "unwrap",
+ "zerocopy",
  "zeroize",
 ]
 
