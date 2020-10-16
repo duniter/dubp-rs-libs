@@ -218,8 +218,9 @@ impl FromPestPair for TransactionOutputV10 {
             amount,
             conditions: UTXOConditions {
                 origin_str: if script_origin_str != script.to_string() {
-                    println!("TMP DEBUG conditions={:#?}", script);
-                    println!("TMP DEBUG conditions.to_string()={}", script.to_string());
+                    //println!("TMP DEBUG script_origin_str={}", script_origin_str);
+                    //println!("TMP DEBUG conditions={:#?}", script);
+                    //println!("TMP DEBUG conditions.to_string()={}", script.to_string());
                     Some(script_origin_str.to_owned())
                 } else {
                     None
