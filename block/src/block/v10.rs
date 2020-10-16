@@ -16,12 +16,9 @@
 //! Wrappers around Block document V10.
 
 use crate::*;
-use dubp_documents::certification::v10::{
-    CertificationDocumentV10, CompactCertificationDocumentV10Stringified,
-};
-use dubp_documents::identity::{IdentityDocumentV10, IdentityDocumentV10Stringified};
-use dubp_documents::membership::v10::{MembershipDocumentV10, MembershipDocumentV10Stringified};
-use dubp_documents::revocation::v10::CompactRevocationDocumentV10Stringified;
+use dubp_documents::certification::v10::CertificationDocumentV10;
+use dubp_documents::identity::IdentityDocumentV10;
+use dubp_documents::membership::v10::MembershipDocumentV10;
 use dubp_documents::revocation::RevocationDocumentV10;
 use dubp_documents::transaction::v10::{TransactionDocumentV10, TransactionDocumentV10Stringified};
 
@@ -405,6 +402,7 @@ impl DubpBlockV10 {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DubpBlockV10Stringified {
     /// Version
     pub version: u64,
@@ -423,6 +421,7 @@ pub struct DubpBlockV10Stringified {
     /// Monetary mass
     pub monetary_mass: u64,
     /// Unit base (power of ten)
+    #[serde(rename = "unitbase")]
     pub unit_base: u64,
     /// Number of compute members in the current frame
     pub issuers_count: u64,
@@ -437,7 +436,7 @@ pub struct DubpBlockV10Stringified {
     /// Block signature.
     pub signature: String,
     /// Block hash.
-    pub hash: String,
+    pub hash: Option<String>,
     /// Currency parameters (only in genesis block)
     pub parameters: Option<String>,
     /// Hash of the previous block
@@ -445,23 +444,24 @@ pub struct DubpBlockV10Stringified {
     /// Issuer of the previous block
     pub previous_issuer: Option<String>,
     /// Hash of the deterministic content of the block
+    #[serde(rename = "inner_hash")]
     pub inner_hash: Option<String>,
     /// Amount of new dividend created at this block, None if no dividend is created at this block
     pub dividend: Option<u64>,
     /// Identities
-    pub identities: Vec<IdentityDocumentV10Stringified>,
+    pub identities: Vec<String>,
     /// joiners
-    pub joiners: Vec<MembershipDocumentV10Stringified>,
+    pub joiners: Vec<String>,
     /// Actives (=renewals)
-    pub actives: Vec<MembershipDocumentV10Stringified>,
+    pub actives: Vec<String>,
     /// Leavers
-    pub leavers: Vec<MembershipDocumentV10Stringified>,
+    pub leavers: Vec<String>,
     /// Revokeds
-    pub revoked: Vec<CompactRevocationDocumentV10Stringified>,
+    pub revoked: Vec<String>,
     /// Excludeds
     pub excluded: Vec<String>,
     /// Certifications
-    pub certifications: Vec<CompactCertificationDocumentV10Stringified>,
+    pub certifications: Vec<String>,
     /// Transactions
     pub transactions: Vec<TransactionDocumentV10Stringified>,
 }
@@ -486,7 +486,7 @@ impl ToStringObject for DubpBlockV10 {
             currency: self.content.currency.to_string(),
             issuer: self.content.issuer.to_string(),
             signature: self.signature.to_string(),
-            hash: self.hash.to_string(),
+            hash: Some(self.hash.to_string()),
             parameters: self
                 .content
                 .parameters
@@ -507,38 +507,31 @@ impl ToStringObject for DubpBlockV10 {
                 .content
                 .identities
                 .iter()
-                .map(ToStringObject::to_string_object)
+                .map(|doc| doc.to_compact_document().as_compact_text())
                 .collect(),
             joiners: self
                 .content
                 .joiners
                 .iter()
-                .map(ToStringObject::to_string_object)
+                .map(|doc| doc.to_compact_document().as_compact_text())
                 .collect(),
             actives: self
                 .content
                 .actives
                 .iter()
-                .map(ToStringObject::to_string_object)
+                .map(|doc| doc.to_compact_document().as_compact_text())
                 .collect(),
             leavers: self
                 .content
                 .leavers
                 .iter()
-                .map(ToStringObject::to_string_object)
+                .map(|doc| doc.to_compact_document().as_compact_text())
                 .collect(),
             revoked: self
                 .content
                 .revoked
                 .iter()
-                .map(|revocation_doc| match revocation_doc {
-                    TextDocumentFormat::Complete(complete_revoc_doc) => {
-                        complete_revoc_doc.to_compact_document().to_string_object()
-                    }
-                    TextDocumentFormat::Compact(compact_revoc_doc) => {
-                        compact_revoc_doc.to_string_object()
-                    }
-                })
+                .map(|doc| doc.to_compact_document().as_compact_text())
                 .collect(),
             excluded: self
                 .content
@@ -550,14 +543,7 @@ impl ToStringObject for DubpBlockV10 {
                 .content
                 .certifications
                 .iter()
-                .map(|cert_doc| match cert_doc {
-                    TextDocumentFormat::Complete(complete_cert_doc) => {
-                        complete_cert_doc.to_compact_document().to_string_object()
-                    }
-                    TextDocumentFormat::Compact(compact_cert_doc) => {
-                        compact_cert_doc.to_string_object()
-                    }
-                })
+                .map(|doc| doc.to_compact_document().as_compact_text())
                 .collect(),
             transactions: self
                 .content
@@ -587,7 +573,7 @@ mod tests {
         default_stringified_block.currency = String::with_capacity(0);
         default_stringified_block.issuer = String::with_capacity(0);
         default_stringified_block.signature = String::with_capacity(0);
-        default_stringified_block.hash = String::with_capacity(0);
+        default_stringified_block.hash = None;
         assert_eq!(
             default_stringified_block,
             DubpBlockV10Stringified::default()
