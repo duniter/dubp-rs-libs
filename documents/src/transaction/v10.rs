@@ -264,7 +264,7 @@ impl ToStringObject for TransactionDocumentV10 {
             hash: if let Some(hash) = self.hash {
                 Some(hash.to_string())
             } else {
-                None
+                Some(self.compute_hash().to_hex())
             },
         }
     }
@@ -303,13 +303,11 @@ impl TransactionDocumentV10 {
         self.hash
     }
     /// Get transaction hash
-    pub fn get_hash(&mut self) -> Hash {
+    pub fn get_hash(&self) -> Hash {
         if let Some(hash) = self.hash {
             hash
         } else {
-            let hash = self.compute_hash();
-            self.hash = Some(hash);
-            hash
+            self.compute_hash()
         }
     }
     pub fn recipients_keys(&self) -> Vec<ed25519::PublicKey> {
@@ -648,7 +646,7 @@ mod tests {
             comment: "Pour cesium merci",
             hash: None,
         };
-        let mut tx_doc = builder.build_with_signature(svec![sig]);
+        let tx_doc = builder.build_with_signature(svec![sig]);
         assert!(tx_doc.verify_signatures().is_ok());
         assert!(tx_doc.get_hash_opt().is_none());
         assert_eq!(
