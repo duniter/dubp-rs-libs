@@ -35,6 +35,12 @@ use crate::*;
 #[repr(transparent)]
 pub struct SourceAmount([u8; 16]);
 
+impl std::fmt::Display for SourceAmount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}", self.amount(), self.base())
+    }
+}
+
 impl SourceAmount {
     pub fn new(amount: i64, base: i64) -> Self {
         let mut buffer = [0; 16];
