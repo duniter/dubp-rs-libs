@@ -55,6 +55,33 @@ pub fn str_base58_to_32bytes(base58_data: &str) -> Result<([u8; 32], u8), BaseCo
                 offset: index,
             })
         }
+        Err(bs58::decode::Error::BufferTooSmall) => str_base58_to_32bytes_vec(base58_data),
+        _ => Err(BaseConversionError::UnknownError),
+    }
+}
+
+// Create an array of 32 bytes from a Base58 string (use heap allocation)
+fn str_base58_to_32bytes_vec(base58_data: &str) -> Result<([u8; 32], u8), BaseConversionError> {
+    let mut source = base58_data;
+    let mut count_leading_1 = 0;
+    while !source.is_empty() && &source[0..1] == "1" {
+        source = &source[1..];
+        count_leading_1 += 1;
+    }
+
+    let mut u8_array = [0; 32];
+    match bs58::decode(source).into_vec() {
+        Ok(bytes) => {
+            let len = std::cmp::min(bytes.len(), 32);
+            u8_array[(32 - len)..].copy_from_slice(&bytes[..len]);
+            Ok((u8_array, count_leading_1))
+        }
+        Err(bs58::decode::Error::InvalidCharacter { character, index }) => {
+            Err(BaseConversionError::InvalidCharacter {
+                character,
+                offset: index,
+            })
+        }
         Err(bs58::decode::Error::BufferTooSmall) => {
             Err(BaseConversionError::InvalidBaseConverterLength)
         }
@@ -140,6 +167,12 @@ mod tests {
 
         assert_eq!(base58str, &bytes_to_str_base58(&bytes[..], count_leading_1),);
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_invalid_pubkey_of_33_bytes() -> Result<(), BaseConversionError> {
+        str_base58_to_32bytes("jUPLL2BgY2QpheWEY3R13edV2Y4tvQMCXjJVM8PGDvyd")?;
         Ok(())
     }
 }
