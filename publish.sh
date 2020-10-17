@@ -14,3 +14,5 @@ sleep 30
 cargo publish --manifest-path documents-parser/Cargo.toml || exit 1
 sleep 30
 cargo publish --manifest-path block/Cargo.toml || exit 1
+sleep 30
+cargo publish --manifest-path Cargo.toml || exit 1
