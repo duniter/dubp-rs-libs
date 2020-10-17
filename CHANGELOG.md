@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- publish meta crate `dubp` with feature `crypto_scrypt`
+
 ## [0.29.0] - 2020-10-17
 
 ## [0.28.0] - 2020-10-15

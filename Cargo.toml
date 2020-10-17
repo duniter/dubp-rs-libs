@@ -13,12 +13,12 @@ version = "0.29.0"
 path = "lib.rs"
 
 [dependencies]
-dup-crypto = { path = "crypto", version = "0.29.0" }
-dubp-common = { path = "common", version = "0.29.0" }
-dubp-wallet = { path = "wallet", version = "0.29.0" }
-dubp-documents = { path = "documents", version = "0.29.0" }
-dubp-documents-parser = { path = "documents-parser", version = "0.29.0" }
-dubp-block = { path = "block", version = "0.29.0" }
+dup-crypto = { path = "crypto", version = "0.29.0", features = ["scrypt"] }
+dubp-common = { path = "common", version = "0.29.0", features = ["crypto_scrypt"] }
+dubp-wallet = { path = "wallet", version = "0.29.0", features = ["crypto_scrypt"] }
+dubp-documents = { path = "documents", version = "0.29.0", features = ["crypto_scrypt"] }
+dubp-documents-parser = { path = "documents-parser", version = "0.29.0", features = ["crypto_scrypt"] }
+dubp-block = { path = "block", version = "0.29.0", features = ["crypto_scrypt"] }
 
 [workspace]
 members = [
