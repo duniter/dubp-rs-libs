@@ -16,11 +16,14 @@
 //! Wrappers around Block document V10.
 
 use crate::*;
-use dubp_documents::certification::v10::CertificationDocumentV10;
+use dubp_documents::certification::{
+    v10::CertificationDocumentV10, CompactCertificationDocumentV10,
+};
 use dubp_documents::identity::IdentityDocumentV10;
 use dubp_documents::membership::v10::MembershipDocumentV10;
-use dubp_documents::revocation::RevocationDocumentV10;
+use dubp_documents::revocation::{CompactRevocationDocumentV10, RevocationDocumentV10};
 use dubp_documents::transaction::v10::{TransactionDocumentV10, TransactionDocumentV10Stringified};
+use std::borrow::Cow;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
 pub struct DubpBlockV10Content {
@@ -384,6 +387,38 @@ impl DubpBlockTrait for DubpBlockV10 {
 }
 
 impl DubpBlockV10 {
+    pub fn identities(&self) -> &[IdentityDocumentV10] {
+        &self.content.identities
+    }
+    pub fn joiners(&self) -> &[MembershipDocumentV10] {
+        &self.content.joiners
+    }
+    pub fn actives(&self) -> &[MembershipDocumentV10] {
+        &self.content.actives
+    }
+    pub fn leavers(&self) -> &[MembershipDocumentV10] {
+        &self.content.leavers
+    }
+    pub fn revoked(&self) -> Vec<Cow<CompactRevocationDocumentV10>> {
+        self.content
+            .revoked
+            .iter()
+            .map(|revo| revo.to_compact_document())
+            .collect()
+    }
+    pub fn excluded(&self) -> &[ed25519::PublicKey] {
+        &self.content.excluded
+    }
+    pub fn certifications(&self) -> Vec<Cow<CompactCertificationDocumentV10>> {
+        self.content
+            .certifications
+            .iter()
+            .map(|cert| cert.to_compact_document())
+            .collect()
+    }
+    pub fn transactions(&self) -> &[TransactionDocumentV10] {
+        &self.content.transactions
+    }
     /// Needed only for BMA (to be removed)
     #[cfg(not(tarpaulin_include))]
     pub fn as_compact_text(&self) -> String {
