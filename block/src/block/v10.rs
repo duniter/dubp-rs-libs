@@ -637,22 +637,30 @@ impl FromStringObject for DubpBlockV10 {
                 })?,
                 parameters: None,
                 previous_hash: if let Some(ref previous_hash) = stringified.previous_hash {
-                    Hash::from_hex(previous_hash).map_err(|error| {
-                        TextParseError::BaseConversionError {
-                            field: "block.previous_hash",
-                            error,
-                        }
-                    })?
+                    if !previous_hash.is_empty() {
+                        Hash::from_hex(previous_hash).map_err(|error| {
+                            TextParseError::BaseConversionError {
+                                field: "block.previous_hash",
+                                error,
+                            }
+                        })?
+                    } else {
+                        Hash::default()
+                    }
                 } else {
                     Hash::default()
                 },
                 previous_issuer: if let Some(ref previous_issuer) = stringified.previous_issuer {
-                    ed25519::PublicKey::from_base58(previous_issuer).map_err(|error| {
-                        TextParseError::BaseConversionError {
-                            field: "block.previous_issuer",
-                            error,
-                        }
-                    })?
+                    if !previous_issuer.is_empty() {
+                        ed25519::PublicKey::from_base58(previous_issuer).map_err(|error| {
+                            TextParseError::BaseConversionError {
+                                field: "block.previous_issuer",
+                                error,
+                            }
+                        })?
+                    } else {
+                        ed25519::PublicKey::default()
+                    }
                 } else {
                     ed25519::PublicKey::default()
                 },
