@@ -181,8 +181,7 @@ pub fn parse_json_block(
         excluded: get_str_array(json_block, "excluded")?
             .iter()
             .map(|p| ed25519::PublicKey::from_base58(p))
-            .map(|p| p.map(PubKey::Ed25519))
-            .collect::<Result<Vec<PubKey>, BaseConversionError>>()?,
+            .collect::<Result<Vec<_>, BaseConversionError>>()?,
         certifications: parse_compact_certifications(&get_str_array(
             json_block,
             "certifications",

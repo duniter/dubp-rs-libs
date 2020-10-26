@@ -5,7 +5,7 @@ pub mod identities;
 pub mod memberships;
 pub mod revoked;
 
-#[derive(Clone, Debug, Error)]
+#[derive(Clone, Debug, Error, Eq, PartialEq)]
 pub enum ParseCompactDocError {
     #[error("wrong blockstamp : {0}")]
     BlockNumber(ParseIntError),

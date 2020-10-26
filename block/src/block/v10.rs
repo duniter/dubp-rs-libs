@@ -69,7 +69,7 @@ pub struct DubpBlockV10Content {
     /// Revokeds
     pub revoked: Vec<TextDocumentFormat<RevocationDocumentV10>>,
     /// Excludeds
-    pub excluded: Vec<PubKey>,
+    pub excluded: Vec<ed25519::PublicKey>,
     /// Certifications
     pub certifications: Vec<TextDocumentFormat<CertificationDocumentV10>>,
     /// Transactions
@@ -552,6 +552,144 @@ impl ToStringObject for DubpBlockV10 {
                 .map(|tx_doc| tx_doc.to_string_object())
                 .collect(),
         }
+    }
+}
+
+impl FromStringObject for DubpBlockV10 {
+    fn from_string_object(stringified: &DubpBlockV10Stringified) -> Result<Self, TextParseError> {
+        let str_identities: Vec<_> = stringified.identities.iter().map(|x| &**x).collect();
+        let str_joiners: Vec<_> = stringified.joiners.iter().map(|x| &**x).collect();
+        let str_actives: Vec<_> = stringified.actives.iter().map(|x| &**x).collect();
+        let str_leavers: Vec<_> = stringified.leavers.iter().map(|x| &**x).collect();
+        let str_revoked: Vec<_> = stringified.revoked.iter().map(|x| &**x).collect();
+        let str_certs: Vec<_> = stringified.certifications.iter().map(|x| &**x).collect();
+        Ok(DubpBlockV10 {
+            content: DubpBlockV10Content {
+                version: stringified.version as usize,
+                number: BlockNumber(stringified.number as u32),
+                pow_min: stringified.pow_min as usize,
+                time: stringified.time,
+                median_time: stringified.median_time,
+                members_count: stringified.members_count as usize,
+                monetary_mass: stringified.monetary_mass,
+                unit_base: stringified.unit_base as usize,
+                issuers_count: stringified.issuers_count as usize,
+                issuers_frame: stringified.issuers_frame as usize,
+                issuers_frame_var: stringified.issuers_frame_var as isize,
+                currency: CurrencyName(stringified.currency.clone()),
+                issuer: ed25519::PublicKey::from_base58(&stringified.issuer).map_err(|error| {
+                    TextParseError::BaseConversionError {
+                        field: "block.issuer",
+                        error,
+                    }
+                })?,
+                parameters: None,
+                previous_hash: if let Some(ref previous_hash) = stringified.previous_hash {
+                    Hash::from_hex(previous_hash).map_err(|error| {
+                        TextParseError::BaseConversionError {
+                            field: "block.previous_hash",
+                            error,
+                        }
+                    })?
+                } else {
+                    Hash::default()
+                },
+                previous_issuer: if let Some(ref previous_issuer) = stringified.previous_issuer {
+                    ed25519::PublicKey::from_base58(previous_issuer).map_err(|error| {
+                        TextParseError::BaseConversionError {
+                            field: "block.previous_issuer",
+                            error,
+                        }
+                    })?
+                } else {
+                    ed25519::PublicKey::default()
+                },
+                dividend: stringified.dividend.map(|dividend| dividend as usize),
+                identities: parse_compact_identities(&stringified.currency, &str_identities)
+                    .map_err(|error| TextParseError::CompactDoc {
+                        field: "block.identities",
+                        error,
+                    })?,
+                joiners: parse_compact_memberships(
+                    &stringified.currency,
+                    MembershipType::In(),
+                    &str_joiners,
+                )
+                .map_err(|error| TextParseError::CompactDoc {
+                    field: "block.joiners",
+                    error,
+                })?,
+                actives: parse_compact_memberships(
+                    &stringified.currency,
+                    MembershipType::In(),
+                    &str_actives,
+                )
+                .map_err(|error| TextParseError::CompactDoc {
+                    field: "block.actives",
+                    error,
+                })?,
+                leavers: parse_compact_memberships(
+                    &stringified.currency,
+                    MembershipType::Out(),
+                    &str_leavers,
+                )
+                .map_err(|error| TextParseError::CompactDoc {
+                    field: "block.leavers",
+                    error,
+                })?,
+                revoked: parse_compact_revocations(&str_revoked).map_err(|error| {
+                    TextParseError::CompactDoc {
+                        field: "block.revoked",
+                        error,
+                    }
+                })?,
+                excluded: stringified
+                    .excluded
+                    .iter()
+                    .map(|pubkey| ed25519::PublicKey::from_base58(pubkey))
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(|error| TextParseError::BaseConversionError {
+                        field: "block.excluded",
+                        error,
+                    })?,
+                certifications: parse_compact_certifications(&str_certs).map_err(|error| {
+                    TextParseError::CompactDoc {
+                        field: "block.certifications",
+                        error,
+                    }
+                })?,
+                transactions: stringified
+                    .transactions
+                    .iter()
+                    .map(|tx| TransactionDocumentV10::from_string_object(tx))
+                    .collect::<Result<Vec<_>, _>>()?,
+            },
+            inner_hash: Some(
+                Hash::from_hex(stringified.inner_hash.as_ref().ok_or_else(|| {
+                    TextParseError::InvalidInnerFormat("Block without inner_hash".to_owned())
+                })?)
+                .map_err(|error| TextParseError::BaseConversionError {
+                    field: "block.inner_hash",
+                    error,
+                })?,
+            ),
+            nonce: stringified.nonce,
+            signature: ed25519::Signature::from_base64(&stringified.signature).map_err(
+                |error| TextParseError::BaseConversionError {
+                    field: "block.signature",
+                    error,
+                },
+            )?,
+            hash: BlockHash(
+                Hash::from_hex(stringified.hash.as_ref().ok_or_else(|| {
+                    TextParseError::InvalidInnerFormat("Block without inner_hash".to_owned())
+                })?)
+                .map_err(|error| TextParseError::BaseConversionError {
+                    field: "block.hash",
+                    error,
+                })?,
+            ),
+        })
     }
 }
 

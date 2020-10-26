@@ -115,6 +115,12 @@ pub enum TextParseError {
     /// Fail to parse blockstamp
     #[error("BlockstampParseError: {0}")]
     BlockstampParseError(BlockstampParseError),
+    /// Fail to parse compact doc
+    #[error("Fail to parse compact doc (field '{field}'): {error}")]
+    CompactDoc {
+        field: &'static str,
+        error: ParseCompactDocError,
+    },
     /// The given source don't have a valid specific document format (document type).
     #[error("TextDocumentParseError: Invalid inner format: {0}")]
     InvalidInnerFormat(String),
