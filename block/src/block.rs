@@ -18,6 +18,7 @@
 pub mod v10;
 
 use crate::*;
+use dubp_documents::dubp_wallet::prelude::SourceAmount;
 pub use v10::{
     DubpBlockV10, DubpBlockV10AfterPowData, DubpBlockV10Builder, DubpBlockV10Content,
     DubpBlockV10Stringified,
@@ -63,12 +64,16 @@ pub trait DubpBlockTrait {
     fn compute_signed_string(&self) -> String;
     /// Get current frame size (in blocks)
     fn current_frame_size(&self) -> usize;
+    /// Get universal dividend amount
+    fn dividend(&self) -> Option<SourceAmount>;
     /// Generate compact inner text (for compute inner_hash)
     fn generate_compact_inner_text(&self) -> String;
     /// Get block hash
     fn hash(&self) -> BlockHash;
     /// Get block inner hash
     fn inner_hash(&self) -> Hash;
+    /// Get block issuer
+    fn issuer(&self) -> <Self::Signator as Signator>::PublicKey;
     /// Get number of compute members in the current frame
     fn issuers_count(&self) -> usize;
     /// Get number of members in wot
@@ -91,6 +96,8 @@ pub trait DubpBlockTrait {
     fn verify_hash(&self) -> Result<(), VerifyBlockHashError>;
     /// Sign block
     fn sign(&mut self, signator: &Self::Signator) -> Result<(), SignError>;
+    /// Get block signature
+    fn signature(&self) -> <Self::Signator as Signator>::Signature;
 }
 
 macro_rules! dubp_block_fn {
@@ -121,6 +128,7 @@ impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(compute_hashed_string, String);
     dubp_block_fn!(compute_signed_string, String);
     dubp_block_fn!(current_frame_size, usize);
+    dubp_block_fn!(dividend, Option<SourceAmount>);
     dubp_block_fn!(generate_compact_inner_text, String);
     dubp_block_fn!(hash, BlockHash);
     dubp_block_fn!(inner_hash, Hash);
@@ -136,6 +144,12 @@ impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(verify_signature, Result<(), SigError>);
     dubp_block_fn!(verify_hash, Result<(), VerifyBlockHashError>);
     #[inline]
+    fn issuer(&self) -> PubKey {
+        match self {
+            DubpBlock::V10(block) => PubKey::Ed25519(block.issuer()),
+        }
+    }
+    #[inline]
     fn sign(&mut self, signator: &Self::Signator) -> Result<(), SignError> {
         match self {
             DubpBlock::V10(block) => {
@@ -145,6 +159,12 @@ impl DubpBlockTrait for DubpBlock {
                     Err(SignError::WrongAlgo)
                 }
             }
+        }
+    }
+    #[inline]
+    fn signature(&self) -> Sig {
+        match self {
+            DubpBlock::V10(block) => Sig::Ed25519(block.signature()),
         }
     }
 }

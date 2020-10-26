@@ -16,13 +16,14 @@
 //! Wrappers around Block document V10.
 
 use crate::*;
-use dubp_documents::certification::{
-    v10::CertificationDocumentV10, CompactCertificationDocumentV10,
-};
 use dubp_documents::identity::IdentityDocumentV10;
 use dubp_documents::membership::v10::MembershipDocumentV10;
 use dubp_documents::revocation::{CompactRevocationDocumentV10, RevocationDocumentV10};
 use dubp_documents::transaction::v10::{TransactionDocumentV10, TransactionDocumentV10Stringified};
+use dubp_documents::{
+    certification::{v10::CertificationDocumentV10, CompactCertificationDocumentV10},
+    dubp_wallet::prelude::SourceAmount,
+};
 use std::borrow::Cow;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq)]
@@ -280,6 +281,16 @@ impl DubpBlockTrait for DubpBlockV10 {
     fn current_frame_size(&self) -> usize {
         self.content.issuers_frame
     }
+    fn dividend(&self) -> Option<SourceAmount> {
+        if let Some(dividend) = self.content.dividend {
+            Some(SourceAmount::new(
+                dividend as i64,
+                self.content.unit_base as i64,
+            ))
+        } else {
+            None
+        }
+    }
     fn generate_compact_inner_text(&self) -> String {
         self.content.gen_hashable_text()
     }
@@ -295,6 +306,9 @@ impl DubpBlockTrait for DubpBlockV10 {
     }
     fn issuers_count(&self) -> usize {
         self.content.issuers_count
+    }
+    fn issuer(&self) -> ed25519::PublicKey {
+        self.content.issuer
     }
     fn members_count(&self) -> usize {
         self.content.members_count
@@ -340,6 +354,9 @@ impl DubpBlockTrait for DubpBlockV10 {
     fn sign(&mut self, signator: &Self::Signator) -> Result<(), SignError> {
         self.signature = signator.sign(self.compute_signed_string().as_bytes());
         Ok(())
+    }
+    fn signature(&self) -> ed25519::Signature {
+        self.signature
     }
     fn verify_inner_hash(&self) -> Result<(), VerifyBlockHashError> {
         match self.inner_hash {
