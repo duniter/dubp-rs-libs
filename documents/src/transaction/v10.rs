@@ -135,6 +135,15 @@ impl Default for TransactionInputUnlocksV10 {
     }
 }
 
+impl TransactionInputUnlocksV10 {
+    pub fn single_index(i: usize) -> Self {
+        TransactionInputUnlocksV10 {
+            index: i,
+            unlocks: vec![WalletUnlockProofV10::Sig(0)],
+        }
+    }
+}
+
 impl ToString for TransactionInputUnlocksV10 {
     fn to_string(&self) -> String {
         let mut result: String = format!("{}:", self.index);
