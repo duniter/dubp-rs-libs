@@ -42,6 +42,8 @@ impl std::fmt::Display for SourceAmount {
 }
 
 impl SourceAmount {
+    pub const ZERO: Self = SourceAmount([0u8; 16]);
+
     pub fn new(amount: i64, base: i64) -> Self {
         let mut buffer = [0; 16];
         buffer[..8].copy_from_slice(&amount.to_be_bytes()[..]);
@@ -119,6 +121,12 @@ impl Sum for SourceAmount {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_zero() {
+        assert_eq!(SourceAmount::ZERO.amount(), 0);
+        assert_eq!(SourceAmount::ZERO.base(), 0);
+    }
 
     #[test]
     fn test_add_sources_amount() {
