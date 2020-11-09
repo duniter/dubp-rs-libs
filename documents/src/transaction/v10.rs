@@ -336,6 +336,23 @@ impl TransactionDocumentV10 {
             output.reduce()
         }
     }
+    /// Verify comment validity
+    pub fn verify_comment(comment: &str) -> bool {
+        if comment.is_ascii() {
+            for char_ in comment.chars() {
+                match char_ {
+                    c if c.is_ascii_alphanumeric() => continue,
+                    '.' | ' ' | '-' | '_' | '\\' | ':' | '/' | ';' | '*' | '[' | ']' | '('
+                    | ')' | '?' | '!' | '^' | '+' | '=' | '@' | '&' | '~' | '#' | '{' | '}'
+                    | '|' | '<' | '>' | '%' => continue,
+                    _ => return false,
+                }
+            }
+            true
+        } else {
+            false
+        }
+    }
     /// Indicates from which blockchain timestamp the transaction can be writable.
     pub fn writable_on(
         &self,
@@ -664,5 +681,12 @@ mod tests {
                 "876D2430E0B66E2CE4467866D8F923D68896CACD6AA49CDD8BDD0096B834DEF1"
             ))
         );
+    }
+    #[test]
+    fn verify_comment() {
+        assert!(TransactionDocumentV10::verify_comment(""));
+        assert!(TransactionDocumentV10::verify_comment("sntsrttfsrt"));
+        assert!(!TransactionDocumentV10::verify_comment("sntsrt,tfsrt"));
+        assert!(TransactionDocumentV10::verify_comment("sntsrt|tfsrt"));
     }
 }
