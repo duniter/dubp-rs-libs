@@ -24,7 +24,7 @@ pub const G1_CURRENCY: u32 = 1;
 const G1_CURRENCY_STR: &str = "g1";
 
 /// Ğ1-Test currency
-pub const G1_TEST_CURRENCY: u32 = 268_435_457;
+pub const G1_TEST_CURRENCY: u32 = /*268_435_457*/0x1000_0001;
 const G1_TEST_CURRENCY_STR: &str = "g1-test";
 
 #[derive(Copy, Clone, Debug, PartialEq)]
