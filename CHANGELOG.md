@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- feat(documents):tx: add method generate_simple_txs
+
 ## [0.30.0] - 2020-11-09
 
 - feat(documents):tx: add method TransactionDocumentV10::verify_comment

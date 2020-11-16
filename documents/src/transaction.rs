@@ -16,6 +16,7 @@
 //! Wrappers around Transaction documents.
 
 pub mod v10;
+pub(crate) mod v10_gen;
 
 use crate::*;
 
@@ -90,13 +91,25 @@ pub enum TxVerifyErr {
     WrongCurrency { expected: String, found: String },
 }
 
-pub trait TransactionDocumentTrait<'a> {
+pub trait TransactionDocumentTrait<'a>: Sized {
     type Input: 'a;
     type Inputs: AsRef<[Self::Input]>;
     type InputUnlocks: 'a;
     type InputsUnlocks: AsRef<[Self::InputUnlocks]>;
     type Output: 'a;
     type Outputs: AsRef<[Self::Output]>;
+    type PubKey: PublicKey;
+    type RawTx;
+
+    fn generate_simple_txs(
+        blockstamp: Blockstamp,
+        currency: String,
+        inputs_with_sum: (Vec<Self::Input>, SourceAmount),
+        inputs_per_tx: usize,
+        issuer: Self::PubKey,
+        recipient: Self::PubKey,
+        user_amount_and_comment: (SourceAmount, String),
+    ) -> Vec<Self::RawTx>;
     fn get_inputs(&'a self) -> Self::Inputs;
     fn get_inputs_unlocks(&'a self) -> Self::InputsUnlocks;
     fn get_outputs(&'a self) -> Self::Outputs;

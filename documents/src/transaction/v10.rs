@@ -60,6 +60,33 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
     type InputsUnlocks = &'a [TransactionInputUnlocksV10];
     type Output = TransactionOutputV10;
     type Outputs = &'a [TransactionOutputV10];
+    type PubKey = ed25519::PublicKey;
+    type RawTx = String;
+
+    fn generate_simple_txs(
+        blockstamp: Blockstamp,
+        currency: String,
+        inputs_with_sum: (Vec<Self::Input>, SourceAmount),
+        inputs_per_tx: usize,
+        issuer: Self::PubKey,
+        recipient: Self::PubKey,
+        user_amount_and_comment: (SourceAmount, String),
+    ) -> Vec<Self::RawTx> {
+        let (inputs, inputs_sum) = inputs_with_sum;
+        let (user_amount, user_comment) = user_amount_and_comment;
+        super::v10_gen::TransactionDocV10SimpleGen {
+            blockstamp,
+            currency,
+            inputs,
+            inputs_sum,
+            inputs_per_tx,
+            issuer,
+            recipient,
+            user_amount,
+            user_comment,
+        }
+        .gen()
+    }
     fn get_inputs(&'a self) -> Self::Inputs {
         &self.inputs
     }
