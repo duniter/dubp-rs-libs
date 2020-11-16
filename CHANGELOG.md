@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.31.0] - 2020-11-16
+
 - feat(documents):tx: add method generate_simple_txs
 
 ## [0.30.0] - 2020-11-09
@@ -46,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.30.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.31.0...HEAD
+[0.31.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.30.0...v0.31.0
 [0.30.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.29.0...v0.30.0
 [0.29.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.28.0...v0.29.0
 [0.28.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.27.0...v0.28.0
