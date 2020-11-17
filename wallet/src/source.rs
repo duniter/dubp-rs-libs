@@ -22,6 +22,7 @@ use crate::*;
 /// Wrap a source amount
 #[derive(
     Debug,
+    Default,
     Copy,
     Clone,
     Eq,
