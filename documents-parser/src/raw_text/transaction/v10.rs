@@ -157,7 +157,7 @@ impl FromPestPair for TransactionInputV10 {
 impl FromPestPair for TransactionInputUnlocksV10 {
     fn from_pest_pair(pair: Pair<Rule>) -> Result<TransactionInputUnlocksV10, TextParseError> {
         let mut input_index = 0;
-        let mut unlock_conds = Vec::new();
+        let mut unlock_conds = SmallVec::new();
         for unlock_field in pair.into_inner() {
             // ${ input_index ~ ":" ~ unlock_cond ~ (" " ~ unlock_cond)* }
             match unlock_field.as_rule() {

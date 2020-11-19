@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- feat(documents): gen complex transactions
 - feat(block): add method unit_base
 
 ## [0.31.0] - 2020-11-16

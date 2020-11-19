@@ -16,7 +16,7 @@
 //! Wrappers around Transaction documents.
 
 pub mod v10;
-pub(crate) mod v10_gen;
+pub mod v10_gen;
 
 use crate::*;
 
@@ -81,7 +81,7 @@ pub enum TxVerifyErr {
     NoOutput,
     #[error("Not same amount of inputs and unlocks: found {0} inputs and {1} unlocks.")]
     NotSameAmountOfInputsAndUnlocks(usize, usize),
-    #[error("Not same sum of inputs amount and outputs amount: ({0:?}, {1:?}).")]
+    #[error("Not same sum of inputs amount and outputs amount: ({0}, {1}).")]
     NotSameSumOfInputsAmountAndOutputsAmount(SourceAmount, SourceAmount),
     #[error("{0}")]
     Sigs(DocumentSigsErr),
@@ -91,7 +91,14 @@ pub enum TxVerifyErr {
     WrongCurrency { expected: String, found: String },
 }
 
+#[derive(Clone, Copy, Debug, Error)]
+pub enum GenTxError {
+    #[error("Too Many signers or recipients.")]
+    TooManySignersOrRecipients,
+}
+
 pub trait TransactionDocumentTrait<'a>: Sized {
+    type Address;
     type Input: 'a;
     type Inputs: AsRef<[Self::Input]>;
     type InputUnlocks: 'a;
@@ -105,7 +112,6 @@ pub trait TransactionDocumentTrait<'a>: Sized {
         blockstamp: Blockstamp,
         currency: String,
         inputs_with_sum: (Vec<Self::Input>, SourceAmount),
-        inputs_per_tx: usize,
         issuer: Self::PubKey,
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
@@ -331,7 +337,7 @@ pub(super) mod tests {
             }],
             unlocks: &[TransactionInputUnlocksV10 {
                 index: 0,
-                unlocks: vec![WalletUnlockProofV10::Sig(0)],
+                unlocks: svec![WalletUnlockProofV10::Sig(0)],
             }],
             outputs: smallvec![tx_output_v10(
                 10,

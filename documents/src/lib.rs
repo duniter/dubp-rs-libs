@@ -61,7 +61,7 @@ pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use smallvec::{smallvec as svec, SmallVec, ToSmallVec};
 pub(crate) use std::{
     borrow::Cow,
-    collections::{BTreeSet, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap},
     fmt::Debug,
     iter::FromIterator,
 };

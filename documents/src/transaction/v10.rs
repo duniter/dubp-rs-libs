@@ -54,6 +54,7 @@ impl ToString for TransactionInputV10 {
 const TX_V10_MAX_LINES: usize = 100;
 
 impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
+    type Address = WalletScriptV10;
     type Input = TransactionInputV10;
     type Inputs = &'a [TransactionInputV10];
     type InputUnlocks = TransactionInputUnlocksV10;
@@ -67,7 +68,6 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
         blockstamp: Blockstamp,
         currency: String,
         inputs_with_sum: (Vec<Self::Input>, SourceAmount),
-        inputs_per_tx: usize,
         issuer: Self::PubKey,
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
@@ -79,7 +79,6 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
             currency,
             inputs,
             inputs_sum,
-            inputs_per_tx,
             issuer,
             recipient,
             user_amount,
@@ -150,14 +149,14 @@ pub struct TransactionInputUnlocksV10 {
     /// Input index
     pub index: usize,
     /// List of proof to unlock funds
-    pub unlocks: Vec<WalletUnlockProofV10>,
+    pub unlocks: SmallVec<[WalletUnlockProofV10; 1]>,
 }
 
 impl Default for TransactionInputUnlocksV10 {
     fn default() -> Self {
         TransactionInputUnlocksV10 {
             index: 0,
-            unlocks: vec![WalletUnlockProofV10::Sig(0)],
+            unlocks: svec![WalletUnlockProofV10::Sig(0)],
         }
     }
 }
@@ -166,7 +165,7 @@ impl TransactionInputUnlocksV10 {
     pub fn single_index(i: usize) -> Self {
         TransactionInputUnlocksV10 {
             index: i,
-            unlocks: vec![WalletUnlockProofV10::Sig(0)],
+            unlocks: svec![WalletUnlockProofV10::Sig(0)],
         }
     }
 }
@@ -639,7 +638,7 @@ mod tests {
             }],
             unlocks: &[TransactionInputUnlocksV10 {
                 index: 0,
-                unlocks: vec![WalletUnlockProofV10::Sig(0)],
+                unlocks: smallvec![WalletUnlockProofV10::Sig(0)],
             }],
             outputs: smallvec![tx_output_v10(
                 10,
