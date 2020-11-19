@@ -98,6 +98,8 @@ pub trait DubpBlockTrait {
     fn sign(&mut self, signator: &Self::Signator) -> Result<(), SignError>;
     /// Get block signature
     fn signature(&self) -> <Self::Signator as Signator>::Signature;
+    /// Get unit base
+    fn unit_base(&self) -> usize;
 }
 
 macro_rules! dubp_block_fn {
@@ -143,6 +145,7 @@ impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(verify_inner_hash, Result<(), VerifyBlockHashError>);
     dubp_block_fn!(verify_signature, Result<(), SigError>);
     dubp_block_fn!(verify_hash, Result<(), VerifyBlockHashError>);
+    dubp_block_fn!(unit_base, usize);
     #[inline]
     fn issuer(&self) -> PubKey {
         match self {

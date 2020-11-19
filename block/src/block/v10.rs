@@ -401,6 +401,9 @@ impl DubpBlockTrait for DubpBlockV10 {
             })
         }
     }
+    fn unit_base(&self) -> usize {
+        self.content.unit_base
+    }
 }
 
 impl DubpBlockV10 {
