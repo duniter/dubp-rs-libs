@@ -174,6 +174,18 @@ impl WalletScriptV10 {
             nodes,
         }
     }
+    pub fn and_and(cond1: WalletConditionV10, cond2: WalletConditionV10, cond3: WalletConditionV10) -> Self {
+        let mut nodes = SmallVec::new();
+        nodes.push(WalletSubScriptV10::Single(cond1));
+        nodes.push(WalletSubScriptV10::And(2, 3));
+        nodes.push(WalletSubScriptV10::Single(cond2));
+        nodes.push(WalletSubScriptV10::Single(cond3));
+
+        WalletScriptV10 {
+            root: WalletSubScriptV10::And(0, 1),
+            nodes,
+        }
+    }
     pub fn or(cond1: WalletConditionV10, cond2: WalletConditionV10) -> Self {
         let mut nodes = SmallVec::new();
         nodes.push(WalletSubScriptV10::Single(cond1));
@@ -398,5 +410,15 @@ mod tests {
             Ok((369, None)),
             cond.unlockable_on(&hashset![], &hashset![], 246),
         );
+    }
+
+    #[test]
+    fn tect_and_and() {
+        let cond1 = WalletConditionV10::Csv(123);
+        let cond2 = WalletConditionV10::Csv(456);
+        let cond3 = WalletConditionV10::Csv(789);
+
+        let script = WalletScriptV10::and_and(cond1, cond2, cond3);
+        assert_eq!(&script.to_string(), "CSV(123) && CSV(456) && CSV(789)");
     }
 }

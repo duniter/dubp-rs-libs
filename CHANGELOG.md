@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- feat(wallet):script: add method and_and
 - feat(documents): gen complex transactions
 - feat(block): add method unit_base
 
