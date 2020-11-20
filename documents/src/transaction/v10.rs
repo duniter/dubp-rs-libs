@@ -329,7 +329,7 @@ impl TransactionDocumentV10 {
         };
         for sig in &self.signatures {
             hashing_text.push_str(&sig.to_string());
-            hashing_text.push_str("\n");
+            hashing_text.push('\n');
         }
         Hash::compute_str(&hashing_text)
     }
@@ -435,22 +435,22 @@ impl CompactTextDocument for TransactionDocumentV10 {
     fn as_compact_text(&self) -> String {
         let mut issuers_str = String::from("");
         for issuer in &self.issuers {
-            issuers_str.push_str("\n");
+            issuers_str.push('\n');
             issuers_str.push_str(&issuer.to_string());
         }
         let mut inputs_str = String::from("");
         for input in &self.inputs {
-            inputs_str.push_str("\n");
+            inputs_str.push('\n');
             inputs_str.push_str(&input.to_string());
         }
         let mut unlocks_str = String::from("");
         for unlock in &self.unlocks {
-            unlocks_str.push_str("\n");
+            unlocks_str.push('\n');
             unlocks_str.push_str(&unlock.to_string());
         }
         let mut outputs_str = String::from("");
         for output in &self.outputs {
-            outputs_str.push_str("\n");
+            outputs_str.push('\n');
             outputs_str.push_str(&output.to_string());
         }
         let comment_str = if self.comment.is_empty() {
@@ -461,7 +461,7 @@ impl CompactTextDocument for TransactionDocumentV10 {
         let mut signatures_str = String::from("");
         for sig in &self.signatures {
             signatures_str.push_str(&sig.to_string());
-            signatures_str.push_str("\n");
+            signatures_str.push('\n');
         }
         // Remove end line step
         signatures_str.pop();

@@ -84,47 +84,47 @@ impl DubpBlockV10Content {
     pub(crate) fn gen_hashable_text(&self) -> String {
         let mut identities_str = String::from("");
         for identity in &self.identities {
-            identities_str.push_str("\n");
+            identities_str.push('\n');
             identities_str.push_str(&identity.generate_compact_text());
         }
         let mut joiners_str = String::new();
         for joiner in &self.joiners {
-            joiners_str.push_str("\n");
+            joiners_str.push('\n');
             joiners_str.push_str(&joiner.generate_compact_text());
         }
         let mut actives_str = String::new();
         for active in &self.actives {
-            actives_str.push_str("\n");
+            actives_str.push('\n');
             actives_str.push_str(&active.generate_compact_text());
         }
         let mut leavers_str = String::new();
         for leaver in &self.leavers {
-            leavers_str.push_str("\n");
+            leavers_str.push('\n');
             leavers_str.push_str(&leaver.generate_compact_text());
         }
         let mut identities_str = String::new();
         for identity in &self.identities {
-            identities_str.push_str("\n");
+            identities_str.push('\n');
             identities_str.push_str(&identity.generate_compact_text());
         }
         let mut revokeds_str = String::new();
         for revocation in &self.revoked {
-            revokeds_str.push_str("\n");
+            revokeds_str.push('\n');
             revokeds_str.push_str(&revocation.as_compact_text());
         }
         let mut excludeds_str = String::new();
         for exclusion in &self.excluded {
-            excludeds_str.push_str("\n");
+            excludeds_str.push('\n');
             excludeds_str.push_str(&exclusion.to_string());
         }
         let mut certifications_str = String::new();
         for certification in &self.certifications {
-            certifications_str.push_str("\n");
+            certifications_str.push('\n');
             certifications_str.push_str(&certification.as_compact_text());
         }
         let mut transactions_str = String::new();
         for transaction in &self.transactions {
-            transactions_str.push_str("\n");
+            transactions_str.push('\n');
             transactions_str.push_str(&transaction.generate_compact_text());
         }
         let mut dividend_str = String::new();
@@ -132,26 +132,26 @@ impl DubpBlockV10Content {
             if dividend > 0 {
                 dividend_str.push_str("UniversalDividend: ");
                 dividend_str.push_str(&dividend.to_string());
-                dividend_str.push_str("\n");
+                dividend_str.push('\n');
             }
         }
         let mut parameters_str = String::new();
         if let Some(params) = self.parameters {
             parameters_str.push_str("Parameters: ");
             parameters_str.push_str(&params.to_string());
-            parameters_str.push_str("\n");
+            parameters_str.push('\n');
         }
         let mut previous_hash_str = String::new();
         if self.number.0 > 0 {
             previous_hash_str.push_str("PreviousHash: ");
             previous_hash_str.push_str(&self.previous_hash.to_string());
-            previous_hash_str.push_str("\n");
+            previous_hash_str.push('\n');
         }
         let mut previous_issuer_str = String::new();
         if self.number.0 > 0 {
             previous_issuer_str.push_str("PreviousIssuer: ");
             previous_issuer_str.push_str(&self.previous_issuer.to_string());
-            previous_issuer_str.push_str("\n");
+            previous_issuer_str.push('\n');
         }
         format!(
             "Version: {version}

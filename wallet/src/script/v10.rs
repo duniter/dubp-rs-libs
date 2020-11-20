@@ -174,7 +174,11 @@ impl WalletScriptV10 {
             nodes,
         }
     }
-    pub fn and_and(cond1: WalletConditionV10, cond2: WalletConditionV10, cond3: WalletConditionV10) -> Self {
+    pub fn and_and(
+        cond1: WalletConditionV10,
+        cond2: WalletConditionV10,
+        cond3: WalletConditionV10,
+    ) -> Self {
         let mut nodes = SmallVec::new();
         nodes.push(WalletSubScriptV10::Single(cond1));
         nodes.push(WalletSubScriptV10::And(2, 3));
