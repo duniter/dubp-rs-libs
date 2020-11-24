@@ -164,6 +164,12 @@ impl WalletScriptV10 {
             nodes: SmallVec::new(),
         }
     }
+    pub fn single_sig(pubkey: PublicKey) -> Self {
+        WalletScriptV10 {
+            root: WalletSubScriptV10::Single(WalletConditionV10::Sig(pubkey)),
+            nodes: SmallVec::new(),
+        }
+    }
     pub fn and(cond1: WalletConditionV10, cond2: WalletConditionV10) -> Self {
         let mut nodes = SmallVec::new();
         nodes.push(WalletSubScriptV10::Single(cond1));
