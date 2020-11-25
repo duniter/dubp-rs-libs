@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.32.1] - 2020-11-25
+
 - fix(docs-parser): TransactionOutputV10: handle invalid script without grammar
 
 ## [0.32.0] - 2020-11-20
@@ -56,7 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.1...HEAD
+[0.32.1]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.0...v0.32.1
 [0.32.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.31.0...v0.32.0
 [0.31.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.30.0...v0.31.0
 [0.30.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.29.0...v0.30.0
