@@ -109,7 +109,6 @@ impl TransactionDocV10ComplexGen {
             (TX_V10_MAX_INPUTS_PLUS_SIGNERS - ((signers.len() + self.recipients.len()) * 2)) / 2;
 
         if max_inputs < self.issuers.len() {
-            print!("TMP max_inputs={}", max_inputs);
             return Err(GenTxError::TooManySignersOrRecipients);
         }
 

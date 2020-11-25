@@ -17,8 +17,15 @@ pub fn tx_unlock_v10_from_str(source: &str) -> Result<TransactionInputUnlocksV10
 pub(crate) fn tx_output_v10_from_str(source: &str) -> Result<TransactionOutputV10, TextParseError> {
     let mut doc_pairs = RawDocumentsParser::parse(Rule::tx_output, source)
         .map_err(|e| TextParseError::PestError(e.into()))?;
-    TransactionOutputV10::from_pest_pair(doc_pairs.next().unwrap_or_else(|| unreachable!()))
-    // get and unwrap the `tx_output` rule; never fails
+    let mut output =
+        TransactionOutputV10::from_pest_pair(doc_pairs.next().unwrap_or_else(|| unreachable!()))?; // get and unwrap the `tx_output` rule; never fails
+
+    if output.to_string() != source {
+        let output_parts = source.split(':').collect::<Vec<_>>();
+        output.conditions.origin_str = Some(output_parts[2].to_owned());
+    }
+
+    Ok(output)
 }
 
 #[cfg(test)]

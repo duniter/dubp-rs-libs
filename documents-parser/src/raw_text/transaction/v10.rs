@@ -211,20 +211,12 @@ impl FromPestPair for TransactionOutputV10 {
                 .unwrap_or_else(|_| unreachable!()),
         );
         let script_pairs = utxo_pairs.next().unwrap_or_else(|| unreachable!());
-        let script_origin_str = script_pairs.as_str();
         let script = WalletScriptV10::from_pest_pair(script_pairs)?;
 
         Ok(TransactionOutputV10 {
             amount,
             conditions: UTXOConditions {
-                origin_str: if script_origin_str != script.to_string() {
-                    //println!("TMP DEBUG script_origin_str={}", script_origin_str);
-                    //println!("TMP DEBUG conditions={:#?}", script);
-                    //println!("TMP DEBUG conditions.to_string()={}", script.to_string());
-                    Some(script_origin_str.to_owned())
-                } else {
-                    None
-                },
+                origin_str: None,
                 script,
             },
         })
@@ -257,6 +249,51 @@ hfncr3i2TMfyu+SFgUQOkE9Hfw23Sxgk/WF2SR3jXfaaEhM8wFYEVyJsgSWPAKrBqQl+jhVkXMQc6lnz
         let doc = unwrap!(TransactionDocumentV10::parse_from_raw_text(doc));
         println!("doc={:?}", doc);
         assert!(doc.verify_signatures().is_ok());
+    }
+
+    #[test]
+    fn parse_tx_with_invalid_output_cond() -> Result<(), TextParseError> {
+        let tx_stringified = TransactionDocumentV10Stringified {
+            currency: "g1".to_owned(),
+            blockstamp: "71327-0000883B04D983D9C6461D2AD2E67E3DF050B9065ADB6A5514A8BE16EF343E67".to_owned(),
+            locktime: 0,
+            issuers: vec!["7t38cKwaBN9e6KymPnPS7SDc4bSJEMML1mTyKg4sDtiY".to_owned()],
+            inputs: vec!["45249:0:T:E774E2C45B4C93C5008CA466ED9BDC3F698AD5CED4FB2899083DBF28C633A1C4:0".to_owned()],
+            unlocks: vec!["0:SIG(0)".to_owned()],
+            outputs: vec![
+                "45229:0:SIG(7t38cKwaBN9e6KymPnPS7SDc4bSJEMML1mTyKg4sDtiY)".to_owned(),
+                "20:0:XHX(6B86B273FF34FCE19D6B804EFF5A3F5747ADA4EAA22F1D49C01E52DDB7875B4B))".to_owned()
+            ],
+            comment: "".to_owned(),
+            signatures: vec!["KoO0768jC+M+8MKa02awEbd/CIR1dq1Ee5OGeMlnmIlaoYubwONfkqi5LNVJ2apncQRNhjBYDnFpTbE8OmRLDg==".to_owned()],
+            hash: None,
+        };
+
+        let tx = TransactionDocumentV10::from_string_object(&tx_stringified)?;
+
+        println!("tx={}", tx.as_text());
+
+        assert_eq!(
+            tx.as_text(),
+            "Version: 10
+Type: Transaction
+Currency: g1
+Blockstamp: 71327-0000883B04D983D9C6461D2AD2E67E3DF050B9065ADB6A5514A8BE16EF343E67
+Locktime: 0
+Issuers:
+7t38cKwaBN9e6KymPnPS7SDc4bSJEMML1mTyKg4sDtiY
+Inputs:
+45249:0:T:E774E2C45B4C93C5008CA466ED9BDC3F698AD5CED4FB2899083DBF28C633A1C4:0
+Unlocks:
+0:SIG(0)
+Outputs:
+45229:0:SIG(7t38cKwaBN9e6KymPnPS7SDc4bSJEMML1mTyKg4sDtiY)
+20:0:XHX(6B86B273FF34FCE19D6B804EFF5A3F5747ADA4EAA22F1D49C01E52DDB7875B4B))
+Comment: 
+"
+        );
+
+        Ok(())
     }
 
     #[test]

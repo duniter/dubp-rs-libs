@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- fix(docs-parser): TransactionOutputV10: handle invalid script without grammar
+
 ## [0.32.0] - 2020-11-20
 
 - feat(wallet):script: add method and_and
