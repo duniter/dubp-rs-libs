@@ -18,20 +18,11 @@
 pub mod v10;
 
 use crate::*;
+use std::cmp::Ordering;
 
 /// Wrap a source amount
 #[derive(
-    Debug,
-    Default,
-    Copy,
-    Clone,
-    Eq,
-    Ord,
-    PartialOrd,
-    Deserialize,
-    Serialize,
-    zerocopy::AsBytes,
-    zerocopy::FromBytes,
+    Debug, Default, Copy, Clone, Eq, Deserialize, Serialize, zerocopy::AsBytes, zerocopy::FromBytes,
 )]
 #[repr(transparent)]
 pub struct SourceAmount([u8; 16]);
@@ -80,6 +71,32 @@ impl PartialEq for SourceAmount {
             self.eq(&(*other).increment_base())
         } else {
             self.increment_base().eq(other)
+        }
+    }
+}
+
+impl PartialOrd for SourceAmount {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        #[allow(clippy::comparison_chain)]
+        if self.base() == other.base() {
+            self.amount().partial_cmp(&other.amount())
+        } else if self.base() > other.base() {
+            self.partial_cmp(&other.increment_base())
+        } else {
+            self.increment_base().partial_cmp(other)
+        }
+    }
+}
+
+impl Ord for SourceAmount {
+    fn cmp(&self, other: &Self) -> Ordering {
+        #[allow(clippy::comparison_chain)]
+        if self.base() == other.base() {
+            self.amount().cmp(&other.amount())
+        } else if self.base() > other.base() {
+            self.cmp(&other.increment_base())
+        } else {
+            self.increment_base().cmp(other)
         }
     }
 }
@@ -157,5 +174,13 @@ mod tests {
             sa2 - sa3,
         );c
         assert_eq!(SourceAmount::new(0, 1), sa3 - sa1,);*/
+    }
+
+    #[test]
+    fn test_ord() {
+        let a1 = SourceAmount::new(20, 3);
+        let a2 = SourceAmount::new(9_000, 0);
+
+        assert!(a1 > a2);
     }
 }

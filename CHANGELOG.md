@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- fix(wallet): SourceAmount auto impl of Ord is wrong
+
 ## [0.32.1] - 2020-11-25
 
 - fix(docs-parser): TransactionOutputV10: handle invalid script without grammar
