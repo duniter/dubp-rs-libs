@@ -549,15 +549,15 @@ mod tests {
             0u8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0,
         ];
-        let seed_str_b58 = "1111111111111111111111111111111".to_owned();
+
         let seed = Seed32::new(seed_bytes);
 
         assert_eq!(seed_default, seed);
-        assert_eq!(seed_default, unwrap!(Seed32::from_base58(&seed_str_b58)));
+        assert_eq!(seed_default, unwrap!(Seed32::from_base58("")));
 
-        assert_eq!("1111111111111111111111111111111", format!("{}", seed));
+        assert_eq!("", format!("{}", seed));
 
-        assert_eq!(seed_str_b58, seed.to_base58());
+        assert_eq!("", seed.to_base58());
     }
 
     fn false_key_pair_ed25519() -> ed25519::Ed25519KeyPair {

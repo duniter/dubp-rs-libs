@@ -596,6 +596,7 @@ mod tests {
             bincode::serialize(&public_key)?,
             public_key.to_bytes_vector(),
         );
+        assert_eq!(&public_key.to_string(), public58);
         Ok(())
     }
 
@@ -607,6 +608,32 @@ mod tests {
             bincode::serialize(&public_key)?,
             public_key.to_bytes_vector(),
         );
+        assert_eq!(&public_key.to_string(), public58);
+        Ok(())
+    }
+
+    #[test]
+    fn test_third_pubkey_with_leading_1() -> Result<(), bincode::Error> {
+        let public58 = "1XoFs76G4yidvVY3FZBwYyLXTMjabryhFD8mNQPkQKHk";
+        let public_key = unwrap!(super::PublicKey::from_base58(public58));
+        assert_eq!(
+            bincode::serialize(&public_key)?,
+            public_key.to_bytes_vector(),
+        );
+        println!("public_key_with_leading_1={:?}", public_key.as_ref());
+        println!("public_key_with_leading_1={}", public_key);
+        let public_key_without_leading_1 = unwrap!(super::PublicKey::from_base58(
+            "XoFs76G4yidvVY3FZBwYyLXTMjabryhFD8mNQPkQKHk"
+        ));
+        println!(
+            "public_key_without_leading_1={:?}",
+            public_key_without_leading_1.as_ref()
+        );
+        println!(
+            "public_key_without_leading_1={}",
+            public_key_without_leading_1
+        );
+        assert_eq!(&public_key.to_string(), public58);
         Ok(())
     }
 

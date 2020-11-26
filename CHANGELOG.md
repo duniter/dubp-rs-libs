@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- fix(crypto):b58: some rare base 58 string with leading 1 are not correctly handled
+
 ## [0.32.2] - 2020-11-26
 
 - fix(wallet): SourceAmount auto impl of Ord is wrong
