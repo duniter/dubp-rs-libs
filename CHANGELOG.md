@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- ref(documents):transaction: method verify not need an owned string
+
 ## [0.32.3] - 2020-12-04
 
 - fix(crypto):b58: some rare base 58 string with leading 1 are not correctly handled

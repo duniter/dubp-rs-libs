@@ -96,11 +96,11 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
         &self.outputs
     }
 
-    fn verify(&self, expected_currency_opt: Option<String>) -> Result<(), super::TxVerifyErr> {
+    fn verify(&self, expected_currency_opt: Option<&str>) -> Result<(), super::TxVerifyErr> {
         if let Some(expected_currency) = expected_currency_opt {
             if self.currency != expected_currency {
                 return Err(super::TxVerifyErr::WrongCurrency {
-                    expected: expected_currency,
+                    expected: expected_currency.to_owned(),
                     found: self.currency.clone(),
                 });
             }

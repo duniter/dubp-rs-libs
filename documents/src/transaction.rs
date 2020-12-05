@@ -119,7 +119,7 @@ pub trait TransactionDocumentTrait<'a>: Sized {
     fn get_inputs(&'a self) -> Self::Inputs;
     fn get_inputs_unlocks(&'a self) -> Self::InputsUnlocks;
     fn get_outputs(&'a self) -> Self::Outputs;
-    fn verify(&self, expected_currency: Option<String>) -> Result<(), TxVerifyErr>;
+    fn verify(&self, expected_currency: Option<&str>) -> Result<(), TxVerifyErr>;
 }
 
 /// Wrap a Transaction document.
