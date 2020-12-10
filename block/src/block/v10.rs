@@ -307,11 +307,23 @@ impl DubpBlockTrait for DubpBlockV10 {
     fn issuers_count(&self) -> usize {
         self.content.issuers_count
     }
+    fn issuers_frame(&self) -> usize {
+        self.content.issuers_frame
+    }
     fn issuer(&self) -> ed25519::PublicKey {
         self.content.issuer
     }
+    fn local_time(&self) -> u64 {
+        self.content.time
+    }
     fn members_count(&self) -> usize {
         self.content.members_count
+    }
+    fn monetary_mass(&self) -> u64 {
+        self.content.monetary_mass
+    }
+    fn nonce(&self) -> u64 {
+        self.nonce
     }
     fn number(&self) -> BlockNumber {
         self.content.number

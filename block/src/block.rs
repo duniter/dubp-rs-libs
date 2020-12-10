@@ -76,8 +76,16 @@ pub trait DubpBlockTrait {
     fn issuer(&self) -> <Self::Signator as Signator>::PublicKey;
     /// Get number of compute members in the current frame
     fn issuers_count(&self) -> usize;
+    /// Get size of the current frame (in blocks)
+    fn issuers_frame(&self) -> usize;
+    /// Get local time
+    fn local_time(&self) -> u64;
     /// Get number of members in wot
     fn members_count(&self) -> usize;
+    /// Get monetary mass
+    fn monetary_mass(&self) -> u64;
+    /// Get block nonce
+    fn nonce(&self) -> u64;
     /// Get block number
     fn number(&self) -> BlockNumber;
     /// Get common difficulty (PoW)
@@ -135,8 +143,12 @@ impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(hash, BlockHash);
     dubp_block_fn!(inner_hash, Hash);
     dubp_block_fn!(issuers_count, usize);
+    dubp_block_fn!(issuers_frame, usize);
+    dubp_block_fn!(local_time, u64);
     dubp_block_fn!(members_count, usize);
+    dubp_block_fn!(monetary_mass, u64);
     dubp_block_fn!(common_time, u64);
+    dubp_block_fn!(nonce, u64);
     dubp_block_fn!(number, BlockNumber);
     dubp_block_fn!(pow_min, usize);
     dubp_block_fn!(previous_blockstamp, Blockstamp);

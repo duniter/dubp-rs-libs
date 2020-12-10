@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- feat(block): add several field accessors
 - ref(documents):transaction: method verify not need an owned string
 
 ## [0.32.3] - 2020-12-04
