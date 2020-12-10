@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.33.0] - 2020-12-10
+
 - feat(block): add several field accessors
 - ref(documents):transaction: method verify not need an owned string
 
@@ -69,7 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.3...HEAD
+[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.33.0...HEAD
+[0.33.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.3...v0.33.0
 [0.32.3]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.2...v0.32.3
 [0.32.2]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.1...v0.32.2
 [0.32.1]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.0...v0.32.1
