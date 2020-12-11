@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.34.0] - 2020-12-11
+
 - feat(wallet): impl Hash for UtxoIdV10
 
 ## [0.33.0] - 2020-12-10
@@ -73,7 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.33.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.34.0...HEAD
+[0.34.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.33.0...v0.34.0
 [0.33.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.3...v0.33.0
 [0.32.3]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.2...v0.32.3
 [0.32.2]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.1...v0.32.2
