@@ -35,7 +35,7 @@ pub struct UdSourceIdV10 {
     pub block_number: BlockNumber,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct UtxoIdV10 {
     pub tx_hash: Hash,
     pub output_index: usize,
