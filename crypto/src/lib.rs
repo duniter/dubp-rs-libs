@@ -51,6 +51,8 @@ pub mod bases;
 pub mod dewif;
 pub mod hashs;
 pub mod keys;
+#[cfg(feature = "mnemonic")]
+pub mod mnemonic;
 #[cfg(feature = "private_message")]
 pub mod private_message;
 #[cfg(feature = "rand")]

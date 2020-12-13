@@ -127,7 +127,7 @@ mod tests {
         for b in keypair.public_key().as_ref() {
             print!("{:x}", b);
         }
-        print!("\n");
+        println!();
 
         // Get user passphrase for DEWIF encryption
         let encryption_passphrase = "toto titi tata";

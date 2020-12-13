@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- feat(crypto): impl dubp-mnemonic
+
 ## [0.34.0] - 2020-12-11
 
 - feat(wallet): impl Hash for UtxoIdV10

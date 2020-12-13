@@ -462,6 +462,7 @@ dependencies = [
  "cryptoxide",
  "curve25519-dalek",
  "getrandom",
+ "once_cell",
  "ring",
  "serde",
  "sodiumoxide",
