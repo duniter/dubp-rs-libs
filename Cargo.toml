@@ -20,6 +20,9 @@ dubp-documents = { path = "documents", version = "0.34.0", features = ["crypto_s
 dubp-documents-parser = { path = "documents-parser", version = "0.34.0", features = ["crypto_scrypt"] }
 dubp-block = { path = "block", version = "0.34.0", features = ["crypto_scrypt"] }
 
+[dev-dependencies]
+rusty-hook = "0.11.2"
+
 [workspace]
 members = [
     "block",
