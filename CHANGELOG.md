@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.35.0] - 2020-12-13
+
 - feat(crypto): impl dubp-mnemonic
 
 ## [0.34.0] - 2020-12-11
@@ -77,7 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.34.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.35.0...HEAD
+[0.35.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.34.0...v0.35.0
 [0.34.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.33.0...v0.34.0
 [0.33.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.3...v0.33.0
 [0.32.3]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.32.2...v0.32.3
