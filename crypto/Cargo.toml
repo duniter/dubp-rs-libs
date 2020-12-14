@@ -65,3 +65,7 @@ mnemonic_italian = []
 mnemonic_japanese = []
 mnemonic_korean = []
 mnemonic_spanish = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
