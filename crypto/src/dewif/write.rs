@@ -97,19 +97,19 @@ mod tests {
     use unwrap::unwrap;
 
     #[test]
-    fn write_dewif_v1() {
+    fn write_dewif_v1_seed() {
         let keypair = KeyPairFromSeed32Generator::generate(Seed32::new([0u8; 32]));
 
         let dewif_content = write_dewif_v1_content(Currency::none(), &keypair, "toto");
         println!("{}", dewif_content);
         assert_eq!(
-            "AAAAAQAAAAC99J4N5CPUBjG0e02Aqj4UvfSeDeQj1AYxtHtNgKo+FBJYqJ2hzrdJL/nmloBkhpKz9S0H7sIr7r4O/vZ9IHdf",
+            "AAAAAQAAAADN3czaMJnPCBAZcxqnMsQtzd3M2jCZzwgQGXMapzLELTy1JyZZ4l2jocoq8aPJHWBIvk35Uxn3zLHKoJkDtvA/",
             dewif_content
         )
     }
 
     #[test]
-    fn write_ok() {
+    fn write_dewif_v1_credentials() {
         use crate::dewif::write_dewif_v1_content;
         use crate::keys::ed25519::{KeyPairFromSaltedPasswordGenerator, SaltedPassword};
 
@@ -140,7 +140,7 @@ mod tests {
             write_dewif_v1_content(expected_currency, &keypair, encryption_passphrase);
 
         assert_eq!(
-            "AAAAARAAAAEx3yd707xD3F5ttjcISbZzXRrko4pKUmCDIF/emfcVU9MvBqCJQS9R2sWlqbtI1Q37sLQhkj/W7tqY+hxm7mFQ",
+            "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0",
             dewif_content
         )
     }

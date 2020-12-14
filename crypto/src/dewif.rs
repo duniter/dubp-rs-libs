@@ -45,7 +45,7 @@
 //! let dewif_content = write_dewif_v1_content(Currency::from(G1_TEST_CURRENCY), &keypair, encryption_passphrase);
 //!
 //! assert_eq!(
-//!     "AAAAARAAAAEx3yd707xD3F5ttjcISbZzXRrko4pKUmCDIF/emfcVU9MvBqCJQS9R2sWlqbtI1Q37sLQhkj/W7tqY+hxm7mFQ",
+//!     "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0",
 //!     dewif_content
 //! )
 //! ```
@@ -59,7 +59,7 @@
 //! use std::str::FromStr;
 //!
 //! // Get DEWIF file content (Usually from disk)
-//! let dewif_file_content = "AAAAARAAAAEx3yd707xD3F5ttjcISbZzXRrko4pKUmCDIF/emfcVU9MvBqCJQS9R2sWlqbtI1Q37sLQhkj/W7tqY+hxm7mFQ";
+//! let dewif_file_content = "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0";
 //!
 //! // Get user passphrase for DEWIF decryption (from cli prompt or gui)
 //! let encryption_passphrase = "toto titi tata";
@@ -108,8 +108,6 @@ pub use write::{write_dewif_v1_content, write_dewif_v2_content};
 use crate::hashs::Hash;
 use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
-use arrayvec::ArrayVec;
-use std::hint::unreachable_unchecked;
 
 const UNENCRYPTED_BYTES_LEN: usize = 8;
 
@@ -125,13 +123,7 @@ const V2_BYTES_LEN: usize = 136;
 const V2_ENCRYPTED_BYTES_LEN: usize = 128;
 
 fn gen_aes_seed(passphrase: &str) -> Seed32 {
-    let mut salt = ArrayVec::<[u8; 37]>::new();
-    salt.try_extend_from_slice(b"dewif")
-        .unwrap_or_else(|_| unsafe { unreachable_unchecked() }); // 5
-    let hash = Hash::compute(passphrase.as_bytes());
-    salt.try_extend_from_slice(hash.as_ref()) // 32
-        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
-
+    let salt = Hash::compute(format!("dewif{}", passphrase).as_bytes());
     let mut aes_seed_bytes = [0u8; 32];
     scrypt(
         passphrase.as_bytes(),
