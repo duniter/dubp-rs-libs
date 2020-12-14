@@ -26,8 +26,28 @@ pub use language::Language;
 pub use mnemonic_gen::Mnemonic;
 pub use mnemonic_type::MnemonicType;
 
+///
+/// Generate seed from [`Mnemonic`][Mnemonic]
+///
+/// # Example
+///
+/// ```
+/// use dup_crypto::mnemonic::*;
+/// use dup_crypto::keys::{ed25519::KeyPairFromSeed32Generator, KeyPair};
+///
+/// let mnemonic = Mnemonic::new(MnemonicType::Words12, Language::English).expect("fail to generate random bytes");
+///
+/// let seed = mnemonic_to_seed(&mnemonic);
+///
+/// let keypair = KeyPairFromSeed32Generator::generate(seed);
+///
+/// println!("public key: {}", keypair.public_key());
+///
+/// ```
+///
+/// [Mnemonic]: ./mnemonic/struct.Mnemonic.html
+/// [Mnemonic::phrase()]: ./mnemonic/struct.Mnemonic.html#method.phrase
 #[cfg(feature = "scrypt")]
-/// Generate seed from `Mnemonic`
 pub fn mnemonic_to_seed(mnemonic: &Mnemonic) -> crate::keys::Seed32 {
     let mnemonic_bytes = mnemonic.phrase().as_bytes();
     let salt = crate::hashs::Hash::compute(format!("dubp{}", mnemonic.phrase()).as_bytes());

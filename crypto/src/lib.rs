@@ -19,6 +19,8 @@
 //!
 //! ## Summary
 //!
+//!
+//! * [Generate wallet with Dubp-Mnemonic](./mnemonic/index.html)
 //! * [Handle DEWIF format](./dewif/index.html#handle-dewif-format)
 //!   * [Write DEWIF file](./dewif/index.html#write-ed25519-key-pair-in-dewif-file)
 //!   * [Read DEWIF file](./dewif/index.html#read-dewif-file)
