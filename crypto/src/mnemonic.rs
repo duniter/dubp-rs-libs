@@ -34,3 +34,25 @@ pub fn mnemonic_to_seed(mnemonic: &Mnemonic) -> crate::keys::Seed32 {
     crate::keys::ed25519::KeyPairFromSaltedPasswordGenerator::with_default_parameters()
         .generate_seed(mnemonic_bytes, salt.as_ref())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_mnemonic_to_seed() -> Result<(), MnemonicError> {
+        let m = Mnemonic::from_phrase(
+            "tongue cute mail fossil great frozen same social weasel impact brush kind",
+            Language::English,
+        )?;
+
+        let seed = mnemonic_to_seed(&m);
+
+        assert_eq!(
+            "qGdvpbP9lJe7ZG4ZUSyu33KFeAEs/KkshAp9gEI4ReY=",
+            &base64::encode(seed.as_ref())
+        );
+
+        Ok(())
+    }
+}
