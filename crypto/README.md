@@ -19,7 +19,8 @@ Manage cryptographic operations for DUniter Protocols and the Duniter eco-system
 * Secure random byte generation
 * Scrypt to generate seed from credentials.
 * Ed25519 functions to create and use ed25519 keypair.
-* [DEWIF](https://git.duniter.org/nodes/common/doc/blob/dewif/rfc/0013_Duniter_Encrypted_Wallet_Import_Format.md) format read/write
+* [DEWIF](https://git.duniter.org/documents/rfcs/blob/dewif/rfc/0013_Duniter_Encrypted_Wallet_Import_Format.md) format read/write
+* [Dubp-Mnemonic](https://git.duniter.org/documents/rfcs/blob/dubp-mnemonic/rfc/0014_Dubp_Mnemonic.md) implementation.
 
 ## Documentation
 
