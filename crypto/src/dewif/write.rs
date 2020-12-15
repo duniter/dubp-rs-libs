@@ -119,15 +119,10 @@ mod tests {
         // Generate ed25519 keypair
         let keypair =
             KeyPairFromSaltedPasswordGenerator::with_default_parameters().generate(credentials);
-        print!("seed: ");
-        for b in keypair.seed().as_ref() {
-            print!("{:x}", b);
-        }
-        print!("\npubkey: ");
-        for b in keypair.public_key().as_ref() {
-            print!("{:x}", b);
-        }
-        println!();
+
+        println!("seed: {}", hex::encode(keypair.seed()));
+        println!("pubkey bytes: {:?}", keypair.public_key().as_ref());
+        println!("pubkey hex: {}", hex::encode(keypair.public_key()));
 
         // Get user passphrase for DEWIF encryption
         let encryption_passphrase = "toto titi tata";
