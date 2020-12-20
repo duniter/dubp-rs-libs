@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.36.0] - 2020-12-20
+
 - feat(crypto): Hash: add method compute_blake3
 - ref(crypto):Hash: remove useless method compute_str
 
@@ -86,7 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.35.2...HEAD
+[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.36.0...HEAD
+[0.36.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.35.2...v0.36.0
 [0.35.2]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.35.1...v0.35.2
 [0.35.1]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.35.0...v0.35.1
 [0.35.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.34.0...v0.35.0
