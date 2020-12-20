@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+
+- ref(crypto):Hash: remove useless method compute_str
+
 ## [0.35.2] - 2020-12-14
 
 ## [0.35.1] - 2020-12-14

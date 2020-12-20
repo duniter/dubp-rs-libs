@@ -52,7 +52,7 @@ pub trait DubpBlockTrait {
     fn common_time(&self) -> u64;
     /// Compute hash
     fn compute_hash(&self) -> BlockHash {
-        BlockHash(Hash::compute_str(&self.compute_hashed_string()))
+        BlockHash(Hash::compute(self.compute_hashed_string().as_bytes()))
     }
     /// Compute inner hash
     fn compute_inner_hash(&self) -> Hash {

@@ -80,7 +80,7 @@ impl SourceV10 {
                     }
                 }
                 WalletUnlockProofV10::Xhx(code) => {
-                    codes_hash.insert(Hash::compute_str(code));
+                    codes_hash.insert(Hash::compute(code.as_bytes()));
                 }
             }
         }

@@ -221,7 +221,7 @@ pub struct DubpBlockV10Builder {
 impl DubpBlockV10Builder {
     pub fn new(content: DubpBlockV10Content) -> Self {
         DubpBlockV10Builder {
-            inner_hash: Hash::compute_str(&content.gen_hashable_text()),
+            inner_hash: Hash::compute(content.gen_hashable_text().as_bytes()),
             content,
         }
     }

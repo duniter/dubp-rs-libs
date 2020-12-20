@@ -111,7 +111,7 @@ impl Hash {
 
     #[cfg(target_arch = "wasm32")]
     #[cfg(not(tarpaulin_include))]
-    /// Compute hash of any binary datas
+    /// Compute SHA256 hash of any binary datas
     pub fn compute(datas: &[u8]) -> Hash {
         let mut hasher = Sha256::new();
         hasher.input(datas);
@@ -120,7 +120,7 @@ impl Hash {
         Hash(hash_buffer)
     }
     #[cfg(not(target_arch = "wasm32"))]
-    /// Compute hash of any binary datas
+    /// Compute SHA256 hash of any binary datas
     pub fn compute(datas: &[u8]) -> Hash {
         let mut hash_buffer = [0u8; 32];
         hash_buffer.copy_from_slice(digest::digest(&digest::SHA256, datas).as_ref());
@@ -206,7 +206,7 @@ mod tests {
             unwrap!(Hash::from_hex(
                 "2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824"
             )),
-            Hash::compute_str("hello"),
+            Hash::compute(b"hello"),
         );
     }
 

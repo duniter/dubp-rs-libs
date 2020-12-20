@@ -331,7 +331,7 @@ impl TransactionDocumentV10 {
             hashing_text.push_str(&sig.to_string());
             hashing_text.push('\n');
         }
-        Hash::compute_str(&hashing_text)
+        Hash::compute(hashing_text.as_bytes())
     }
     /// get transaction hash option
     pub fn get_hash_opt(&self) -> Option<Hash> {

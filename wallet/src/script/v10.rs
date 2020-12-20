@@ -389,7 +389,7 @@ mod tests {
 
     #[test]
     fn test_xhx_cond_unlockable_on() {
-        let h1 = Hash::compute_str("1");
+        let h1 = Hash::compute(b"1");
         let cond = WalletConditionV10::Xhx(h1);
 
         assert_eq!(
