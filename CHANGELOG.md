@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
-
+- feat(crypto): Hash: add method compute_blake3
 - ref(crypto):Hash: remove useless method compute_str
 
 ## [0.35.2] - 2020-12-14

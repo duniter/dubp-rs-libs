@@ -126,9 +126,10 @@ impl Hash {
         hash_buffer.copy_from_slice(digest::digest(&digest::SHA256, datas).as_ref());
         Hash(hash_buffer)
     }
-    /// Compute hash of a string
-    pub fn compute_str(str_datas: &str) -> Hash {
-        Hash::compute(str_datas.as_bytes())
+
+    /// Compute BLAKE3 hash of any binary datas
+    pub fn compute_blake3(datas: &[u8]) -> Hash {
+        Hash(blake3::hash(datas).into())
     }
 
     /// Convert Hash into bytes vector
