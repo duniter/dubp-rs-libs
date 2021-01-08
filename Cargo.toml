@@ -35,6 +35,3 @@ members = [
 
 [patch.crates-io]
 #json-pest-parser = { path = "../../../rust/json-pest-parser" }
-
-[profile.test]
-opt-level = 3

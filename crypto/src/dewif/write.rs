@@ -103,7 +103,7 @@ mod tests {
         let dewif_content = write_dewif_v1_content(Currency::none(), &keypair, "toto");
         println!("{}", dewif_content);
         assert_eq!(
-            "AAAAAQAAAABV0QsqZJF91QDICeFgrn2MVdELKmSRfdUAyAnhYK59jJNqW1MhiUWqCmepOHFC8tawkY8aqYHe5M5ia/n6S2Ph",
+            "AAAAAQAAAADN3czaMJnPCBAZcxqnMsQtzd3M2jCZzwgQGXMapzLELTy1JyZZ4l2jocoq8aPJHWBIvk35Uxn3zLHKoJkDtvA/",
             dewif_content
         )
     }
@@ -135,7 +135,7 @@ mod tests {
             write_dewif_v1_content(expected_currency, &keypair, encryption_passphrase);
 
         assert_eq!(
-            "AAAAARAAAAF0y4EVcXgLoZk8awkOI8FtpylUp5ougnCQOy6ouOTCh/VzvrRnmJWmdmUu3lcQWUR6Ft20uWVWFxx/04rpmOfw",
+            "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0",
             dewif_content
         )
     }

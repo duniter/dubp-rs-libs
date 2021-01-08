@@ -45,7 +45,7 @@
 //! let dewif_content = write_dewif_v1_content(Currency::from(G1_TEST_CURRENCY), &keypair, encryption_passphrase);
 //!
 //! assert_eq!(
-//!     "AAAAARAAAAF0y4EVcXgLoZk8awkOI8FtpylUp5ougnCQOy6ouOTCh/VzvrRnmJWmdmUu3lcQWUR6Ft20uWVWFxx/04rpmOfw",
+//!     "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0",
 //!     dewif_content
 //! )
 //! ```
@@ -59,7 +59,7 @@
 //! use std::str::FromStr;
 //!
 //! // Get DEWIF file content (Usually from disk)
-//! let dewif_file_content = "AAAAARAAAAF0y4EVcXgLoZk8awkOI8FtpylUp5ougnCQOy6ouOTCh/VzvrRnmJWmdmUu3lcQWUR6Ft20uWVWFxx/04rpmOfw";
+//! let dewif_file_content = "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0";
 //!
 //! // Get user passphrase for DEWIF decryption (from cli prompt or gui)
 //! let encryption_passphrase = "toto titi tata";
@@ -128,11 +128,7 @@ fn gen_aes_seed(passphrase: &str) -> Seed32 {
     scrypt(
         passphrase.as_bytes(),
         salt.as_ref(),
-        &ScryptParams {
-            log_n: 15,
-            r: 16,
-            p: 1,
-        },
+        &ScryptParams::default(),
         &mut aes_seed_bytes,
     );
     Seed32::new(aes_seed_bytes)
@@ -149,22 +145,15 @@ mod tests {
 
     #[test]
     fn dewif_v1() {
-        let seed = unwrap!(Seed32::random());
-        println!("seed={}", hex::encode(seed.clone()));
-
-        let written_keypair = KeyPairFromSeed32Generator::generate(seed);
+        let written_keypair = KeyPairFromSeed32Generator::generate(Seed32::new([0u8; 32]));
         let currency = Currency::from(G1_TEST_CURRENCY);
 
-        let dewif_content = write_dewif_v1_content(currency, &written_keypair, "toto titi tata");
-
-        use crate::keys::KeyPair;
-        println!("public_key={}", hex::encode(written_keypair.public_key()));
-        println!("dewif_content={}", dewif_content);
+        let dewif_content = write_dewif_v1_content(currency, &written_keypair, "toto");
 
         let mut keypairs_iter = unwrap!(read_dewif_file_content(
             ExpectedCurrency::Specific(currency),
             &dewif_content,
-            "toto titi tata"
+            "toto"
         ));
         let keypair_read = unwrap!(keypairs_iter.next());
 
