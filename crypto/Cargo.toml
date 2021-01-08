@@ -1,6 +1,6 @@
 [package]
 name = "dup-crypto"
-version = "0.36.0"
+version = "0.37.0"
 authors = ["elois <c@elo.tf>"]
 description = "Manage cryptographic operations for DUniter Protocols and the Duniter eco-system most broadly."
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
