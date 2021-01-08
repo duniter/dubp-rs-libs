@@ -346,12 +346,12 @@ impl TransactionDocumentV10 {
         }
     }
     pub fn recipients_keys(&self) -> Vec<ed25519::PublicKey> {
-        let issuers = BTreeSet::from_iter(self.issuers.iter().copied());
+        let issuers = self.issuers.iter().copied().collect();
         let mut pubkeys = BTreeSet::new();
         for output in &self.outputs {
             pubkeys.append(&mut output.conditions.script.pubkeys());
         }
-        Vec::from_iter(pubkeys.difference(&issuers).copied())
+        pubkeys.difference(&issuers).copied().collect()
     }
     /// Lightens the transaction (for example to store it while minimizing the space required)
     /// WARNING: do not remove the hash as it's necessary to reverse the transaction !

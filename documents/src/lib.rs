@@ -63,7 +63,6 @@ pub(crate) use std::{
     borrow::Cow,
     collections::{BTreeMap, BTreeSet, HashMap},
     fmt::Debug,
-    iter::FromIterator,
 };
 
 /// User document of DUBP (DUniter Blockhain Protocol)
