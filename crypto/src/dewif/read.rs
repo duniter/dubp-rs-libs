@@ -206,7 +206,7 @@ mod tests {
         use std::str::FromStr;
 
         // Get DEWIF file content (Usually from disk)
-        let dewif_file_content = "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0";
+        let dewif_file_content = "AAAAARAAAAF0y4EVcXgLoZk8awkOI8FtpylUp5ougnCQOy6ouOTCh/VzvrRnmJWmdmUu3lcQWUR6Ft20uWVWFxx/04rpmOfw";
 
         // Get user passphrase for DEWIF decryption (from cli prompt or gui)
         let encryption_passphrase = "toto titi tata";
