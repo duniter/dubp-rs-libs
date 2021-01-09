@@ -33,5 +33,8 @@ members = [
     "wallet"
 ]
 
+[profile.test]
+opt-level = 3
+
 [patch.crates-io]
 #json-pest-parser = { path = "../../../rust/json-pest-parser" }
