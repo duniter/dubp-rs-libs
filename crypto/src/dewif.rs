@@ -103,32 +103,46 @@ mod write;
 
 pub use currency::{Currency, ExpectedCurrency, G1_CURRENCY, G1_TEST_CURRENCY};
 pub use read::{read_dewif_file_content, DewifReadError};
-pub use write::{write_dewif_v1_content, write_dewif_v2_content};
+pub use write::{write_dewif_v1_content, write_dewif_v2_content, write_dewif_v3_content};
 
 use crate::hashs::Hash;
 use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
 
-const UNENCRYPTED_BYTES_LEN: usize = 8;
+const HEADERS_LEN: usize = 8;
 
 // v1
 static VERSION_V1: &[u8] = &[0, 0, 0, 1];
-const V1_BYTES_LEN: usize = 72;
 const V1_ENCRYPTED_BYTES_LEN: usize = 64;
+const V1_DATA_LEN: usize = V1_ENCRYPTED_BYTES_LEN;
+const V1_BYTES_LEN: usize = HEADERS_LEN + V1_DATA_LEN;
+const V1_UNENCRYPTED_BYTES_LEN: usize = V1_BYTES_LEN - V1_ENCRYPTED_BYTES_LEN;
 const V1_AES_BLOCKS_COUNT: usize = 4;
+const V1_LOG_N: u8 = 12;
 
 // v2
 static VERSION_V2: &[u8] = &[0, 0, 0, 2];
-const V2_BYTES_LEN: usize = 136;
 const V2_ENCRYPTED_BYTES_LEN: usize = 128;
+const V2_DATA_LEN: usize = V2_ENCRYPTED_BYTES_LEN;
+const V2_BYTES_LEN: usize = HEADERS_LEN + V2_DATA_LEN;
+const V2_UNENCRYPTED_BYTES_LEN: usize = V2_BYTES_LEN - V2_ENCRYPTED_BYTES_LEN;
+const V2_LOG_N: u8 = 12;
 
-fn gen_aes_seed(passphrase: &str) -> Seed32 {
+// v3
+static VERSION_V3: &[u8] = &[0, 0, 0, 3];
+const V3_ENCRYPTED_BYTES_LEN: usize = 64;
+const V3_DATA_LEN: usize = V3_ENCRYPTED_BYTES_LEN + 1;
+const V3_BYTES_LEN: usize = HEADERS_LEN + V3_DATA_LEN;
+const V3_UNENCRYPTED_BYTES_LEN: usize = V3_BYTES_LEN - V3_ENCRYPTED_BYTES_LEN;
+const V3_AES_BLOCKS_COUNT: usize = 4;
+
+fn gen_aes_seed(passphrase: &str, log_n: u8) -> Seed32 {
     let salt = Hash::compute(format!("dewif{}", passphrase).as_bytes());
     let mut aes_seed_bytes = [0u8; 32];
     scrypt(
         passphrase.as_bytes(),
         salt.as_ref(),
-        &ScryptParams::default(),
+        &ScryptParams { log_n, r: 16, p: 1 },
         &mut aes_seed_bytes,
     );
     Seed32::new(aes_seed_bytes)

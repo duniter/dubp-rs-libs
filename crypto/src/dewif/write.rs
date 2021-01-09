@@ -43,10 +43,10 @@ pub fn write_dewif_v1_content(
         .try_extend_from_slice(keypair.public_key().datas.as_ref()) // 32
         .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
 
-    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase));
+    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, super::V1_LOG_N));
     crate::aes256::encrypt::encrypt_n_blocks(
         &cipher,
-        &mut bytes[super::UNENCRYPTED_BYTES_LEN..],
+        &mut bytes[super::V1_UNENCRYPTED_BYTES_LEN..],
         super::V1_AES_BLOCKS_COUNT,
     );
 
@@ -81,8 +81,45 @@ pub fn write_dewif_v2_content(
         .try_extend_from_slice(keypair2.public_key().datas.as_ref()) // 32
         .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
 
-    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase));
-    crate::aes256::encrypt::encrypt_8_blocks(&cipher, &mut bytes[super::UNENCRYPTED_BYTES_LEN..]);
+    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, super::V2_LOG_N));
+    crate::aes256::encrypt::encrypt_8_blocks(
+        &cipher,
+        &mut bytes[super::V2_UNENCRYPTED_BYTES_LEN..],
+    );
+
+    base64::encode(bytes.as_ref())
+}
+
+/// Write dewif v3 file content with user passphrase
+pub fn write_dewif_v3_content(
+    currency: Currency,
+    keypair: &Ed25519KeyPair,
+    log_n: u8,
+    passphrase: &str,
+) -> String {
+    let mut bytes = ArrayVec::<[u8; super::V3_BYTES_LEN]>::new();
+    bytes
+        .try_extend_from_slice(super::VERSION_V3) // 4
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    let currency_code: u32 = currency.into();
+
+    bytes
+        .try_extend_from_slice(&currency_code.to_be_bytes()) // 4
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    bytes.push(log_n); // 1
+    bytes
+        .try_extend_from_slice(keypair.seed().as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+    bytes
+        .try_extend_from_slice(keypair.public_key().datas.as_ref()) // 32
+        .unwrap_or_else(|_| unsafe { unreachable_unchecked() });
+
+    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, log_n));
+    crate::aes256::encrypt::encrypt_n_blocks(
+        &cipher,
+        &mut bytes[super::V3_UNENCRYPTED_BYTES_LEN..],
+        super::V3_AES_BLOCKS_COUNT,
+    );
 
     base64::encode(bytes.as_ref())
 }
@@ -136,6 +173,37 @@ mod tests {
 
         assert_eq!(
             "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0",
+            dewif_content
+        )
+    }
+
+    #[test]
+    fn test_write_dewif_v3() {
+        use crate::dewif::write_dewif_v3_content;
+        use crate::keys::ed25519::{KeyPairFromSaltedPasswordGenerator, SaltedPassword};
+
+        // Get user credentials (from cli prompt or gui)
+        let credentials = SaltedPassword::new("user salt".to_owned(), "user password".to_owned());
+
+        // Generate ed25519 keypair
+        let keypair =
+            KeyPairFromSaltedPasswordGenerator::with_default_parameters().generate(credentials);
+
+        println!("seed: {}", hex::encode(keypair.seed()));
+        println!("pubkey bytes: {:?}", keypair.public_key().as_ref());
+        println!("pubkey hex: {}", hex::encode(keypair.public_key()));
+
+        // Get user passphrase for DEWIF encryption
+        let encryption_passphrase = "toto titi tata";
+
+        // Currency
+        let currency = unwrap!(Currency::from_str("g1-test"));
+
+        // Serialize keypair in DEWIF format
+        let dewif_content = write_dewif_v3_content(currency, &keypair, 15, encryption_passphrase);
+
+        assert_eq!(
+            "AAAAAxAAAAEPdMuBFXF4C6GZPGsJDiPBbacpVKeaLoJwkDsuqLjkwof1c760Z5iVpnZlLt5XEFlEehbdtLllVhccf9OK6Zjn8A==",
             dewif_content
         )
     }
