@@ -336,9 +336,9 @@ dependencies = [
 
 [[package]]
 name = "cryptoxide"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da24927b5b899890bcb29205436c957b7892ec3a3fbffce81d710b9611e77778"
+checksum = "f2824e117f942b77e942b14162316711d66f07d14b0f37a44fa4b4cad592b8fa"
 
 [[package]]
 name = "csv"
@@ -508,6 +508,7 @@ dependencies = [
  "criterion",
  "cryptoxide",
  "curve25519-dalek",
+ "ed25519-bip32",
  "getrandom",
  "hex",
  "once_cell",
@@ -518,6 +519,15 @@ dependencies = [
  "unwrap",
  "zerocopy",
  "zeroize",
+]
+
+[[package]]
+name = "ed25519-bip32"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8827180a2b511141fbe49141e50b31a8d542465e0fb572f81f36feea2addfe92"
+dependencies = [
+ "cryptoxide",
 ]
 
 [[package]]

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- feat(crypto): impl BIP32-Ed25519
+
 ## [0.25.2] - 2020-10-09
 
 ### Fixed

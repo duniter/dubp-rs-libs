@@ -345,9 +345,6 @@ pub trait KeyPair: Clone + Display + Debug + PartialEq + Eq {
     /// Get `PublicKey`
     fn public_key(&self) -> <Self::Signator as Signator>::PublicKey;
 
-    /// Get `Seed32`
-    fn seed(&self) -> &Seed32;
-
     /// Verify a signature with public key.
     fn verify(
         &self,
@@ -415,12 +412,6 @@ impl KeyPair for KeyPairEnum {
             KeyPairEnum::Ed25519(ref ed25519_keypair) => {
                 PubKey::Ed25519(ed25519_keypair.public_key())
             }
-            KeyPairEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
-        }
-    }
-    fn seed(&self) -> &Seed32 {
-        match *self {
-            KeyPairEnum::Ed25519(ref ed25519_keypair) => &ed25519_keypair.seed(),
             KeyPairEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
         }
     }
@@ -681,13 +672,6 @@ mod tests {
     fn key_pair_schnorr_get_pubkey() {
         let key_pair = KeyPairEnum::Schnorr();
         key_pair.public_key();
-    }
-
-    #[test]
-    #[should_panic(expected = "Schnorr algo not yet supported !")]
-    fn key_pair_schnorr_get_seed() {
-        let key_pair = KeyPairEnum::Schnorr();
-        key_pair.seed();
     }
 
     #[test]

@@ -19,7 +19,10 @@
 //!
 //! [`KeyPairGenerator`]: struct.KeyPairGenerator.html
 
-use super::PublicKey as PublicKeyMethods;
+#[cfg(feature = "bip32-ed25519")]
+pub mod bip32;
+
+use super::PublicKey as _;
 use super::{PubkeyFromBytesError, SigError};
 use crate::bases::b58::{bytes_to_str_base58, ToBase58};
 use crate::bases::*;
@@ -181,6 +184,13 @@ impl PublicKey {
     #[cfg(not(feature = "pubkey_check"))]
     fn check_bytes(_: &[u8]) -> bool {
         true
+    }
+    #[cfg(feature = "bip32-ed25519")]
+    fn from_data(data: [u8; 32]) -> Self {
+        PublicKey {
+            datas: data,
+            count_leading_zero: 0,
+        }
     }
 }
 
@@ -373,6 +383,7 @@ impl Ed25519KeyPair {
     pub fn generate_random() -> Result<Self, UnspecifiedRandError> {
         Ok(KeyPairFromSeed32Generator::generate(Seed32::random()?))
     }
+    #[allow(dead_code)]
     pub(crate) fn seed(&self) -> &Seed32 {
         &self.seed
     }
@@ -412,10 +423,6 @@ impl super::KeyPair for Ed25519KeyPair {
 
     fn public_key(&self) -> PublicKey {
         self.pubkey
-    }
-
-    fn seed(&self) -> &Seed32 {
-        &self.seed
     }
 
     fn verify(
