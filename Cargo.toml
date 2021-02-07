@@ -7,18 +7,18 @@ license = "AGPL-3.0"
 name = "dubp"
 readme = "README.md"
 repository = "https://git.duniter.org/libs-dupb-rs-libs"
-version = "0.38.0"
+version = "0.39.0"
 
 [lib]
 path = "lib.rs"
 
 [dependencies]
-dup-crypto = { path = "crypto", version = "0.38.0", features = ["scrypt"] }
-dubp-common = { path = "common", version = "0.38.0", features = ["crypto_scrypt"] }
-dubp-wallet = { path = "wallet", version = "0.38.0", features = ["crypto_scrypt"] }
-dubp-documents = { path = "documents", version = "0.38.0", features = ["crypto_scrypt"] }
-dubp-documents-parser = { path = "documents-parser", version = "0.38.0", features = ["crypto_scrypt"] }
-dubp-block = { path = "block", version = "0.38.0", features = ["crypto_scrypt"] }
+dup-crypto = { path = "crypto", version = "0.39.0", features = ["scrypt"] }
+dubp-common = { path = "common", version = "0.39.0", features = ["crypto_scrypt"] }
+dubp-wallet = { path = "wallet", version = "0.39.0", features = ["crypto_scrypt"] }
+dubp-documents = { path = "documents", version = "0.39.0", features = ["crypto_scrypt"] }
+dubp-documents-parser = { path = "documents-parser", version = "0.39.0", features = ["crypto_scrypt"] }
+dubp-block = { path = "block", version = "0.39.0", features = ["crypto_scrypt"] }
 
 [dev-dependencies]
 rusty-hook = "0.11.2"
