@@ -402,6 +402,8 @@ impl PartialEq<Ed25519KeyPair> for Ed25519KeyPair {
 }
 
 impl super::KeyPair for Ed25519KeyPair {
+    type PublicKey = PublicKey;
+    type Seed = Seed32;
     type Signator = Signator;
 
     #[cfg(target_arch = "wasm32")]
@@ -421,6 +423,10 @@ impl super::KeyPair for Ed25519KeyPair {
         )
     }
 
+    fn from_seed(seed: Self::Seed) -> Self {
+        KeyPairFromSeed32Generator::generate(seed)
+    }
+
     fn public_key(&self) -> PublicKey {
         self.pubkey
     }
@@ -431,6 +437,10 @@ impl super::KeyPair for Ed25519KeyPair {
         signature: &<Self::Signator as super::Signator>::Signature,
     ) -> Result<(), SigError> {
         self.public_key().verify(message, signature)
+    }
+
+    fn upcast(self) -> super::KeyPairEnum {
+        super::KeyPairEnum::Ed25519(self)
     }
 }
 
