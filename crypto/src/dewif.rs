@@ -102,7 +102,7 @@ mod read;
 mod write;
 
 pub use currency::{Currency, ExpectedCurrency, G1_CURRENCY, G1_TEST_CURRENCY};
-pub use read::{read_dewif_file_content, read_dewif_log_n, DewifReadError};
+pub use read::{read_dewif_file_content, read_dewif_log_n, read_dewif_version, DewifReadError};
 #[cfg(feature = "bip32-ed25519")]
 pub use write::write_dewif_v4_content;
 pub use write::{write_dewif_v1_content, write_dewif_v2_content, write_dewif_v3_content};
