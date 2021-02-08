@@ -43,7 +43,7 @@ pub enum CompactRevocationDocument {
 }
 
 impl Document for RevocationDocument {
-    type PublicKey = PubKey;
+    type PublicKey = PubKeyEnum;
 
     #[inline]
     fn version(&self) -> usize {
@@ -69,7 +69,9 @@ impl Document for RevocationDocument {
     #[inline]
     fn issuers(&self) -> SmallVec<[Self::PublicKey; 1]> {
         match self {
-            RevocationDocument::V10(revoc_v10) => svec![PubKey::Ed25519(revoc_v10.issuers()[0])],
+            RevocationDocument::V10(revoc_v10) => {
+                svec![PubKeyEnum::Ed25519(revoc_v10.issuers()[0])]
+            }
         }
     }
 

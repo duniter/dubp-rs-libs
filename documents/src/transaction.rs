@@ -177,7 +177,7 @@ impl TransactionDocument {
 }
 
 impl Document for TransactionDocument {
-    type PublicKey = PubKey;
+    type PublicKey = PubKeyEnum;
 
     fn version(&self) -> usize {
         match self {
@@ -199,7 +199,7 @@ impl Document for TransactionDocument {
 
     fn issuers(&self) -> SmallVec<[Self::PublicKey; 1]> {
         match self {
-            TransactionDocument::V10(tx_v10) => svec![PubKey::Ed25519(tx_v10.issuers()[0])],
+            TransactionDocument::V10(tx_v10) => svec![PubKeyEnum::Ed25519(tx_v10.issuers()[0])],
         }
     }
 

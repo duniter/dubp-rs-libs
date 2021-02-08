@@ -159,9 +159,9 @@ impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(verify_hash, Result<(), VerifyBlockHashError>);
     dubp_block_fn!(unit_base, usize);
     #[inline]
-    fn issuer(&self) -> PubKey {
+    fn issuer(&self) -> PubKeyEnum {
         match self {
-            DubpBlock::V10(block) => PubKey::Ed25519(block.issuer()),
+            DubpBlock::V10(block) => PubKeyEnum::Ed25519(block.issuer()),
         }
     }
     #[inline]

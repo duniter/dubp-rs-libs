@@ -40,7 +40,7 @@ pub enum CompactCertificationDocument {
 }
 
 impl Document for CertificationDocument {
-    type PublicKey = PubKey;
+    type PublicKey = PubKeyEnum;
 
     #[inline]
     fn version(&self) -> usize {
@@ -66,7 +66,9 @@ impl Document for CertificationDocument {
     #[inline]
     fn issuers(&self) -> SmallVec<[Self::PublicKey; 1]> {
         match self {
-            CertificationDocument::V10(cert_v10) => svec![PubKey::Ed25519(cert_v10.issuers()[0])],
+            CertificationDocument::V10(cert_v10) => {
+                svec![PubKeyEnum::Ed25519(cert_v10.issuers()[0])]
+            }
         }
     }
 

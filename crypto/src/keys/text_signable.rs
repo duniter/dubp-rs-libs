@@ -22,7 +22,7 @@ pub trait TextSignable: Debug + Clone {
     /// Return signable text
     fn as_signable_text(&self) -> String;
     /// Return entity issuer pubkey
-    fn issuer_pubkey(&self) -> PubKey;
+    fn issuer_pubkey(&self) -> PubKeyEnum;
     /// Return entity signature
     fn signature(&self) -> Option<Sig>;
     /// Change signature
@@ -33,7 +33,7 @@ pub trait TextSignable: Debug + Clone {
             return Err(SignError::AlreadySign);
         }
         match self.issuer_pubkey() {
-            PubKey::Ed25519(_) => match signator {
+            PubKeyEnum::Ed25519(_) => match signator {
                 SignatorEnum::Ed25519(ed25519_signator) => {
                     let text = self.as_signable_text();
                     let sig = ed25519_signator.sign(&text.as_bytes());
@@ -50,7 +50,7 @@ pub trait TextSignable: Debug + Clone {
     fn verify(&self) -> Result<(), SigError> {
         if let Some(signature) = self.signature() {
             match self.issuer_pubkey() {
-                PubKey::Ed25519(pubkey) => match signature {
+                PubKeyEnum::Ed25519(pubkey) => match signature {
                     Sig::Ed25519(sig) => pubkey.verify(&self.as_signable_text().as_bytes(), &sig),
                     _ => Err(SigError::NotSameAlgo),
                 },
@@ -69,7 +69,7 @@ mod tests {
 
     #[derive(Debug, Clone)]
     struct TextSignableTestImpl {
-        issuer: PubKey,
+        issuer: PubKeyEnum,
         text: String,
         sig: Option<Sig>,
     }
@@ -78,7 +78,7 @@ mod tests {
         fn as_signable_text(&self) -> String {
             format!("{}:{}", self.issuer, self.text)
         }
-        fn issuer_pubkey(&self) -> PubKey {
+        fn issuer_pubkey(&self) -> PubKeyEnum {
             self.issuer
         }
         fn signature(&self) -> Option<Sig> {
@@ -106,7 +106,7 @@ mod tests {
             Err(SignError::WrongAlgo),
             text_signable.sign(&SignatorEnum::Schnorr())
         );
-        text_signable.issuer = PubKey::Schnorr();
+        text_signable.issuer = PubKeyEnum::Schnorr();
         assert_eq!(Err(SignError::WrongAlgo), text_signable.sign(&signator));
         text_signable.issuer = key_pair.public_key();
         assert_eq!(
@@ -118,7 +118,7 @@ mod tests {
         let old_sig = text_signable.sig.replace(Sig::Schnorr());
         assert_eq!(Err(SigError::NotSameAlgo), text_signable.verify());
         text_signable.sig = old_sig;
-        text_signable.issuer = PubKey::Schnorr();
+        text_signable.issuer = PubKeyEnum::Schnorr();
         assert_eq!(Err(SigError::NotSameAlgo), text_signable.verify());
     }
 }

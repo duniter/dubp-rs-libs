@@ -140,7 +140,7 @@ macro_rules! dubp_document_fn {
 }
 
 impl Document for DubpDocument {
-    type PublicKey = PubKey;
+    type PublicKey = PubKeyEnum;
 
     dubp_document_fn!(as_bytes, BeefCow<[u8]>);
     dubp_document_fn!(blockstamp, Blockstamp);
@@ -163,12 +163,12 @@ mod tests {
     #[derive(Debug, Clone, PartialEq, Eq)]
     struct PlainTextDocument {
         pub text: &'static str,
-        pub issuers: SmallVec<[PubKey; 1]>,
+        pub issuers: SmallVec<[PubKeyEnum; 1]>,
         pub signatures: SmallVec<[Sig; 1]>,
     }
 
     impl Document for PlainTextDocument {
-        type PublicKey = PubKey;
+        type PublicKey = PubKeyEnum;
 
         fn version(&self) -> usize {
             unimplemented!()
@@ -206,7 +206,7 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
 ";
 
         // good pair
-        let issuer1 = PubKey::Ed25519(unwrap!(
+        let issuer1 = PubKeyEnum::Ed25519(unwrap!(
             ed25519::PublicKey::from_base58("DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV"),
             "Fail to parse PublicKey from base58"
         ));
@@ -220,7 +220,7 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
         ));
 
         // incorrect pair
-        let issuer2 = PubKey::Ed25519(unwrap!(
+        let issuer2 = PubKeyEnum::Ed25519(unwrap!(
             ed25519::PublicKey::from_base58("DNann1Lh55eZMEDXeYt32bzHbA3NJR46DeQYCS2qQdLV"),
             "Fail to parse PublicKey from base58"
         ));

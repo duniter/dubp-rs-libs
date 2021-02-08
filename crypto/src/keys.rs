@@ -233,7 +233,7 @@ pub trait PublicKey: Clone + Display + Debug + PartialEq + Eq + Hash + ToBase58 
 
 /// Store a cryptographic public key.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum PubKey {
+pub enum PubKeyEnum {
     /// Store a ed25519 public key.
     Ed25519(ed25519::PublicKey),
     /// Store a Schnorr public key.
@@ -256,60 +256,60 @@ pub enum PubKeyFromBytesError {
     InvalidBytesContent,
 }
 
-impl PubKey {
+impl PubKeyEnum {
     /// Create pubkey from bytes
     #[inline]
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, PubKeyFromBytesError> {
-        Ok(PubKey::Ed25519(ed25519::PublicKey::try_from(bytes)?))
+        Ok(PubKeyEnum::Ed25519(ed25519::PublicKey::try_from(bytes)?))
     }
     /// Compute PubKey size in bytes
     pub fn size_in_bytes(&self) -> usize {
         match *self {
-            PubKey::Ed25519(_) => ed25519::PUBKEY_SIZE_IN_BYTES + 3,
-            PubKey::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            PubKeyEnum::Ed25519(_) => ed25519::PUBKEY_SIZE_IN_BYTES + 3,
+            PubKeyEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
         }
     }
 }
 
-impl Default for PubKey {
+impl Default for PubKeyEnum {
     fn default() -> Self {
-        PubKey::Ed25519(ed25519::PublicKey::default())
+        PubKeyEnum::Ed25519(ed25519::PublicKey::default())
     }
 }
 
-impl GetKeysAlgo for PubKey {
+impl GetKeysAlgo for PubKeyEnum {
     fn algo(&self) -> KeysAlgo {
         match *self {
-            PubKey::Ed25519(_) => KeysAlgo::Ed25519,
-            PubKey::Schnorr() => KeysAlgo::Schnorr,
+            PubKeyEnum::Ed25519(_) => KeysAlgo::Ed25519,
+            PubKeyEnum::Schnorr() => KeysAlgo::Schnorr,
         }
     }
 }
 
-impl ToBase58 for PubKey {
+impl ToBase58 for PubKeyEnum {
     fn to_base58(&self) -> String {
         match *self {
-            PubKey::Ed25519(ed25519_pub) => ed25519_pub.to_base58(),
-            PubKey::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            PubKeyEnum::Ed25519(ed25519_pub) => ed25519_pub.to_base58(),
+            PubKeyEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
         }
     }
 }
 
-impl Display for PubKey {
+impl Display for PubKeyEnum {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         write!(f, "{}", self.to_base58())
     }
 }
 
-impl FromStr for PubKey {
+impl FromStr for PubKeyEnum {
     type Err = BaseConversionError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        ed25519::PublicKey::from_base58(s).map(PubKey::Ed25519)
+        ed25519::PublicKey::from_base58(s).map(PubKeyEnum::Ed25519)
     }
 }
 
-impl PublicKey for PubKey {
+impl PublicKey for PubKeyEnum {
     type Signature = Sig;
 
     #[cfg(not(tarpaulin_include))]
@@ -318,20 +318,20 @@ impl PublicKey for PubKey {
     }
     fn to_bytes_vector(&self) -> Vec<u8> {
         match *self {
-            PubKey::Ed25519(ed25519_pubkey) => ed25519_pubkey.to_bytes_vector(),
-            PubKey::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            PubKeyEnum::Ed25519(ed25519_pubkey) => ed25519_pubkey.to_bytes_vector(),
+            PubKeyEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
         }
     }
     fn verify(&self, message: &[u8], signature: &Self::Signature) -> Result<(), SigError> {
         match *self {
-            PubKey::Ed25519(ed25519_pubkey) => {
+            PubKeyEnum::Ed25519(ed25519_pubkey) => {
                 if let Sig::Ed25519(ed25519_sig) = signature {
                     ed25519_pubkey.verify(message, ed25519_sig)
                 } else {
                     Err(SigError::NotSameAlgo)
                 }
             }
-            PubKey::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            PubKeyEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
         }
     }
 }
@@ -418,7 +418,7 @@ impl Display for KeyPairEnum {
 }
 
 impl KeyPair for KeyPairEnum {
-    type PublicKey = PubKey;
+    type PublicKey = PubKeyEnum;
     type Seed = Seed32;
     type Signator = SignatorEnum;
 
@@ -440,11 +440,11 @@ impl KeyPair for KeyPairEnum {
     fn public_key(&self) -> <Self::Signator as Signator>::PublicKey {
         match self {
             KeyPairEnum::Ed25519(ref ed25519_keypair) => {
-                PubKey::Ed25519(ed25519_keypair.public_key())
+                PubKeyEnum::Ed25519(ed25519_keypair.public_key())
             }
             KeyPairEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
             #[cfg(feature = "bip32-ed25519")]
-            KeyPairEnum::Bip32Ed25519(ref keypair) => PubKey::Ed25519(keypair.public_key()),
+            KeyPairEnum::Bip32Ed25519(ref keypair) => PubKeyEnum::Ed25519(keypair.public_key()),
         }
     }
     fn verify(&self, message: &[u8], signature: &Sig) -> Result<(), SigError> {
@@ -486,17 +486,17 @@ pub enum SignatorEnum {
 }
 
 impl Signator for SignatorEnum {
-    type PublicKey = PubKey;
+    type PublicKey = PubKeyEnum;
     type Signature = Sig;
 
     fn public_key(&self) -> Self::PublicKey {
         match self {
             SignatorEnum::Ed25519(ref ed25519_signator) => {
-                PubKey::Ed25519(ed25519_signator.public_key())
+                PubKeyEnum::Ed25519(ed25519_signator.public_key())
             }
             SignatorEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
             #[cfg(feature = "bip32-ed25519")]
-            SignatorEnum::Bip32Ed25519(ref signator) => PubKey::Ed25519(signator.public_key()),
+            SignatorEnum::Bip32Ed25519(ref signator) => PubKeyEnum::Ed25519(signator.public_key()),
         }
     }
 
@@ -551,19 +551,22 @@ mod tests {
     #[test]
     fn public_key() {
         let ed25519_pubkey_default = ed25519::PublicKey::default();
-        let pubkey_default = PubKey::Ed25519(ed25519_pubkey_default);
-        let pubkey = PubKey::Ed25519(unwrap!(ed25519::PublicKey::try_from(
+        let pubkey_default = PubKeyEnum::Ed25519(ed25519_pubkey_default);
+        let pubkey = PubKeyEnum::Ed25519(unwrap!(ed25519::PublicKey::try_from(
             ed25519_pubkey_default.as_ref()
         )));
 
         let pubkey_str_b58 = "11111111111111111111111111111111".to_owned();
-        assert_eq!(pubkey_default, unwrap!(PubKey::from_str(&pubkey_str_b58)));
+        assert_eq!(
+            pubkey_default,
+            unwrap!(PubKeyEnum::from_str(&pubkey_str_b58))
+        );
 
         assert_eq!(pubkey.size_in_bytes(), ed25519::PUBKEY_SIZE_IN_BYTES + 3);
         assert_eq!("11111111111111111111111111111111", &format!("{}", pubkey));
 
         assert_eq!(KeysAlgo::Ed25519, pubkey.algo());
-        assert_eq!(KeysAlgo::Schnorr, PubKey::Schnorr().algo());
+        assert_eq!(KeysAlgo::Schnorr, PubKeyEnum::Schnorr().algo());
 
         let mut expected_vec = [0u8; 32].to_vec();
         expected_vec.push(32);
@@ -621,7 +624,7 @@ mod tests {
             format!("{}", false_key_pair)
         );
         assert_eq!(
-            PubKey::Ed25519(false_key_pair_ed25519.public_key()),
+            PubKeyEnum::Ed25519(false_key_pair_ed25519.public_key()),
             false_key_pair.public_key()
         );
         assert_eq!(
@@ -671,34 +674,34 @@ mod tests {
     #[test]
     #[should_panic(expected = "Schnorr algo not yet supported !")]
     fn pubkey_schnorr_size() {
-        let pubkey = PubKey::Schnorr();
+        let pubkey = PubKeyEnum::Schnorr();
         pubkey.size_in_bytes();
     }
 
     #[test]
     #[should_panic(expected = "Schnorr algo not yet supported !")]
     fn pubkey_schnorr_base58() {
-        let pubkey = PubKey::Schnorr();
+        let pubkey = PubKeyEnum::Schnorr();
         pubkey.to_base58();
     }
 
     #[test]
     #[should_panic(expected = "Schnorr algo not yet supported !")]
     fn pubkey_schnorr_to_bytes() {
-        let pubkey = PubKey::Schnorr();
+        let pubkey = PubKeyEnum::Schnorr();
         pubkey.to_bytes_vector();
     }
 
     #[test]
     #[should_panic(expected = "Schnorr algo not yet supported !")]
     fn pubkey_schnorr_verify() {
-        let pubkey = PubKey::Schnorr();
+        let pubkey = PubKeyEnum::Schnorr();
         let _ = pubkey.verify(b"message", &Sig::Schnorr());
     }
 
     #[test]
     fn pubkey_verify_sig_wrong_algo() {
-        let pubkey = PubKey::default();
+        let pubkey = PubKeyEnum::default();
         assert_eq!(
             Err(SigError::NotSameAlgo),
             pubkey.verify(b"message", &Sig::Schnorr()),
@@ -753,7 +756,7 @@ mod tests {
                 expected: ed25519::PUBKEY_SIZE_IN_BYTES,
                 found: 34,
             }),
-            PubKey::from_bytes(&[
+            PubKeyEnum::from_bytes(&[
                 0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
                 23, 24, 25, 26, 27, 28, 29, 30, 31, 31, 17
             ]),

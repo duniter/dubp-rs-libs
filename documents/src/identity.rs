@@ -29,7 +29,7 @@ pub enum IdentityDocument {
 }
 
 impl Document for IdentityDocument {
-    type PublicKey = PubKey;
+    type PublicKey = PubKeyEnum;
 
     #[inline]
     fn version(&self) -> usize {
@@ -55,7 +55,7 @@ impl Document for IdentityDocument {
     #[inline]
     fn issuers(&self) -> SmallVec<[Self::PublicKey; 1]> {
         match self {
-            IdentityDocument::V10(idty_v10) => svec![PubKey::Ed25519(idty_v10.issuers()[0])],
+            IdentityDocument::V10(idty_v10) => svec![PubKeyEnum::Ed25519(idty_v10.issuers()[0])],
         }
     }
 

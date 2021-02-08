@@ -24,7 +24,7 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
     type SerdeError: std::error::Error;
 
     /// Return entity issuer pubkey
-    fn issuer_pubkey(&self) -> PubKey;
+    fn issuer_pubkey(&self) -> PubKeyEnum;
     /// Return signature
     fn signature(&self) -> Option<Sig>;
     /// Change signature
@@ -39,7 +39,7 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
             return Err(SignError::AlreadySign);
         }
         match self.issuer_pubkey() {
-            PubKey::Ed25519(_) => {
+            PubKeyEnum::Ed25519(_) => {
                 let mut bin_msg = self
                     .get_bin_without_sig()
                     .map_err(|e| SignError::SerdeError(e.to_string()))?;
@@ -56,7 +56,7 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
     fn verify(&self) -> Result<(), SigError> {
         if let Some(signature) = self.signature() {
             match self.issuer_pubkey() {
-                PubKey::Ed25519(pubkey) => match signature {
+                PubKeyEnum::Ed25519(pubkey) => match signature {
                     Sig::Ed25519(sig) => {
                         let signed_part: Vec<u8> = self
                             .get_bin_without_sig()
@@ -82,7 +82,7 @@ mod tests {
     #[derive(Deserialize, Serialize)]
     struct BinSignableTestImpl {
         datas: Vec<u8>,
-        issuer: PubKey,
+        issuer: PubKeyEnum,
         sig: Option<Sig>,
     }
 
@@ -102,7 +102,7 @@ mod tests {
             bin_msg.truncate(bin_msg_len - (sig_size as usize));
             Ok(bin_msg)
         }
-        fn issuer_pubkey(&self) -> PubKey {
+        fn issuer_pubkey(&self) -> PubKeyEnum {
             self.issuer
         }
         fn signature(&self) -> Option<Sig> {
@@ -124,7 +124,7 @@ mod tests {
 
         let mut bin_signable_datas = BinSignableTestImpl {
             datas: vec![0, 1, 2, 3],
-            issuer: PubKey::Ed25519(key_pair.public_key()),
+            issuer: PubKeyEnum::Ed25519(key_pair.public_key()),
             sig: None,
         };
 

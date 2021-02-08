@@ -33,7 +33,7 @@ pub enum MembershipDocument {
 }
 
 impl Document for MembershipDocument {
-    type PublicKey = PubKey;
+    type PublicKey = PubKeyEnum;
 
     #[inline]
     fn version(&self) -> usize {
@@ -59,7 +59,7 @@ impl Document for MembershipDocument {
     #[inline]
     fn issuers(&self) -> SmallVec<[Self::PublicKey; 1]> {
         match self {
-            MembershipDocument::V10(ms_v10) => svec![PubKey::Ed25519(ms_v10.issuers()[0])],
+            MembershipDocument::V10(ms_v10) => svec![PubKeyEnum::Ed25519(ms_v10.issuers()[0])],
         }
     }
 
