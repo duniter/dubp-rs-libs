@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.40.0] - 2021-02-08
+
 ### Added
 
 - feat(crypto): impl BIP32-Ed25519
@@ -122,7 +124,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.25.2...HEAD
+[Unreleased]: https://git.duniter.org/libs/dup-crypto-rs/compare/dup-crypto-v0.40.0...HEAD
+[0.40.0]: https://git.duniter.org/libs/dup-rs-libs/compare/v0.25.2...dup-crypto-v0.40.0
 [0.25.2]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.25.1...v0.25.2
 [0.25.1]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.25.0...v0.25.1
 [0.25.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.24.0...v0.25.0
