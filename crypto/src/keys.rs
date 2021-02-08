@@ -242,7 +242,7 @@ pub enum PubKey {
 
 #[derive(Clone, Copy, Debug, Eq, Error, Hash, PartialEq)]
 /// Error when parsing pubkey bytes
-pub enum PubkeyFromBytesError {
+pub enum PubKeyFromBytesError {
     /// Invalid bytes length
     #[error("Invalid bytes len: expected {expected}, found {found}")]
     InvalidBytesLen {
@@ -259,7 +259,7 @@ pub enum PubkeyFromBytesError {
 impl PubKey {
     /// Create pubkey from bytes
     #[inline]
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, PubkeyFromBytesError> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, PubKeyFromBytesError> {
         Ok(PubKey::Ed25519(ed25519::PublicKey::try_from(bytes)?))
     }
     /// Compute PubKey size in bytes
@@ -749,7 +749,7 @@ mod tests {
     #[test]
     fn pubkey_from_bytes() {
         assert_eq!(
-            Err(PubkeyFromBytesError::InvalidBytesLen {
+            Err(PubKeyFromBytesError::InvalidBytesLen {
                 expected: ed25519::PUBKEY_SIZE_IN_BYTES,
                 found: 34,
             }),

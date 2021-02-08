@@ -117,7 +117,7 @@ pub(crate) fn verify_authentication_proof(
 ) -> Result<(Ed25519PublicKey, Option<Signature>), PrivateMessageError> {
     let sender_public_key =
         Ed25519PublicKey::try_from(&authentication_datas[..SENDER_PUBLIC_KEY_LEN])
-            .map_err(PrivateMessageError::InvalidSenderPubkey)?;
+            .map_err(PrivateMessageError::InvalidSenderPubKey)?;
     let mut authent_proof = AuthenticationProof([0u8; 64]);
     authent_proof.0.copy_from_slice(
         &authentication_datas[SENDER_PUBLIC_KEY_LEN..(AUTHENTICATION_DATAS_LEN - 1)],
@@ -217,12 +217,12 @@ mod tests {
 
         authent_datas[..32].copy_from_slice(&invalid_pubkey_bytes);
 
-        if let Err(PrivateMessageError::InvalidSenderPubkey(_)) =
+        if let Err(PrivateMessageError::InvalidSenderPubKey(_)) =
             verify_authentication_proof(&receiver_key_pair, MESSAGE, authent_datas.as_ref())
         {
             Ok(())
         } else {
-            panic!("Expected PrivateMessageError::InvalidSenderPubkey.")
+            panic!("Expected PrivateMessageError::InvalidSenderPubKey.")
         }
     }
 
@@ -251,7 +251,7 @@ mod tests {
         {
             Ok(())
         } else {
-            panic!("Expected PrivateMessageError::InvalidSenderPubkey.")
+            panic!("Expected PrivateMessageError::InvalidSenderPubKey.")
         }
     }
 
@@ -280,7 +280,7 @@ mod tests {
         {
             Ok(())
         } else {
-            panic!("Expected PrivateMessageError::InvalidSenderPubkey.")
+            panic!("Expected PrivateMessageError::InvalidSenderPubKey.")
         }
     }
 

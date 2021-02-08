@@ -140,12 +140,12 @@ impl CertificationDocumentV10 {
         &self.identity_username
     }
 
-    /// Pubkey of source identity
+    /// PubKey of source identity
     pub fn source(&self) -> &ed25519::PublicKey {
         &self.issuer
     }
 
-    /// Pubkey of target identity
+    /// PubKey of target identity
     pub fn target(&self) -> &ed25519::PublicKey {
         &self.target
     }
@@ -205,7 +205,7 @@ pub struct CertificationDocumentV10Builder<'a> {
     pub issuer: ed25519::PublicKey,
     /// Reference blockstamp.
     pub blockstamp: Blockstamp,
-    /// Pubkey of target identity.
+    /// PubKey of target identity.
     pub target: ed25519::PublicKey,
     /// Username of target Identity.
     pub identity_username: &'a str,

@@ -140,7 +140,7 @@ use crate::keys::ed25519::{
     Ed25519KeyPair, KeyPairFromSeed32Generator, PublicKey as Ed25519PublicKey, Signature,
 };
 use crate::keys::x25519::{diffie_hellman, X25519PublicKey, X25519SecretKey};
-use crate::keys::{KeyPair, PubkeyFromBytesError};
+use crate::keys::{KeyPair, PubKeyFromBytesError};
 use crate::rand::UnspecifiedRandError;
 use crate::seeds::Seed32;
 use ring::aead::{LessSafeKey, Nonce, Tag, UnboundKey};
@@ -186,9 +186,9 @@ pub enum PrivateMessageError {
     /// I/O error
     IoError(std::io::Error),
     /// Invalid ephemeral pubkey
-    InvalidEphemeralPubkey(PubkeyFromBytesError),
+    InvalidEphemeralPubKey(PubKeyFromBytesError),
     /// Invalid sender pubkey
-    InvalidSenderPubkey(PubkeyFromBytesError),
+    InvalidSenderPubKey(PubKeyFromBytesError),
     /// Invalid authentication proof : invalid signature
     InvalidAuthenticationProof,
     /// Unspecified errror
@@ -326,7 +326,7 @@ pub fn decrypt_private_message<'m, A: AsRef<[u8]>>(
         &ephemeral_public_key,
         &receiver_key_pair.seed(),
         &Ed25519PublicKey::try_from(ephemeral_public_key)
-            .map_err(PrivateMessageError::InvalidEphemeralPubkey)?,
+            .map_err(PrivateMessageError::InvalidEphemeralPubKey)?,
     )?;
 
     // Decrypt message

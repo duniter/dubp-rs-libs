@@ -23,7 +23,7 @@
 pub mod bip32;
 
 use super::PublicKey as _;
-use super::{PubkeyFromBytesError, SigError};
+use super::{PubKeyFromBytesError, SigError};
 use crate::bases::b58::{bytes_to_str_base58, ToBase58};
 use crate::bases::*;
 #[cfg(feature = "rand")]
@@ -195,11 +195,11 @@ impl PublicKey {
 }
 
 impl TryFrom<&[u8]> for PublicKey {
-    type Error = PubkeyFromBytesError;
+    type Error = PubKeyFromBytesError;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         if bytes.len() > PUBKEY_SIZE_IN_BYTES {
-            Err(PubkeyFromBytesError::InvalidBytesLen {
+            Err(PubKeyFromBytesError::InvalidBytesLen {
                 expected: PUBKEY_SIZE_IN_BYTES,
                 found: bytes.len(),
             })
@@ -223,7 +223,7 @@ impl TryFrom<&[u8]> for PublicKey {
                     count_leading_zero,
                 })
             } else {
-                Err(PubkeyFromBytesError::InvalidBytesContent)
+                Err(PubKeyFromBytesError::InvalidBytesContent)
             }
         }
     }
@@ -872,12 +872,12 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
             206u8, 58, 67, 221, 20, 133, 0, 225, 86, 115, 26, 104, 142, 116, 140, 132, 119, 51,
             175, 45, 82, 225, 14, 195, 7, 107, 43, 212, 8, 37, 234, 23,
         ];
-        if let Err(PubkeyFromBytesError::InvalidBytesContent) =
+        if let Err(PubKeyFromBytesError::InvalidBytesContent) =
             PublicKey::try_from(&invalid_bytes[..])
         {
             Ok(())
         } else {
-            panic!("expected PubkeyFromBytesError::InvalidBytesContent");
+            panic!("expected PubKeyFromBytesError::InvalidBytesContent");
         }
     }
 
