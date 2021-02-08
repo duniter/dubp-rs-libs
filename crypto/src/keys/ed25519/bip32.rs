@@ -160,7 +160,6 @@ impl PublicKeyWithChainCode {
 }
 
 /// HDWallet extended key pair (Ed25519 extended private key + BIP32 ChainCode)
-///
 #[derive(Clone, Debug, PartialEq, Eq, Zeroize)]
 #[zeroize(drop)]
 pub struct KeyPair {
@@ -192,8 +191,21 @@ impl KeyPair {
             extended_secret_key: xprv_derived.extended_secret_key(),
         }
     }
-    /// Generate a HDWallet extended key pair from 32 bytes seed
-    pub fn from_seed(seed: Seed32) -> Self {
+}
+
+impl KeyPairTrait for KeyPair {
+    type PublicKey = super::PublicKey;
+    type Seed = Seed32;
+    type Signator = Signator;
+
+    fn generate_signator(&self) -> Self::Signator {
+        Signator {
+            extended_secret_key: self.extended_secret_key,
+        }
+    }
+
+    // Generate a HDWallet extended key pair from 32 bytes seed
+    fn from_seed(seed: Seed32) -> Self {
         let digest = digest::digest(&digest::SHA512, seed.as_ref());
         let mut extended_secret_key = [0u8; EXTENDED_SECRET_KEY_SIZE];
         extended_secret_key.copy_from_slice(digest.as_ref());
@@ -202,16 +214,6 @@ impl KeyPair {
         Self {
             chain_code: gen_root_chain_code(&seed),
             extended_secret_key,
-        }
-    }
-}
-
-impl KeyPairTrait for KeyPair {
-    type Signator = Signator;
-
-    fn generate_signator(&self) -> Self::Signator {
-        Signator {
-            extended_secret_key: self.extended_secret_key,
         }
     }
 
@@ -225,6 +227,10 @@ impl KeyPairTrait for KeyPair {
         signature: &super::Signature,
     ) -> Result<(), crate::keys::SigError> {
         self.public_key().verify(message, signature)
+    }
+
+    fn upcast(self) -> super::super::KeyPairEnum {
+        super::super::KeyPairEnum::Bip32Ed25519(self)
     }
 }
 

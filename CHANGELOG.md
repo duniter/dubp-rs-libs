@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- feat(crypto): implement DEWIF v4
+
 ## [0.39.1] - 2021-02-07
 
 ## [0.39.0] - 2021-02-07
+
+- feat(crypto): impl BIP32-Ed25519
 
 ## [0.38.0] - 2021-01-09
 

@@ -75,6 +75,8 @@ pub enum KeysAlgo {
     Ed25519 = 0,
     /// Schnorr algorithm
     Schnorr = 1,
+    /// BIP32-Ed25519 algorithm
+    Bip32Ed25519 = 2,
 }
 
 /// Get the cryptographic algorithm.
@@ -336,14 +338,21 @@ impl PublicKey for PubKey {
 
 /// Define the operations that can be performed on a cryptographic key pair.
 pub trait KeyPair: Clone + Display + Debug + PartialEq + Eq {
+    /// PublicKey type of associated cryptosystem.
+    type PublicKey: PublicKey;
+    /// Seed
+    type Seed: AsRef<[u8]>;
     /// Signator type of associated cryptosystem.
     type Signator: Signator;
 
     /// Generate signator.
     fn generate_signator(&self) -> Self::Signator;
 
+    /// Generate keypair from seed
+    fn from_seed(seed: Self::Seed) -> Self;
+
     /// Get `PublicKey`
-    fn public_key(&self) -> <Self::Signator as Signator>::PublicKey;
+    fn public_key(&self) -> Self::PublicKey;
 
     /// Verify a signature with public key.
     fn verify(
@@ -351,6 +360,9 @@ pub trait KeyPair: Clone + Display + Debug + PartialEq + Eq {
         message: &[u8],
         signature: &<Self::Signator as Signator>::Signature,
     ) -> Result<(), SigError>;
+
+    /// Upcast to KeyPairEnum
+    fn upcast(self) -> KeyPairEnum;
 }
 
 /// Define the operations that can be performed on a cryptographic signator.
@@ -374,6 +386,9 @@ pub enum KeyPairEnum {
     Ed25519(ed25519::Ed25519KeyPair),
     /// Store a Schnorr key pair.
     Schnorr(),
+    #[cfg(feature = "bip32-ed25519")]
+    /// Store a BIP32-ed25519 key pair.
+    Bip32Ed25519(ed25519::bip32::KeyPair),
 }
 
 impl GetKeysAlgo for KeyPairEnum {
@@ -381,6 +396,8 @@ impl GetKeysAlgo for KeyPairEnum {
         match *self {
             KeyPairEnum::Ed25519(_) => KeysAlgo::Ed25519,
             KeyPairEnum::Schnorr() => KeysAlgo::Schnorr,
+            #[cfg(feature = "bip32-ed25519")]
+            KeyPairEnum::Bip32Ed25519(_) => KeysAlgo::Bip32Ed25519,
         }
     }
 }
@@ -389,14 +406,20 @@ impl Display for KeyPairEnum {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
             KeyPairEnum::Ed25519(ref ed25519_keypair) => {
-                write!(f, "({}, hidden)", ed25519_keypair.public_key().to_base58())
+                write!(f, "{}", ed25519_keypair)
             }
             KeyPairEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            #[cfg(feature = "bip32-ed25519")]
+            KeyPairEnum::Bip32Ed25519(ref keypair) => {
+                write!(f, "{}", keypair)
+            }
         }
     }
 }
 
 impl KeyPair for KeyPairEnum {
+    type PublicKey = PubKey;
+    type Seed = Seed32;
     type Signator = SignatorEnum;
 
     fn generate_signator(&self) -> Self::Signator {
@@ -405,7 +428,14 @@ impl KeyPair for KeyPairEnum {
                 SignatorEnum::Ed25519(ed25519_keypair.generate_signator())
             }
             KeyPairEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            #[cfg(feature = "bip32-ed25519")]
+            KeyPairEnum::Bip32Ed25519(ref keypair) => {
+                SignatorEnum::Bip32Ed25519(keypair.generate_signator())
+            }
         }
+    }
+    fn from_seed(_: Self::Seed) -> Self {
+        unimplemented!()
     }
     fn public_key(&self) -> <Self::Signator as Signator>::PublicKey {
         match self {
@@ -413,19 +443,33 @@ impl KeyPair for KeyPairEnum {
                 PubKey::Ed25519(ed25519_keypair.public_key())
             }
             KeyPairEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            #[cfg(feature = "bip32-ed25519")]
+            KeyPairEnum::Bip32Ed25519(ref keypair) => PubKey::Ed25519(keypair.public_key()),
         }
     }
     fn verify(&self, message: &[u8], signature: &Sig) -> Result<(), SigError> {
         match self {
-            KeyPairEnum::Ed25519(ref ed25519_keypair) => {
-                if let Sig::Ed25519(ed25519_sig) = signature {
-                    ed25519_keypair.verify(message, ed25519_sig)
+            KeyPairEnum::Ed25519(ref keypair) => {
+                if let Sig::Ed25519(sig) = signature {
+                    keypair.verify(message, sig)
                 } else {
                     Err(SigError::NotSameAlgo)
                 }
             }
             KeyPairEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            #[cfg(feature = "bip32-ed25519")]
+            KeyPairEnum::Bip32Ed25519(ref keypair) => {
+                if let Sig::Ed25519(sig) = signature {
+                    keypair.verify(message, sig)
+                } else {
+                    Err(SigError::NotSameAlgo)
+                }
+            }
         }
+    }
+    #[inline(always)]
+    fn upcast(self) -> KeyPairEnum {
+        self
     }
 }
 
@@ -436,6 +480,9 @@ pub enum SignatorEnum {
     Ed25519(ed25519::Signator),
     /// Store a Schnorr signator.
     Schnorr(),
+    #[cfg(feature = "bip32-ed25519")]
+    /// Store a BIP32-Ed25519 signator.
+    Bip32Ed25519(ed25519::bip32::Signator),
 }
 
 impl Signator for SignatorEnum {
@@ -448,6 +495,8 @@ impl Signator for SignatorEnum {
                 PubKey::Ed25519(ed25519_signator.public_key())
             }
             SignatorEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            #[cfg(feature = "bip32-ed25519")]
+            SignatorEnum::Bip32Ed25519(ref signator) => PubKey::Ed25519(signator.public_key()),
         }
     }
 
@@ -457,6 +506,8 @@ impl Signator for SignatorEnum {
                 Sig::Ed25519(ed25519_signator.sign(message))
             }
             SignatorEnum::Schnorr() => panic!("Schnorr algo not yet supported !"),
+            #[cfg(feature = "bip32-ed25519")]
+            SignatorEnum::Bip32Ed25519(ref signator) => Sig::Ed25519(signator.sign(message)),
         }
     }
 }

@@ -103,7 +103,9 @@ mod write;
 
 pub use currency::{Currency, ExpectedCurrency, G1_CURRENCY, G1_TEST_CURRENCY};
 pub use read::{read_dewif_file_content, read_dewif_log_n, DewifReadError};
-pub use write::{write_dewif_v1_content, write_dewif_v2_content, write_dewif_v3_content};
+pub use write::{
+    write_dewif_v1_content, write_dewif_v2_content, write_dewif_v3_content, write_dewif_v4_content,
+};
 
 use crate::hashs::Hash;
 use crate::scrypt::{params::ScryptParams, scrypt};
@@ -135,6 +137,9 @@ const V3_DATA_LEN: usize = V3_ENCRYPTED_BYTES_LEN + 1;
 const V3_BYTES_LEN: usize = HEADERS_LEN + V3_DATA_LEN;
 const V3_UNENCRYPTED_BYTES_LEN: usize = V3_BYTES_LEN - V3_ENCRYPTED_BYTES_LEN;
 const V3_AES_BLOCKS_COUNT: usize = 4;
+
+// v4
+static VERSION_V4: &[u8] = &[0, 0, 0, 4];
 
 fn gen_aes_seed(passphrase: &str, log_n: u8) -> Seed32 {
     let salt = Hash::compute(format!("dewif{}", passphrase).as_bytes());
