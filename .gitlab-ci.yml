@@ -16,6 +16,7 @@ stages:
 fmt:
   extends: .rust_stable_lin64
   stage: fmt
+  allow_failure: true
   script:
     - cargo fmt -- --version
     - cargo fmt -- --check
