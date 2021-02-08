@@ -66,6 +66,42 @@ pub enum DewifReadError {
     },
 }
 
+/// read dewif log N
+pub fn read_dewif_log_n(
+    expected_currency: ExpectedCurrency,
+    file_content: &str,
+) -> Result<u8, DewifReadError> {
+    let bytes = base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
+
+    if bytes.len() < 8 {
+        return Err(DewifReadError::TooShortContent);
+    }
+
+    let version = byteorder::BigEndian::read_u32(&bytes[0..4]);
+    let currency = Currency::from(byteorder::BigEndian::read_u32(&bytes[4..8]));
+
+    if !expected_currency.is_valid(currency) {
+        return Err(DewifReadError::UnexpectedCurrency {
+            expected: expected_currency,
+            actual: currency,
+        });
+    }
+
+    match version {
+        1 | 2 => Ok(12u8),
+        3 | 4 => {
+            if bytes.len() < 9 {
+                Err(DewifReadError::TooShortContent)
+            } else {
+                Ok(bytes[8])
+            }
+        }
+        other_version => Err(DewifReadError::UnsupportedVersion {
+            actual: other_version,
+        }),
+    }
+}
+
 /// read dewif file content with user passphrase
 pub fn read_dewif_file_content(
     expected_currency: ExpectedCurrency,
@@ -239,6 +275,7 @@ mod tests {
 
         // Read DEWIF file content
         // If the file content is correct, we get a key-pair iterator.
+        assert_eq!(unwrap!(read_dewif_log_n(expected_currency, dewif_file_content)), 12u8);
         let mut key_pair_iter = unwrap!(read_dewif_file_content(
             expected_currency,
             dewif_file_content,
@@ -284,6 +321,7 @@ mod tests {
 
         // Read DEWIF file content
         // If the file content is correct, we get a key-pair iterator.
+        assert_eq!(unwrap!(read_dewif_log_n(expected_currency, dewif_file_content)), 15u8);
         let mut key_pair_iter = unwrap!(read_dewif_file_content(
             expected_currency,
             dewif_file_content,
