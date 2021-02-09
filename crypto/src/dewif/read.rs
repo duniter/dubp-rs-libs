@@ -102,11 +102,8 @@ pub fn read_dewif_log_n(
     }
 }
 
-/// read dewif version
-pub fn read_dewif_version(
-    expected_currency: ExpectedCurrency,
-    file_content: &str,
-) -> Result<u32, DewifReadError> {
+/// read dewif meta data
+pub fn read_dewif_meta(file_content: &str) -> Result<super::DewifMeta, DewifReadError> {
     let bytes = base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
 
     if bytes.len() < 8 {
@@ -116,14 +113,27 @@ pub fn read_dewif_version(
     let version = byteorder::BigEndian::read_u32(&bytes[0..4]);
     let currency = Currency::from(byteorder::BigEndian::read_u32(&bytes[4..8]));
 
-    if !expected_currency.is_valid(currency) {
-        return Err(DewifReadError::UnexpectedCurrency {
-            expected: expected_currency,
-            actual: currency,
-        });
-    }
+    let log_n = match version {
+        1 | 2 => 12u8,
+        3 | 4 => {
+            if bytes.len() < 9 {
+                return Err(DewifReadError::TooShortContent);
+            } else {
+                bytes[8]
+            }
+        }
+        other_version => {
+            return Err(DewifReadError::UnsupportedVersion {
+                actual: other_version,
+            });
+        }
+    };
 
-    Ok(version)
+    Ok(super::DewifMeta {
+        currency,
+        log_n,
+        version,
+    })
 }
 
 /// read dewif file content with user passphrase
@@ -274,6 +284,8 @@ fn bytes_to_checked_keypair<KP: KeyPair<Seed = Seed32, PublicKey = PublicKey>>(
 
 #[cfg(test)]
 mod tests {
+    use crate::dewif::DewifMeta;
+
     use super::*;
     use unwrap::unwrap;
 
@@ -336,8 +348,12 @@ mod tests {
             12u8
         );
         assert_eq!(
-            unwrap!(read_dewif_version(expected_currency, dewif_file_content)),
-            1
+            unwrap!(read_dewif_meta(dewif_file_content)),
+            DewifMeta {
+                currency: unwrap!(Currency::from_str("g1-test")),
+                log_n: 12u8,
+                version: 1
+            }
         );
         let mut key_pair_iter = unwrap!(read_dewif_file_content(
             expected_currency,
@@ -389,8 +405,12 @@ mod tests {
             15u8
         );
         assert_eq!(
-            unwrap!(read_dewif_version(expected_currency, dewif_file_content)),
-            3
+            unwrap!(read_dewif_meta(dewif_file_content)),
+            DewifMeta {
+                currency: unwrap!(Currency::from_str("g1-test")),
+                log_n: 15u8,
+                version: 3
+            }
         );
         let mut key_pair_iter = unwrap!(read_dewif_file_content(
             expected_currency,
@@ -443,8 +463,12 @@ mod tests {
             15u8
         );
         assert_eq!(
-            unwrap!(read_dewif_version(expected_currency, dewif_file_content)),
-            4
+            unwrap!(read_dewif_meta(dewif_file_content)),
+            DewifMeta {
+                currency: unwrap!(Currency::from_str("g1-test")),
+                log_n: 15u8,
+                version: 4
+            }
         );
         let mut key_pair_iter = unwrap!(read_dewif_file_content(
             expected_currency,
