@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+- feat(crypto): dewif: add function read_dewif_meta
+- feat(crypto): dewif: add function change_dewif_passphrase
+
 ## [0.40.0] - 2021-02-08
 
 - feat(crypto): implement DEWIF v4

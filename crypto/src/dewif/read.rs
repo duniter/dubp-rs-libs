@@ -259,6 +259,24 @@ fn read_dewif_v4(
     bytes_to_checked_keypair::<crate::keys::ed25519::bip32::KeyPair>(&bytes[1..])
 }
 
+#[cfg(feature = "bip32-ed25519")]
+// Internal insecure function, should not expose on public API
+pub(super) fn get_dewif_v4_seed_unchecked(bytes: &mut [u8], passphrase: &str) -> Seed32 {
+    // Read log_n
+    let log_n = bytes[0];
+
+    // Decrypt bytes
+    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, log_n));
+    crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[1..], super::V3_AES_BLOCKS_COUNT);
+
+    // Wrap bytes into Seed32
+    Seed32::new(
+        (&bytes[1..(SEED_32_SIZE_IN_BYTES + 1)])
+            .try_into()
+            .unwrap_or_else(|_| unsafe { unreachable_unchecked() }),
+    )
+}
+
 fn bytes_to_checked_keypair<KP: KeyPair<Seed = Seed32, PublicKey = PublicKey>>(
     bytes: &[u8],
 ) -> Result<KP, DewifReadError> {

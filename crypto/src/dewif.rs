@@ -108,6 +108,7 @@ pub use write::write_dewif_v4_content;
 pub use write::{write_dewif_v1_content, write_dewif_v2_content, write_dewif_v3_content};
 
 use crate::hashs::Hash;
+use crate::keys::KeyPair as _;
 use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
 
@@ -150,6 +151,65 @@ pub struct DewifMeta {
     version: u32,
 }
 
+/// Change DEWIF passphrase
+pub fn change_dewif_passphrase(
+    file_content: &str,
+    old_passphrase: &str,
+    new_passphrase: &str,
+) -> Result<String, DewifReadError> {
+    let DewifMeta {
+        currency,
+        log_n,
+        version,
+    } = read_dewif_meta(file_content)?;
+    let mut keypairs_iter = read_dewif_file_content(
+        ExpectedCurrency::Specific(currency),
+        file_content,
+        old_passphrase,
+    )?;
+
+    let keypair1 = keypairs_iter
+        .next()
+        .ok_or(DewifReadError::CorruptedContent)?;
+    if version == 2 {
+        if let crate::keys::KeyPairEnum::Ed25519(keypair1) = keypair1 {
+            if let Some(crate::keys::KeyPairEnum::Ed25519(keypair2)) = keypairs_iter.next() {
+                Ok(write_dewif_v2_content(
+                    currency,
+                    &keypair1,
+                    &keypair2,
+                    new_passphrase,
+                ))
+            } else {
+                Err(DewifReadError::CorruptedContent)
+            }
+        } else {
+            Err(DewifReadError::CorruptedContent)
+        }
+    } else {
+        match keypair1 {
+            crate::keys::KeyPairEnum::Ed25519(kp) => match version {
+                1 => Ok(write_dewif_v1_content(currency, &kp, new_passphrase)),
+                3 => Ok(write_dewif_v3_content(currency, &kp, log_n, new_passphrase)),
+                _ => Err(DewifReadError::CorruptedContent),
+            },
+            #[cfg(feature = "bip32-ed25519")]
+            crate::keys::KeyPairEnum::Bip32Ed25519(kp) => {
+                let mut bytes =
+                    base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
+                let seed = read::get_dewif_v4_seed_unchecked(&mut bytes[8..], old_passphrase);
+                Ok(write_dewif_v4_content(
+                    currency,
+                    log_n,
+                    new_passphrase,
+                    &kp.public_key(),
+                    seed,
+                ))
+            }
+        }
+    }
+}
+
 fn gen_aes_seed(passphrase: &str, log_n: u8) -> Seed32 {
     let salt = Hash::compute(format!("dewif{}", passphrase).as_bytes());
     let mut aes_seed_bytes = [0u8; 32];
@@ -185,7 +245,19 @@ mod tests {
         ));
         let keypair_read = unwrap!(keypairs_iter.next());
 
-        assert_eq!(KeyPairEnum::Ed25519(written_keypair), keypair_read,)
+        assert_eq!(KeyPairEnum::Ed25519(written_keypair.clone()), keypair_read,);
+
+        // Change DEWIF passphrase
+        let new_dewif_content = unwrap!(change_dewif_passphrase(&dewif_content, "toto", "titi"));
+
+        let mut keypairs_iter = unwrap!(read_dewif_file_content(
+            ExpectedCurrency::Specific(currency),
+            &new_dewif_content,
+            "titi"
+        ));
+        let keypair_read = unwrap!(keypairs_iter.next());
+
+        assert_eq!(KeyPairEnum::Ed25519(written_keypair), keypair_read,);
     }
 
     #[test]
@@ -225,6 +297,26 @@ mod tests {
         let keypair1_read = unwrap!(keypairs_iter.next());
         let keypair2_read = unwrap!(keypairs_iter.next());
 
+        assert_eq!(
+            KeyPairEnum::Ed25519(written_keypair1.clone()),
+            keypair1_read,
+        );
+        assert_eq!(
+            KeyPairEnum::Ed25519(written_keypair2.clone()),
+            keypair2_read,
+        );
+
+        // Change DEWIF passphrase
+        let new_dewif_content = unwrap!(change_dewif_passphrase(&dewif_content, "toto", "titi"));
+
+        let mut keypairs_iter = unwrap!(read_dewif_file_content(
+            ExpectedCurrency::Specific(currency),
+            &new_dewif_content,
+            "titi"
+        ));
+        let keypair1_read = unwrap!(keypairs_iter.next());
+        let keypair2_read = unwrap!(keypairs_iter.next());
+
         assert_eq!(KeyPairEnum::Ed25519(written_keypair1), keypair1_read,);
         assert_eq!(KeyPairEnum::Ed25519(written_keypair2), keypair2_read,);
     }
@@ -249,5 +341,69 @@ mod tests {
         } else {
             panic!("dewif content must be corrupted.")
         }
+    }
+
+    #[test]
+    fn dewif_v3() {
+        let written_keypair = KeyPairFromSeed32Generator::generate(Seed32::new([0u8; 32]));
+        let currency = Currency::from(G1_TEST_CURRENCY);
+
+        let dewif_content = write_dewif_v3_content(currency, &written_keypair, 10, "toto");
+
+        let mut keypairs_iter = unwrap!(read_dewif_file_content(
+            ExpectedCurrency::Specific(currency),
+            &dewif_content,
+            "toto"
+        ));
+        let keypair_read = unwrap!(keypairs_iter.next());
+
+        assert_eq!(KeyPairEnum::Ed25519(written_keypair.clone()), keypair_read,);
+
+        // Change DEWIF passphrase
+        let new_dewif_content = unwrap!(change_dewif_passphrase(&dewif_content, "toto", "titi"));
+
+        let mut keypairs_iter = unwrap!(read_dewif_file_content(
+            ExpectedCurrency::Specific(currency),
+            &new_dewif_content,
+            "titi"
+        ));
+        let keypair_read = unwrap!(keypairs_iter.next());
+
+        assert_eq!(KeyPairEnum::Ed25519(written_keypair), keypair_read,);
+    }
+
+    //#[cfg(feature = "bip32-ed25519")]
+    #[test]
+    fn dewif_v4() {
+        let seed = Seed32::new([0u8; 32]);
+        let written_keypair = crate::keys::ed25519::bip32::KeyPair::from_seed(seed.clone());
+        let currency = Currency::from(G1_TEST_CURRENCY);
+
+        let dewif_content =
+            write_dewif_v4_content(currency, 10, "toto", &written_keypair.public_key(), seed);
+
+        let mut keypairs_iter = unwrap!(read_dewif_file_content(
+            ExpectedCurrency::Specific(currency),
+            &dewif_content,
+            "toto"
+        ));
+        let keypair_read = unwrap!(keypairs_iter.next());
+
+        assert_eq!(
+            KeyPairEnum::Bip32Ed25519(written_keypair.clone()),
+            keypair_read,
+        );
+
+        // Change DEWIF passphrase
+        let new_dewif_content = unwrap!(change_dewif_passphrase(&dewif_content, "toto", "titi"));
+
+        let mut keypairs_iter = unwrap!(read_dewif_file_content(
+            ExpectedCurrency::Specific(currency),
+            &new_dewif_content,
+            "titi"
+        ));
+        let keypair_read = unwrap!(keypairs_iter.next());
+
+        assert_eq!(KeyPairEnum::Bip32Ed25519(written_keypair), keypair_read,);
     }
 }
