@@ -204,7 +204,7 @@ impl KeyPairTrait for KeyPair {
         }
     }
 
-    // Generate a HDWallet extended key pair from 32 bytes seed
+    // Generate an HDWallet extended key pair from 32 bytes seed
     fn from_seed(seed: Seed32) -> Self {
         let digest = digest::digest(&digest::SHA512, seed.as_ref());
         let mut extended_secret_key = [0u8; EXTENDED_SECRET_KEY_SIZE];
