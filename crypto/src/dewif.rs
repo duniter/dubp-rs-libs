@@ -146,9 +146,12 @@ static VERSION_V4: &[u8] = &[0, 0, 0, 4];
 /// DEWIF meta data
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DewifMeta {
-    currency: Currency,
-    log_n: u8,
-    version: u32,
+    /// Currency
+    pub currency: Currency,
+    /// Scrypt parameter log N
+    pub log_n: u8,
+    /// DEWIF version
+    pub version: u32,
 }
 
 /// Change DEWIF passphrase
