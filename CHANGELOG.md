@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.41.1] - 2021-02-14
+
 ## [0.41.0] - 2021-02-09
 
 - feat(crypto): dewif: add function read_dewif_meta
@@ -109,7 +111,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.41.0...HEAD
+[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.41.1...HEAD
+[0.41.1]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.41.0...v0.41.1
 [0.41.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.40.0...v0.41.0
 [0.40.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.39.1...v0.40.0
 [0.39.1]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.39.0...v0.39.1
