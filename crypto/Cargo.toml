@@ -24,16 +24,11 @@ cryptoxide = { version = "0.3", optional = true }
 ed25519-bip32 = { version = "0.3.2", optional = true }
 getrandom = { version = "0.1.14" }
 once_cell = { version = "1.3.1", optional = true, default-features = false, features = ["std"] }
+ring = { version = "0.16.15", optional = true }
 serde = { version = "1.0.114", features = ["derive"] }
 thiserror = "1.0.11"
 zerocopy = "0.3.0"
 zeroize = { version = "1.1.0", features = ["zeroize_derive"] }
-
-# Crypto backend depend on the target
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-cryptoxide = "0.3"
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-ring = { version = "0.16.15" }
 
 [dev-dependencies]
 bincode = "1.2.0"
@@ -45,13 +40,16 @@ unwrap = "1.2.1"
 criterion = { version = "0.3.1" }
 
 [[bench]]
-name = "ring_vs_sodium"
 harness = false
+name = "ring_vs_sodium"
+required-features = ["assembly"]
 
 [features]
+default = ["cryptoxide"]
 #default = ["bip32-ed25519"]
 #default = ["dewif", "private_message", "pubkey_check", "mnemonic"]
 
+assembly = ["ring"]
 bip32-ed25519 = ["cryptoxide", "ed25519-bip32"]
 dewif = ["aes", "arrayvec", "scrypt"]
 x25519 = ["curve25519-dalek", "pubkey_check"]
