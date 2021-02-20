@@ -60,7 +60,6 @@ pub mod keys;
 pub mod mnemonic;
 #[cfg(feature = "private_message")]
 pub mod private_message;
-#[cfg(feature = "rand")]
 pub mod rand;
 #[cfg(feature = "scrypt")]
 pub mod scrypt;

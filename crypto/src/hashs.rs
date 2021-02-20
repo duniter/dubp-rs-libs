@@ -34,7 +34,6 @@
 //!
 
 use crate::bases::*;
-#[cfg(feature = "rand")]
 use crate::rand::UnspecifiedRandError;
 #[cfg(target_arch = "wasm32")]
 use cryptoxide::{digest::Digest, sha2::Sha256};
@@ -101,7 +100,6 @@ impl Hash {
     /// Hash size (in bytes).
     pub const SIZE_IN_BYTES: usize = 32;
 
-    #[cfg(feature = "rand")]
     /// Generate a random Hash
     #[inline]
     pub fn random() -> Result<Self, UnspecifiedRandError> {
@@ -167,7 +165,6 @@ mod tests {
     use super::*;
     use unwrap::unwrap;
 
-    #[cfg(feature = "rand")]
     #[test]
     fn test_hash_random() {
         let hash1 = Hash::random();

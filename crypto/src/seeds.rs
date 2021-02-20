@@ -17,7 +17,6 @@
 
 use crate::bases::b58::{bytes_to_str_base58, ToBase58};
 use crate::bases::*;
-#[cfg(feature = "rand")]
 use crate::rand::UnspecifiedRandError;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Debug, Display, Formatter};
@@ -66,7 +65,6 @@ impl Seed32 {
     pub fn from_base58(base58_str: &str) -> Result<Self, BaseConversionError> {
         Ok(Seed32::new(b58::str_base58_to_32bytes(base58_str)?.0))
     }
-    #[cfg(feature = "rand")]
     #[inline]
     /// Generate random seed
     pub fn random() -> Result<Seed32, UnspecifiedRandError> {
@@ -78,10 +76,8 @@ impl Seed32 {
 #[cfg(test)]
 mod tests {
 
-    #[cfg(feature = "rand")]
     use super::*;
 
-    #[cfg(feature = "rand")]
     #[test]
     fn test_gen_random_seed() {
         assert_ne!(Seed32::random(), Seed32::random());

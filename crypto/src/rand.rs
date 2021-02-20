@@ -16,10 +16,7 @@
 //! Manage random generation.
 
 use byteorder::ByteOrder;
-#[cfg(target_arch = "wasm32")]
 use getrandom::getrandom;
-#[cfg(not(target_arch = "wasm32"))]
-use ring::rand::{generate, SystemRandom};
 
 /// An error with absolutely no details.
 ///
@@ -42,28 +39,9 @@ pub struct UnspecifiedRandError;
 
 /// Secure random bytes generator
 pub fn gen_random_bytes(buffer: &mut [u8]) -> Result<(), UnspecifiedRandError> {
-    let mut cursor = 0;
-    let mut remaining_len = buffer.len();
-
-    while remaining_len >= 32 {
-        buffer[cursor..(cursor + 32)].copy_from_slice(&gen_32_bytes()?[..]);
-        cursor += 32;
-        remaining_len -= 32;
-    }
-    while remaining_len >= 16 {
-        buffer[cursor..(cursor + 16)].copy_from_slice(&gen_16_bytes()?[..]);
-        cursor += 16;
-        remaining_len -= 16;
-    }
-    if remaining_len > 0 {
-        buffer[cursor..].copy_from_slice(&gen_16_bytes()?[..remaining_len]);
-    }
-
-    Ok(())
+    getrandom(buffer).map_err(|_| UnspecifiedRandError)
 }
 
-#[cfg(target_arch = "wasm32")]
-#[cfg(not(tarpaulin_include))]
 #[inline]
 /// Generate random u32
 pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
@@ -71,18 +49,7 @@ pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
     getrandom(&mut random_bytes[..]).map_err(|_| UnspecifiedRandError)?;
     Ok(byteorder::BigEndian::read_u32(&random_bytes))
 }
-#[cfg(not(target_arch = "wasm32"))]
-#[inline]
-/// Generate random u32
-pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
-    let random_bytes =
-        generate::<[u8; 4]>(&SystemRandom::new()).map_err(|_| UnspecifiedRandError)?;
 
-    Ok(byteorder::BigEndian::read_u32(&random_bytes.expose()))
-}
-
-#[cfg(target_arch = "wasm32")]
-#[cfg(not(tarpaulin_include))]
 #[inline]
 /// Generate random 16 bytes
 pub fn gen_16_bytes() -> Result<[u8; 16], UnspecifiedRandError> {
@@ -90,33 +57,13 @@ pub fn gen_16_bytes() -> Result<[u8; 16], UnspecifiedRandError> {
     getrandom(&mut random_bytes[..]).map_err(|_| UnspecifiedRandError)?;
     Ok(random_bytes)
 }
-#[cfg(not(target_arch = "wasm32"))]
-#[inline]
-/// Generate random 16 bytes
-pub fn gen_16_bytes() -> Result<[u8; 16], UnspecifiedRandError> {
-    let random_bytes =
-        generate::<[u8; 16]>(&SystemRandom::new()).map_err(|_| UnspecifiedRandError)?;
 
-    Ok(random_bytes.expose())
-}
-
-#[cfg(target_arch = "wasm32")]
-#[cfg(not(tarpaulin_include))]
 #[inline]
 /// Generate random 32 bytes
 pub fn gen_32_bytes() -> Result<[u8; 32], UnspecifiedRandError> {
     let mut random_bytes = [0u8; 32];
     getrandom(&mut random_bytes[..]).map_err(|_| UnspecifiedRandError)?;
     Ok(random_bytes)
-}
-#[cfg(not(target_arch = "wasm32"))]
-#[inline]
-/// Generate random 32 bytes
-pub fn gen_32_bytes() -> Result<[u8; 32], UnspecifiedRandError> {
-    let random_bytes =
-        generate::<[u8; 32]>(&SystemRandom::new()).map_err(|_| UnspecifiedRandError)?;
-
-    Ok(random_bytes.expose())
 }
 
 #[cfg(test)]
