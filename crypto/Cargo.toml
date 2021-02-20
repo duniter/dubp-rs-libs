@@ -26,6 +26,7 @@ getrandom = { version = "0.2.2" }
 once_cell = { version = "1.5.2", optional = true, default-features = false, features = ["std"] }
 ring = { version = "0.16.20", optional = true }
 serde = { version = "1.0.123", features = ["derive"] }
+sharks = { version = "0.4.3", optional = true }
 thiserror = "1.0.24"
 zerocopy = "0.3.0"
 zeroize = { version = "1.2.0", features = ["zeroize_derive"] }
@@ -45,8 +46,8 @@ name = "ring_vs_sodium"
 required-features = ["assembly"]
 
 [features]
-default = ["assembly"]
-#default = ["assembly", "bip32-ed25519"]
+#default = ["assembly"]
+default = ["assembly", "shamir"]
 #default = ["assembly", "bip32-ed25519", "dewif", "private_message", "pubkey_check", "mnemonic"]
 
 assembly = ["ring"]
@@ -58,6 +59,7 @@ private_message = ["arrayvec", "x25519"]
 pubkey_check = ["curve25519-dalek"]
 pure_rust = ["cryptoxide"]
 scrypt = []
+shamir = ["arrayvec", "mnemonic", "sharks"]
 
 # mnemonic languages features (English is the default language, so always included)
 mnemonic_all_languages = ["mnemonic_chinese_simplified", "mnemonic_chinese_traditional", "mnemonic_french", "mnemonic_italian", "mnemonic_japanese", "mnemonic_korean", "mnemonic_spanish"]

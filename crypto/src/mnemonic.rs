@@ -18,12 +18,18 @@
 mod error;
 mod language;
 mod mnemonic_gen;
+#[cfg(feature = "shamir")]
+mod mnemonic_sss;
 mod mnemonic_type;
 mod utils;
 
 pub use error::MnemonicError;
 pub use language::Language;
 pub use mnemonic_gen::Mnemonic;
+#[cfg(feature = "shamir")]
+pub use mnemonic_sss::{
+    get_share_meta, mnemonic_from_shares, mnemonic_to_shares, MnemonicSSSErr, Share, Shares,
+};
 pub use mnemonic_type::MnemonicType;
 
 ///

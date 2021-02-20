@@ -56,6 +56,12 @@ pub enum BaseConversionError {
         /// Offset (=position)
         offset: usize,
     },
+    /// Non-ASCII character
+    #[error("Non-ASCII character at offset {offset:?}.")]
+    NonAsciiCharacter {
+        /// Offset (=position)
+        offset: usize,
+    },
     /// Unknown error
     #[error("Unknown error.")]
     UnknownError,
@@ -74,6 +80,24 @@ impl From<base64::DecodeError> for BaseConversionError {
             base64::DecodeError::InvalidLastSymbol(offset, symbol) => {
                 BaseConversionError::InvalidLastSymbol { symbol, offset }
             }
+        }
+    }
+}
+
+impl From<bs58::decode::Error> for BaseConversionError {
+    fn from(err: bs58::decode::Error) -> Self {
+        match err {
+            bs58::decode::Error::BufferTooSmall => BaseConversionError::InvalidBaseConverterLength,
+            bs58::decode::Error::InvalidCharacter { character, index } => {
+                BaseConversionError::InvalidCharacter {
+                    character,
+                    offset: index,
+                }
+            }
+            bs58::decode::Error::NonAsciiCharacter { index } => {
+                BaseConversionError::NonAsciiCharacter { offset: index }
+            }
+            _ => BaseConversionError::UnknownError,
         }
     }
 }

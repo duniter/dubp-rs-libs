@@ -38,4 +38,7 @@ pub enum MnemonicError {
     /// Unspecified rand error
     #[error("Unspecified rand error")]
     UnspecifiedRandError(UnspecifiedRandError),
+    /// Unknown language
+    #[error("Unknown language")]
+    UnknownLanguage,
 }
