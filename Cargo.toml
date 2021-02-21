@@ -13,12 +13,12 @@ version = "0.43.0"
 path = "lib.rs"
 
 [dependencies]
-dup-crypto = { path = "crypto", version = "0.43.0", features = ["scrypt"] }
-dubp-common = { path = "common", version = "0.43.0", features = ["crypto_scrypt"] }
-dubp-wallet = { path = "wallet", version = "0.43.0", features = ["crypto_scrypt"] }
-dubp-documents = { path = "documents", version = "0.43.0", features = ["crypto_scrypt"] }
-dubp-documents-parser = { path = "documents-parser", version = "0.43.0", features = ["crypto_scrypt"] }
-dubp-block = { path = "block", version = "0.43.0", features = ["crypto_scrypt"] }
+dup-crypto = { path = "crypto", default-features = false, version = "0.43.0", features = ["assembly", "scrypt"] }
+dubp-common = { path = "common", version = "0.43.0", features = ["crypto_assembly", "crypto_scrypt"] }
+dubp-wallet = { path = "wallet", version = "0.43.0", features = ["crypto_assembly", "crypto_scrypt"] }
+dubp-documents = { path = "documents", version = "0.43.0", features = ["crypto_assembly", "crypto_scrypt"] }
+dubp-documents-parser = { path = "documents-parser", version = "0.43.0", features = ["crypto_assembly", "crypto_scrypt"] }
+dubp-block = { path = "block", version = "0.43.0", features = ["crypto_assembly", "crypto_scrypt"] }
 
 [dev-dependencies]
 rusty-hook = "0.11.2"

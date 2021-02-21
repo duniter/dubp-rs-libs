@@ -13,7 +13,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-dup-crypto = { path = "../crypto", version = "0.43.0" }
+dup-crypto = { path = "../crypto", default-features = false, version = "0.43.0" }
 serde = { version = "1.0.105", features = ["derive"] }
 serde_json = "1.0.57"
 thiserror = "1.0.20"
@@ -24,8 +24,12 @@ bincode = "1.2.0"
 unwrap = "1.2.1"
 
 [features]
+default = ["crypto_assembly"]
+
+crypto_assembly = ["dup-crypto/assembly"]
 crypto_dewif = ["dup-crypto/dewif"]
 crypto_x25519 = ["dup-crypto/x25519"]
 crypto_private_message = ["dup-crypto/private_message"]
 crypto_pubkey_check = ["dup-crypto/pubkey_check"]
+crypto_pure_rust = ["dup-crypto/cryptoxide"]
 crypto_scrypt = ["dup-crypto/scrypt"]
