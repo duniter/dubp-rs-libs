@@ -1,6 +1,6 @@
 [package]
 name = "dubp-documents-parser"
-version = "0.43.0"
+version = "0.43.1"
 authors = ["elois <elois@duniter.org>"]
 description = "Parser for DUBP documents."
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
@@ -13,7 +13,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-dubp-documents = { path = "../documents", version = "0.43.0" }
+dubp-documents = { path = "../documents", version = "0.43.1" }
 json-pest-parser = "0.3.0"
 pest = "2.1.3"
 pest_derive = "2.1.0"
