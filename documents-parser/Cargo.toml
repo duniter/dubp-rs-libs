@@ -24,4 +24,6 @@ thiserror = "1.0.20"
 unwrap = "1.2.1"
 
 [features]
+crypto_assembly = ["dubp-documents/crypto_assembly"]
 crypto_scrypt = ["dubp-documents/crypto_scrypt"]
+crypto_pure_rust = ["dubp-documents/crypto_pure_rust"]
