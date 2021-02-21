@@ -13,8 +13,8 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-dubp-documents = { path = "../documents", version = "0.43.1" }
-dubp-documents-parser = { path = "../documents-parser", version = "0.43.1" }
+dubp-documents = { path = "../documents", default-features = false, version = "0.43.1" }
+dubp-documents-parser = { path = "../documents-parser", default-features = false, version = "0.43.1" }
 json-pest-parser = "0.3.0"
 serde = { version = "1.0.*", features = ["derive"] }
 serde_json = "1.0.*"
@@ -27,6 +27,8 @@ pretty_assertions = "0.6.1"
 unwrap = "1.2.1"
 
 [features]
+default = ["crypto_assembly"]
+
 crypto_assembly = ["dubp-documents/crypto_assembly", "dubp-documents-parser/crypto_assembly"]
 crypto_scrypt = ["dubp-documents/crypto_scrypt", "dubp-documents-parser/crypto_scrypt"]
 crypto_pure_rust = ["dubp-documents/crypto_pure_rust", "dubp-documents-parser/crypto_pure_rust"]

@@ -45,7 +45,7 @@ name = "ring_vs_sodium"
 required-features = ["assembly"]
 
 [features]
-default = ["cryptoxide"]
+default = ["assembly"]
 #default = ["assembly", "bip32-ed25519"]
 #default = ["dewif", "private_message", "pubkey_check", "mnemonic"]
 
@@ -56,6 +56,7 @@ x25519 = ["curve25519-dalek", "pubkey_check"]
 mnemonic = ["once_cell"]
 private_message = ["arrayvec", "x25519"]
 pubkey_check = ["curve25519-dalek"]
+pure_rust = ["cryptoxide"]
 scrypt = []
 
 # mnemonic languages features (English is the default language, so always included)
