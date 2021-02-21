@@ -47,6 +47,36 @@ pub fn str_hex_to_32bytes(text: &str) -> Result<[u8; 32], BaseConversionError> {
     }
 }
 
+/// Convert a hexadecimal string in an array of 64 bytes.
+///
+/// The hex string must only contains hex characters
+/// and produce a 64 bytes value.
+pub fn str_hex_to_64bytes(text: &str) -> Result<[u8; 64], BaseConversionError> {
+    if text.len() != 128 {
+        Err(BaseConversionError::InvalidLength {
+            expected: 128,
+            found: text.len(),
+        })
+    } else {
+        let mut bytes = [0u8; 64];
+
+        let chars = text.as_bytes();
+
+        for i in 0..128 {
+            if i % 2 != 0 {
+                continue;
+            }
+
+            let byte1 = hex_char_byte_to_byte(chars[i], i)?;
+            let byte2 = hex_char_byte_to_byte(chars[i + 1], i + 1)?;
+
+            bytes[i / 2] = (byte1 << 4) | byte2;
+        }
+
+        Ok(bytes)
+    }
+}
+
 fn hex_char_byte_to_byte(hex_char: u8, pos: usize) -> Result<u8, BaseConversionError> {
     match hex_char {
         b'0' => Ok(0),

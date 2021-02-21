@@ -46,7 +46,7 @@ required-features = ["assembly"]
 
 [features]
 default = ["cryptoxide"]
-#default = ["bip32-ed25519"]
+#default = ["assembly", "bip32-ed25519"]
 #default = ["dewif", "private_message", "pubkey_check", "mnemonic"]
 
 assembly = ["ring"]

@@ -33,6 +33,10 @@
 //! ```
 //!
 
+mod hash64;
+
+pub use hash64::Hash64;
+
 use crate::bases::*;
 use crate::rand::UnspecifiedRandError;
 #[cfg(not(feature = "assembly"))]
@@ -122,6 +126,29 @@ impl Hash {
     pub fn compute(datas: &[u8]) -> Hash {
         let mut hash_buffer = [0u8; 32];
         hash_buffer.copy_from_slice(digest::digest(&digest::SHA256, datas).as_ref());
+        Hash(hash_buffer)
+    }
+
+    #[cfg(not(feature = "assembly"))]
+    /// Compute SHA256 hash of any binary data on several parts
+    pub fn compute_multipart(data_parts: &[&[u8]]) -> Hash {
+        let mut hasher = Sha256::new();
+        for data in data_parts {
+            hasher.input(data);
+        }
+        let mut hash_buffer = [0u8; 32];
+        hasher.result(&mut hash_buffer);
+        Hash(hash_buffer)
+    }
+    #[cfg(feature = "assembly")]
+    /// Compute SHA256 hash of any binary data on several parts
+    pub fn compute_multipart(data_parts: &[&[u8]]) -> Hash {
+        let mut ctx = digest::Context::new(&digest::SHA256);
+        for data in data_parts {
+            ctx.update(data);
+        }
+        let mut hash_buffer = [0u8; 32];
+        hash_buffer.copy_from_slice(ctx.finish().as_ref());
         Hash(hash_buffer)
     }
 
