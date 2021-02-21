@@ -58,14 +58,13 @@
 //! ```
 //!
 
-use std::fmt::Display;
-
-use crate::bases::b58::ToBase58;
 use crate::{
+    bases::b58::ToBase58,
+    hashs::{Hash, Hash64},
     keys::{KeyPair as KeyPairTrait, PublicKey as _},
     seeds::Seed32,
 };
-use ring::digest;
+use std::fmt::Display;
 use thiserror::Error;
 use zeroize::Zeroize;
 
@@ -206,7 +205,7 @@ impl KeyPairTrait for KeyPair {
 
     // Generate an HDWallet extended key pair from 32 bytes seed
     fn from_seed(seed: Seed32) -> Self {
-        let digest = digest::digest(&digest::SHA512, seed.as_ref());
+        let digest = Hash64::sha512(seed.as_ref());
         let mut extended_secret_key = [0u8; EXTENDED_SECRET_KEY_SIZE];
         extended_secret_key.copy_from_slice(digest.as_ref());
         normalize_bytes_ed25519_force3rd(&mut extended_secret_key);
@@ -261,14 +260,7 @@ impl super::super::Signator for Signator {
 ///
 /// > "Derive c ← H256(0x01||~k), where H256 is SHA-256, and call it the root chain code."
 fn gen_root_chain_code(seed: &Seed32) -> ChainCode {
-    let mut ctx = digest::Context::new(&digest::SHA256);
-    ctx.update(&[0x01]);
-    ctx.update(seed.as_ref());
-    let digest = ctx.finish();
-    let mut chain_code = [0u8; CHAIN_CODE_SIZE];
-    chain_code.copy_from_slice(digest.as_ref());
-
-    chain_code
+    Hash::compute_multipart(&[&[0x01], seed.as_ref()]).0
 }
 
 /// takes the given raw bytes and perform some modifications to normalize
