@@ -108,6 +108,7 @@ pub use write::write_dewif_v4_content;
 pub use write::{write_dewif_v1_content, write_dewif_v2_content, write_dewif_v3_content};
 
 use crate::hashs::Hash;
+#[cfg(feature = "bip32-ed25519")]
 use crate::keys::KeyPair as _;
 use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
@@ -375,7 +376,7 @@ mod tests {
         assert_eq!(KeyPairEnum::Ed25519(written_keypair), keypair_read,);
     }
 
-    //#[cfg(feature = "bip32-ed25519")]
+    #[cfg(feature = "bip32-ed25519")]
     #[test]
     fn dewif_v4() {
         let seed = Seed32::new([0u8; 32]);

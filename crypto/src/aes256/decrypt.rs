@@ -16,8 +16,8 @@
 //! Aes256 decryption
 
 use super::{Aes256, Block, ParBlocks};
-use aes::block_cipher::generic_array::GenericArray;
-use aes::block_cipher::BlockCipher;
+use aes::cipher::generic_array::GenericArray;
+use aes::cipher::BlockCipher;
 
 /// Decrypt bytes.
 /// The length of the bytes slice must be a multiple of 16 !
