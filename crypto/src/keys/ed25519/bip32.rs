@@ -112,9 +112,9 @@ impl Into<u32> for DerivationIndex {
 
 impl DerivationIndex {
     /// Derivation 0'
-    pub const HARD_ZERO: Self = DerivationIndex(0);
+    pub const HARD_ZERO: Self = DerivationIndex(0x80000000);
     /// Derivation 1'
-    pub const HARD_ONE: Self = DerivationIndex(1);
+    pub const HARD_ONE: Self = DerivationIndex(0x80000001);
 
     /// Hardened derivation
     pub fn hard(index: u32) -> Result<Self, InvalidDerivationIndex> {
@@ -343,5 +343,12 @@ mod tests {
         assert!(public_key.verify(message.as_bytes(), &sig).is_ok());
         assert!(public_key.verify(wrong_message.as_bytes(), &sig).is_err());
         assert!(public_key.verify(message.as_bytes(), &wrong_sig).is_err());
+    }
+
+    #[test]
+    fn test_derivation_index_consts() -> Result<(), InvalidDerivationIndex> {
+        assert_eq!(DerivationIndex::HARD_ZERO, DerivationIndex::hard(0)?);
+        assert_eq!(DerivationIndex::HARD_ONE, DerivationIndex::hard(1)?);
+        Ok(())
     }
 }
