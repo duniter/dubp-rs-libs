@@ -100,7 +100,7 @@ impl From<ed25519_bip32::DerivationError> for DerivationError {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 /// BIP32 Derivation index
 pub struct DerivationIndex(u32);
 
@@ -111,6 +111,11 @@ impl Into<u32> for DerivationIndex {
 }
 
 impl DerivationIndex {
+    /// Derivation 0'
+    pub const HARD_ZERO: Self = DerivationIndex(0);
+    /// Derivation 1'
+    pub const HARD_ONE: Self = DerivationIndex(1);
+
     /// Hardened derivation
     pub fn hard(index: u32) -> Result<Self, InvalidDerivationIndex> {
         if index < 0x80000000 {
