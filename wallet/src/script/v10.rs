@@ -74,6 +74,9 @@ impl WalletSubScriptV10 {
 }
 
 impl WalletSubScriptV10 {
+    pub fn is_single_sig(&self) -> bool {
+        matches!(self, Self::Single(WalletConditionV10::Sig(_)))
+    }
     fn unlockable_on(
         self,
         nodes: &[WalletSubScriptV10],
@@ -169,6 +172,9 @@ impl WalletScriptV10 {
             root: WalletSubScriptV10::Single(WalletConditionV10::Sig(pubkey)),
             nodes: SmallVec::new(),
         }
+    }
+    pub fn is_single_sig(&self) -> bool {
+        self.nodes.is_empty() && self.root.is_single_sig()
     }
     pub fn and(cond1: WalletConditionV10, cond2: WalletConditionV10) -> Self {
         let mut nodes = SmallVec::new();
@@ -423,12 +429,22 @@ mod tests {
     }
 
     #[test]
-    fn tect_and_and() {
+    fn test_and_and() {
         let cond1 = WalletConditionV10::Csv(123);
         let cond2 = WalletConditionV10::Csv(456);
         let cond3 = WalletConditionV10::Csv(789);
 
         let script = WalletScriptV10::and_and(cond1, cond2, cond3);
         assert_eq!(&script.to_string(), "CSV(123) && CSV(456) && CSV(789)");
+    }
+
+    #[test]
+    fn test_is_single_sig() {
+        assert!(WalletScriptV10::single_sig(PublicKey::default()).is_single_sig());
+        assert!(!WalletScriptV10::single(WalletConditionV10::Csv(100)).is_single_sig());
+
+        let cond1 = WalletConditionV10::Csv(123);
+        let cond2 = WalletConditionV10::Csv(456);
+        assert!(!WalletScriptV10::and(cond1, cond2).is_single_sig());
     }
 }
