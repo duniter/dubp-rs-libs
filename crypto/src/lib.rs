@@ -64,3 +64,4 @@ pub mod rand;
 #[cfg(feature = "scrypt")]
 pub mod scrypt;
 pub mod seeds;
+pub mod utils;

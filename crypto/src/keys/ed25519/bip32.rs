@@ -36,24 +36,40 @@
 //! ```
 //! use dup_crypto::seeds::Seed32;
 //! use dup_crypto::keys::KeyPair as _;
-//! use dup_crypto::keys::ed25519::bip32::{DerivationIndex, KeyPair, PublicKeyWithChainCode};
+//! use dup_crypto::keys::ed25519::bip32::{PrivateDerivationPath, KeyPair, PublicKeyWithChainCode};
+//! use dup_crypto::utils::U31;
 //!
-//! let master_key_pair = KeyPair::from_seed(Seed32::random().expect("fail to generate random seed"));
-//! let master_public_key = master_key_pair.public_key();
+//! let master_keypair = KeyPair::from_seed(Seed32::random().expect("fail to generate random seed"));
 //!
-//! let chain_code = master_key_pair.chain_code();
-//! let derivation_index = DerivationIndex::soft(3)?;
+//! let account_index = U31::new(2)?;
+//! let address_index = U31::new(3)?;
 //!
-//! // Derive key pair
-//! let child_key_pair = master_key_pair.derive(derivation_index);
+//! // Derive master external keypair
+//! let derivation_path = PrivateDerivationPath::opaque(account_index, true, None)?;
+//! let external_keypair = master_keypair.derive(derivation_path);
 //!
-//! // Derive public key
-//! let child_public_key = PublicKeyWithChainCode {
-//!     public_key: master_public_key,
-//!     chain_code
-//! }.derive(derivation_index)?.public_key;
+//! // Get master external public key and chain code
+//! let external_public_key = external_keypair.public_key();
+//! let external_chain_code = external_keypair.chain_code();
 //!
-//! assert_eq!(child_key_pair.public_key(), child_public_key);
+//! // Derive a specific address with public derivation
+//! let address = PublicKeyWithChainCode {
+//!     public_key: external_public_key,
+//!     chain_code: external_chain_code,
+//! }
+//! .derive(address_index)?
+//! .public_key;
+//!
+//! // Verify that the private derivation give us the same address
+//! assert_eq!(
+//!     address,
+//!     master_keypair
+//!         .derive(PrivateDerivationPath::opaque(
+//!                 account_index,
+//!                 true,
+//!                 Some(address_index)
+//!         )?).public_key()
+//! );
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
@@ -63,7 +79,9 @@ use crate::{
     hashs::{Hash, Hash64},
     keys::{KeyPair as KeyPairTrait, PublicKey as _},
     seeds::Seed32,
+    utils::U31,
 };
+use arrayvec::ArrayVec;
 use std::fmt::Display;
 use thiserror::Error;
 use zeroize::Zeroize;
@@ -75,14 +93,13 @@ const EXTENDED_SECRET_KEY_SIZE: usize = 64;
 pub type ChainCode = [u8; 32];
 
 #[derive(Clone, Copy, Debug, Error)]
-#[error("Derivation index must less than 2^31")]
-/// Invalid derivation index
-/// Derivation index must less than 2^31
-pub struct InvalidDerivationIndex;
+#[error("The account index is not compatible with the account type.")]
+/// Invalid account index
+pub struct InvalidAccountIndex;
 
 #[derive(Clone, Copy, Debug, Error)]
 /// Derivation error
-pub enum DerivationError {
+pub enum PublicDerivationError {
     /// Invalid addition
     #[error("Invalid addition")]
     InvalidAddition,
@@ -91,7 +108,7 @@ pub enum DerivationError {
     ExpectedSoftDerivation,
 }
 
-impl From<ed25519_bip32::DerivationError> for DerivationError {
+impl From<ed25519_bip32::DerivationError> for PublicDerivationError {
     fn from(e: ed25519_bip32::DerivationError) -> Self {
         match e {
             ed25519_bip32::DerivationError::InvalidAddition => Self::InvalidAddition,
@@ -102,7 +119,7 @@ impl From<ed25519_bip32::DerivationError> for DerivationError {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 /// BIP32 Derivation index
-pub struct DerivationIndex(u32);
+struct DerivationIndex(u32);
 
 impl Into<u32> for DerivationIndex {
     fn into(self) -> u32 {
@@ -117,20 +134,82 @@ impl DerivationIndex {
     pub const HARD_ONE: Self = DerivationIndex(0x80000001);
 
     /// Hardened derivation
-    pub fn hard(index: u32) -> Result<Self, InvalidDerivationIndex> {
-        if index < 0x80000000 {
-            Ok(Self(index | 0x80000000))
-        } else {
-            Err(InvalidDerivationIndex)
-        }
+    fn hard(index: U31) -> Self {
+        Self(index.into_u32() | 0x80000000)
     }
     /// Soft
-    pub fn soft(index: u32) -> Result<Self, InvalidDerivationIndex> {
-        if index < 0x80000000 {
-            Ok(Self(index))
+    fn soft(index: U31) -> Self {
+        Self(index.into_u32())
+    }
+}
+
+#[derive(Clone, Debug)]
+/// Private Derivation path
+pub struct PrivateDerivationPath(ArrayVec<[DerivationIndex; 3]>);
+
+impl PrivateDerivationPath {
+    /// Derive transparent account
+    pub fn transparent(account_index: U31) -> Result<Self, InvalidAccountIndex> {
+        if account_index.into_u32() % 3 == 0 {
+            let mut avec = ArrayVec::new();
+            avec.push(DerivationIndex::hard(account_index));
+            Ok(Self(avec))
         } else {
-            Err(InvalidDerivationIndex)
+            Err(InvalidAccountIndex)
         }
+    }
+    /// Derive internal keypair for semi-opaque account
+    pub fn semi_opaque_internal(
+        account_index: U31,
+        address_index_opt: Option<U31>,
+    ) -> Result<Self, InvalidAccountIndex> {
+        if account_index.into_u32() % 3 == 1 {
+            let mut avec = ArrayVec::new();
+            avec.push(DerivationIndex::hard(account_index));
+            avec.push(DerivationIndex::HARD_ONE);
+            if let Some(address_index) = address_index_opt {
+                avec.push(DerivationIndex::soft(address_index))
+            }
+            Ok(Self(avec))
+        } else {
+            Err(InvalidAccountIndex)
+        }
+    }
+    /// Derive external chain keypair for semi-opaque account
+    pub fn semi_opaque_external(account_index: U31) -> Result<Self, InvalidAccountIndex> {
+        if account_index.into_u32() % 3 == 1 {
+            let mut avec = ArrayVec::new();
+            avec.push(DerivationIndex::hard(account_index));
+            avec.push(DerivationIndex::HARD_ZERO);
+            Ok(Self(avec))
+        } else {
+            Err(InvalidAccountIndex)
+        }
+    }
+    /// Derive opaque account
+    pub fn opaque(
+        account_index: U31,
+        external: bool,
+        address_index_opt: Option<U31>,
+    ) -> Result<Self, InvalidAccountIndex> {
+        if account_index.into_u32() % 3 == 2 {
+            let mut avec = ArrayVec::new();
+            avec.push(DerivationIndex::hard(account_index));
+            if external {
+                avec.push(DerivationIndex::HARD_ZERO);
+            } else {
+                avec.push(DerivationIndex::HARD_ONE);
+            }
+            if let Some(address_index) = address_index_opt {
+                avec.push(DerivationIndex::soft(address_index))
+            }
+            Ok(Self(avec))
+        } else {
+            Err(InvalidAccountIndex)
+        }
+    }
+    fn into_iter(self) -> impl Iterator<Item = DerivationIndex> {
+        self.0.into_iter()
     }
 }
 
@@ -151,11 +230,13 @@ impl PublicKeyWithChainCode {
     ///
     /// * The derivation is of the hardened type
     /// * The public key is not issued from a private key of HD wallet type
-    pub fn derive(&self, derivation_index: DerivationIndex) -> Result<Self, DerivationError> {
+    pub fn derive(&self, derivation_index: U31) -> Result<Self, PublicDerivationError> {
         let xpub =
             ed25519_bip32::XPub::from_pk_and_chaincode(&self.public_key.datas, &self.chain_code);
-        let xpub_derived =
-            xpub.derive(ed25519_bip32::DerivationScheme::V2, derivation_index.into())?;
+        let xpub_derived = xpub.derive(
+            ed25519_bip32::DerivationScheme::V2,
+            derivation_index.into_u32(),
+        )?;
         Ok(Self {
             public_key: super::PublicKey::from_data(xpub_derived.public_key()),
             chain_code: xpub_derived.chain_code(),
@@ -183,7 +264,14 @@ impl KeyPair {
         self.chain_code
     }
     /// BIP32 derivation
-    pub fn derive(&self, derivation_index: DerivationIndex) -> Self {
+    pub fn derive(&self, derivation_path: PrivateDerivationPath) -> Self {
+        let mut kp = self.to_owned();
+        for derivation_index in derivation_path.into_iter() {
+            kp = kp.derive_inner(derivation_index);
+        }
+        kp
+    }
+    fn derive_inner(&self, derivation_index: DerivationIndex) -> Self {
         let xprv = ed25519_bip32::XPrv::from_extended_and_chaincode(
             &self.extended_secret_key,
             &self.chain_code,
@@ -286,45 +374,47 @@ mod tests {
 
     #[test]
     fn test_derivation_index() {
-        assert!(DerivationIndex::soft(0).is_ok());
-        assert!(DerivationIndex::soft(u32::MAX).is_err());
-        assert!(DerivationIndex::soft(0x80_00_00_00).is_err());
-        assert!(DerivationIndex::soft(0x7F_FF_FF_FF).is_ok());
-
-        assert!(DerivationIndex::hard(u32::MAX).is_err());
-        assert!(DerivationIndex::hard(0x80_00_00_00).is_err());
-
-        assert!(DerivationIndex::hard(0).is_ok());
-        let index: u32 = unwrap!(DerivationIndex::hard(0)).into();
+        let u31_zero = unwrap!(U31::new(0));
+        let index: u32 = DerivationIndex::hard(u31_zero).into();
         assert_eq!(index, 0x80_00_00_00);
-        assert!(DerivationIndex::hard(0x7F_FF_FF_FF).is_ok());
-        let index: u32 = unwrap!(DerivationIndex::hard(0x7F_FF_FF_FF)).into();
-        assert_eq!(index, 0xFF_FF_FF_FF);
+
+        let u31_max = unwrap!(U31::new(0x7F_FF_FF_FF));
+        let index: u32 = DerivationIndex::hard(u31_max).into();
+        assert_eq!(index, u32::MAX);
     }
 
     #[test]
-    fn test_public_key_derivation() {
+    fn test_public_key_derivation() -> Result<(), InvalidAccountIndex> {
         let seed = unwrap!(Seed32::from_base58(
             "DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV"
         ));
-        let kp = KeyPair::from_seed(seed);
-        let public_key = kp.public_key();
-        let chain_code = kp.chain_code();
+        let master_kp = KeyPair::from_seed(seed);
 
-        let derivation_index = unwrap!(DerivationIndex::soft(3));
+        let account_index = unwrap!(U31::new(2));
+        let address_index = unwrap!(U31::new(3));
 
-        let derived_kp = kp.derive(derivation_index);
-        let derived_pk = derived_kp.public_key();
+        let external_chain_kp =
+            master_kp.derive(PrivateDerivationPath::opaque(account_index, true, None)?);
+        let external_chain_public_key = external_chain_kp.public_key();
+        let external_chain_code = external_chain_kp.chain_code();
 
         assert_eq!(
             unwrap!(PublicKeyWithChainCode {
-                public_key,
-                chain_code
+                public_key: external_chain_public_key,
+                chain_code: external_chain_code,
             }
-            .derive(derivation_index))
+            .derive(address_index))
             .public_key,
-            derived_pk
+            master_kp
+                .derive(PrivateDerivationPath::opaque(
+                    account_index,
+                    true,
+                    Some(address_index)
+                )?)
+                .public_key()
         );
+
+        Ok(())
     }
 
     #[test]
@@ -346,9 +436,15 @@ mod tests {
     }
 
     #[test]
-    fn test_derivation_index_consts() -> Result<(), InvalidDerivationIndex> {
-        assert_eq!(DerivationIndex::HARD_ZERO, DerivationIndex::hard(0)?);
-        assert_eq!(DerivationIndex::HARD_ONE, DerivationIndex::hard(1)?);
+    fn test_derivation_index_consts() -> Result<(), crate::utils::U31Error> {
+        assert_eq!(
+            DerivationIndex::HARD_ZERO,
+            DerivationIndex::hard(U31::new(0)?)
+        );
+        assert_eq!(
+            DerivationIndex::HARD_ONE,
+            DerivationIndex::hard(U31::new(1)?)
+        );
         Ok(())
     }
 }

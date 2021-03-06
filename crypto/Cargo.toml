@@ -50,7 +50,7 @@ default = ["assembly"]
 #default = ["assembly", "bip32-ed25519", "dewif", "private_message", "pubkey_check", "mnemonic"]
 
 assembly = ["ring"]
-bip32-ed25519 = ["cryptoxide", "ed25519-bip32"]
+bip32-ed25519 = ["arrayvec", "cryptoxide", "ed25519-bip32"]
 dewif = ["aes", "arrayvec", "scrypt"]
 x25519 = ["curve25519-dalek", "pubkey_check"]
 mnemonic = ["once_cell"]
