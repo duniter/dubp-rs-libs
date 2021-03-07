@@ -26,6 +26,7 @@ use super::PublicKey as _;
 use super::{PubKeyFromBytesError, SigError};
 use crate::bases::b58::{bytes_to_str_base58, ToBase58};
 use crate::bases::*;
+use crate::hashs::Hash as Hash32;
 use crate::rand::UnspecifiedRandError;
 #[cfg(feature = "scrypt")]
 use crate::scrypt::{params::ScryptParams, scrypt};
@@ -171,8 +172,48 @@ impl AsRef<[u8]> for PublicKey {
         unsafe { std::slice::from_raw_parts(self.datas.as_ptr(), PUBKEY_SIZE_IN_BYTES) }
     }
 }
+use thiserror::Error;
+#[derive(Clone, Copy, Debug, Error, PartialEq)]
+/// Error when parse a public key from base 58 representation with optional checksum
+pub enum PublicKeyFromStrErr {
+    /// Base conversion error
+    #[error("{0}")]
+    BaseConversionError(BaseConversionError),
+    /// Empty string
+    #[error("Empty string")]
+    EmptyString,
+    /// Invalid checksum
+    #[error("Invalid checksum")]
+    InvalidChecksum,
+}
 
 impl PublicKey {
+    /// Compute public key checksum
+    pub fn checksum(&self) -> String {
+        let double_hash = Hash32::compute(Hash32::compute(&self.datas[..]).as_ref());
+        let mut checksum = bs58::encode(double_hash).into_string();
+        checksum.truncate(3);
+        checksum
+    }
+    /// Parse public key from base58 representation with optional checksum
+    pub fn from_base58_with_checksum_opt(source: &str) -> Result<Self, PublicKeyFromStrErr> {
+        let mut source = source.split(':');
+        if let Some(b58_str) = source.next() {
+            let pubkey =
+                Self::from_base58(b58_str).map_err(PublicKeyFromStrErr::BaseConversionError)?;
+            if let Some(checksum) = source.next() {
+                if pubkey.checksum() == checksum {
+                    Ok(pubkey)
+                } else {
+                    Err(PublicKeyFromStrErr::InvalidChecksum)
+                }
+            } else {
+                Ok(pubkey)
+            }
+        } else {
+            Err(PublicKeyFromStrErr::EmptyString)
+        }
+    }
     /// Verify if bytes represents a valid point on the Edwards form of Curve25519.
     #[cfg(feature = "pubkey_check")]
     fn check_bytes(bytes: &[u8]) -> bool {
@@ -898,6 +939,41 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
         assert_eq!(
             "8hgzaeFnjkNCsemcaL4rmhB2999B79BydtE8xow4etB7",
             &bs58::encode(&pubkey_bytes).into_string(),
+        );
+    }
+
+    #[test]
+    fn test_checksum() {
+        // RFC example 1
+        let pubkey1: PublicKey = unwrap!(PublicKey::from_base58(
+            "2BjyvjoAf5qik7R8TKDJAHJugsX23YgJGi2LmBUv2nx"
+        ));
+        assert_eq!(&pubkey1.checksum(), "8pQ");
+        assert!(PublicKey::from_base58_with_checksum_opt(
+            "2BjyvjoAf5qik7R8TKDJAHJugsX23YgJGi2LmBUv2nx:8pQ"
+        )
+        .is_ok());
+        assert_eq!(
+            PublicKey::from_base58_with_checksum_opt(
+                "2BjyvjoAf5qik7R8TKDJAHJugsX23YgJGi2LmBUv2nx:8pq"
+            ),
+            Err(PublicKeyFromStrErr::InvalidChecksum)
+        );
+
+        // RFC example 2
+        let pubkey2: PublicKey = unwrap!(PublicKey::from_base58(
+            "J4c8CARmP9vAFNGtHRuzx14zvxojyRWHW2darguVqjtX"
+        ));
+        assert_eq!(&pubkey2.checksum(), "KAv");
+        assert!(PublicKey::from_base58_with_checksum_opt(
+            "J4c8CARmP9vAFNGtHRuzx14zvxojyRWHW2darguVqjtX:KAv"
+        )
+        .is_ok());
+        assert_eq!(
+            PublicKey::from_base58_with_checksum_opt(
+                "J4c8CARmP9vAFNGtHRuzx14zvxojyRWHW2darguVqjtX:kAv"
+            ),
+            Err(PublicKeyFromStrErr::InvalidChecksum)
         );
     }
 }
