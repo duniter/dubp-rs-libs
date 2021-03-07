@@ -1,6 +1,6 @@
 [package]
 name = "dubp-documents"
-version = "0.45.0"
+version = "0.46.0"
 authors = ["elois <elois@duniter.org>"]
 description = "Handles DUBP documents (DUBP: DUniter Blockhain Protocol)"
 repository = "https://git.duniter.org/libs/dubp-rs-libs"
@@ -14,7 +14,7 @@ path = "src/lib.rs"
 
 [dependencies]
 beef = "0.5.0"
-dubp-wallet = { path = "../wallet", default-features = false, version = "0.45.0" }
+dubp-wallet = { path = "../wallet", default-features = false, version = "0.46.0" }
 log = "0.4.*"
 serde = { version = "1.0.*", features = ["derive"] }
 serde_json = "1.0.*"
