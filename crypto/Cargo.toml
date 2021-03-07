@@ -44,6 +44,11 @@ harness = false
 name = "ring_vs_sodium"
 required-features = ["assembly"]
 
+[[bench]]
+harness = false
+name = "vanity"
+required-features = ["assembly"]
+
 [features]
 default = ["assembly"]
 #default = ["assembly", "bip32-ed25519"]
