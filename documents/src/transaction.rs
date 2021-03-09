@@ -115,6 +115,7 @@ pub trait TransactionDocumentTrait<'a>: Sized {
         issuer: Self::PubKey,
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
+        cash_back_pubkey: Option<ed25519::PublicKey>,
     ) -> Vec<Self::RawTx>;
     fn get_inputs(&'a self) -> Self::Inputs;
     fn get_inputs_unlocks(&'a self) -> Self::InputsUnlocks;

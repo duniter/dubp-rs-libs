@@ -71,6 +71,7 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
         issuer: Self::PubKey,
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
+        cash_back_pubkey: Option<ed25519::PublicKey>,
     ) -> Vec<Self::RawTx> {
         let (inputs, inputs_sum) = inputs_with_sum;
         let (user_amount, user_comment) = user_amount_and_comment;
@@ -83,6 +84,7 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
             recipient,
             user_amount,
             user_comment,
+            cash_back_pubkey,
         }
         .gen()
     }

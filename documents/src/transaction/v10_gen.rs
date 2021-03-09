@@ -36,6 +36,7 @@ pub(crate) struct TransactionDocV10SimpleGen {
     pub(crate) recipient: ed25519::PublicKey,
     pub(crate) user_amount: SourceAmount,
     pub(crate) user_comment: String,
+    pub(crate) cash_back_pubkey: Option<ed25519::PublicKey>,
 }
 
 impl TransactionDocV10SimpleGen {
@@ -73,6 +74,7 @@ impl TransactionDocV10SimpleGen {
                 (self.inputs.as_ref(), self.inputs_sum),
                 self.issuer,
                 self.recipient,
+                self.cash_back_pubkey,
             )]
         }
     }
@@ -172,6 +174,7 @@ impl TransactionDocV10ComplexGen {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn gen_final_simple_tx(
     amount: SourceAmount,
     blockstamp: Blockstamp,
@@ -180,6 +183,7 @@ fn gen_final_simple_tx(
     inputs_with_sum: (&[TransactionInputV10], SourceAmount),
     issuer: ed25519::PublicKey,
     recipient: ed25519::PublicKey,
+    cash_back_pubkey: Option<ed25519::PublicKey>,
 ) -> RawTx {
     let (inputs, inputs_sum) = inputs_with_sum;
     let inputs_len = inputs.len();
@@ -201,7 +205,7 @@ fn gen_final_simple_tx(
             TransactionOutputV10 {
                 amount: rest,
                 conditions: UTXOConditions::from(WalletScriptV10::single(WalletConditionV10::Sig(
-                    issuer,
+                    cash_back_pubkey.unwrap_or(issuer),
                 ))),
             },
         ]
@@ -508,6 +512,9 @@ Comment: toto
         let recipient = unwrap!(ed25519::PublicKey::from_base58(
             "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
         ));
+        let cash_back_pubkey = unwrap!(ed25519::PublicKey::from_base58(
+            "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+        ));
 
         let txs = TransactionDocV10SimpleGen {
             blockstamp: Blockstamp::default(),
@@ -518,6 +525,7 @@ Comment: toto
             recipient,
             user_amount: SourceAmount::with_base0(32),
             user_comment: "toto".to_owned(),
+            cash_back_pubkey: Some(cash_back_pubkey),
         }
         .gen();
 
@@ -540,7 +548,7 @@ Unlocks:
 1:SIG(0)
 Outputs:
 32:0:SIG(BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB)
-8:0:SIG(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)
+8:0:SIG(CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC)
 Comment: toto
 "
         );
@@ -569,6 +577,7 @@ Comment: toto
             recipient,
             user_amount: SourceAmount::with_base0(62),
             user_comment: "toto".to_owned(),
+            cash_back_pubkey: None,
         }
         .gen();
 
