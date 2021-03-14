@@ -62,7 +62,6 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
     type Output = TransactionOutputV10;
     type Outputs = &'a [TransactionOutputV10];
     type PubKey = ed25519::PublicKey;
-    type RawTx = String;
 
     fn generate_simple_txs(
         blockstamp: Blockstamp,
@@ -72,7 +71,7 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
         cash_back_pubkey: Option<ed25519::PublicKey>,
-    ) -> Vec<Self::RawTx> {
+    ) -> Vec<Self> {
         let (inputs, inputs_sum) = inputs_with_sum;
         let (user_amount, user_comment) = user_amount_and_comment;
         super::v10_gen::TransactionDocV10SimpleGen {
@@ -524,6 +523,24 @@ pub struct TransactionDocumentV10Builder<'a> {
     pub comment: &'a str,
     /// Transaction hash
     pub hash: Option<Hash>,
+}
+
+impl<'a> TransactionDocumentV10Builder<'a> {
+    pub(crate) fn build_without_sig(self) -> TransactionDocumentV10 {
+        TransactionDocumentV10 {
+            text: Some(self.generate_text()),
+            currency: self.currency.to_string(),
+            blockstamp: self.blockstamp,
+            locktime: self.locktime,
+            issuers: self.issuers.to_smallvec(),
+            inputs: self.inputs.to_vec(),
+            unlocks: self.unlocks.to_vec(),
+            outputs: self.outputs,
+            comment: self.comment.to_owned(),
+            signatures: SmallVec::new(),
+            hash: None,
+        }
+    }
 }
 
 impl<'a> TextDocumentBuilder for TransactionDocumentV10Builder<'a> {

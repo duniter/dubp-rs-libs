@@ -106,7 +106,6 @@ pub trait TransactionDocumentTrait<'a>: Sized {
     type Output: 'a;
     type Outputs: AsRef<[Self::Output]>;
     type PubKey: PublicKey;
-    type RawTx;
 
     fn generate_simple_txs(
         blockstamp: Blockstamp,
@@ -116,7 +115,7 @@ pub trait TransactionDocumentTrait<'a>: Sized {
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
         cash_back_pubkey: Option<ed25519::PublicKey>,
-    ) -> Vec<Self::RawTx>;
+    ) -> Vec<Self>;
     fn get_inputs(&'a self) -> Self::Inputs;
     fn get_inputs_unlocks(&'a self) -> Self::InputsUnlocks;
     fn get_outputs(&'a self) -> Self::Outputs;
