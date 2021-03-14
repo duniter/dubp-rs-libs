@@ -34,6 +34,7 @@ mod stringified_object;
 mod transaction_utils;
 
 // Re-export crates
+pub use dubp_documents;
 pub use dubp_documents::dubp_wallet;
 
 // Prelude
