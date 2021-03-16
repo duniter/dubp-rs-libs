@@ -18,7 +18,7 @@ arrayvec = { version = "0.5.2", features = ["array-sizes-33-128", "array-sizes-1
 base64 = "0.13.0"
 blake3 = "0.3.7"
 bs58 = "0.4.0"
-byteorder = "1.4.2"
+byteorder = "1.3.4"
 curve25519-dalek = { version = "3.0.2", optional = true }
 cryptoxide = { version = "0.3.2", optional = true }
 ed25519-bip32 = { version = "0.3.2", optional = true }
