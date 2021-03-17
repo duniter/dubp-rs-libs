@@ -238,7 +238,7 @@ impl PublicKeyWithChainCode {
             derivation_index.into_u32(),
         )?;
         Ok(Self {
-            public_key: super::PublicKey::from_data(xpub_derived.public_key()),
+            public_key: super::PublicKey::from_32_bytes_array(xpub_derived.public_key()),
             chain_code: xpub_derived.chain_code(),
         })
     }
@@ -310,7 +310,9 @@ impl KeyPairTrait for KeyPair {
     }
 
     fn public_key(&self) -> super::PublicKey {
-        super::PublicKey::from_data(cryptoxide::ed25519::to_public(&self.extended_secret_key))
+        super::PublicKey::from_32_bytes_array(cryptoxide::ed25519::to_public(
+            &self.extended_secret_key,
+        ))
     }
 
     fn verify(
@@ -338,7 +340,9 @@ impl super::super::Signator for Signator {
     type PublicKey = super::PublicKey;
 
     fn public_key(&self) -> Self::PublicKey {
-        super::PublicKey::from_data(cryptoxide::ed25519::to_public(&self.extended_secret_key))
+        super::PublicKey::from_32_bytes_array(cryptoxide::ed25519::to_public(
+            &self.extended_secret_key,
+        ))
     }
 
     fn sign(&self, message: &[u8]) -> Self::Signature {
