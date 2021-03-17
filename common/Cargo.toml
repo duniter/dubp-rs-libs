@@ -24,12 +24,15 @@ bincode = "1.2.0"
 unwrap = "1.2.1"
 
 [features]
-default = ["crypto_assembly"]
 
-crypto_assembly = ["dup-crypto/assembly"]
+# meta-feature for "standard" clients (gcli, gecko, etc)
+client = ["dup-crypto/client"]
+
+# meta-feature for duniter
+duniter = ["dup-crypto/duniter"]
+
 crypto_dewif = ["dup-crypto/dewif"]
 crypto_x25519 = ["dup-crypto/x25519"]
 crypto_private_message = ["dup-crypto/private_message"]
 crypto_pubkey_check = ["dup-crypto/pubkey_check"]
-crypto_pure_rust = ["dup-crypto/pure_rust"]
 crypto_scrypt = ["dup-crypto/scrypt"]

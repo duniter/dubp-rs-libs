@@ -18,7 +18,7 @@ dubp-common = { path = "../common", default-features = false, version = "0.47.1"
 serde = { version = "1.0.*", features = ["derive"] }
 smallvec = { version = "1.6.1", features = ["serde"] }
 thiserror = "1.0.20"
-zerocopy = "0.3.0"
+zerocopy = "0.3.0" 
 
 [dev-dependencies]
 maplit = "1.0.2"
@@ -26,8 +26,11 @@ pretty_assertions = "0.6.1"
 unwrap = "1.2.1"
 
 [features]
-default = ["crypto_assembly"]
 
-crypto_assembly = ["dubp-common/crypto_assembly"]
+# meta-feature for "standard" clients (gcli, gecko, etc)
+client = ["dubp-common/client"]
+
+# meta-feature for duniter
+duniter = ["dubp-common/duniter"]
+
 crypto_scrypt = ["dubp-common/crypto_scrypt"]
-crypto_pure_rust = ["dubp-common/crypto_pure_rust"]

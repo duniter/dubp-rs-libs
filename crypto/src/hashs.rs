@@ -39,9 +39,9 @@ pub use hash64::Hash64;
 
 use crate::bases::*;
 use crate::rand::UnspecifiedRandError;
-#[cfg(not(feature = "assembly"))]
+#[cfg(target_arch = "wasm32")]
 use cryptoxide::{digest::Digest, sha2::Sha256};
-#[cfg(feature = "assembly")]
+#[cfg(not(target_arch = "wasm32"))]
 use ring::digest;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -111,7 +111,7 @@ impl Hash {
         Ok(Hash(random_bytes))
     }
 
-    #[cfg(not(feature = "assembly"))]
+    #[cfg(target_arch = "wasm32")]
     #[cfg(not(tarpaulin_include))]
     /// Compute SHA256 hash of any binary datas
     pub fn compute(datas: &[u8]) -> Hash {
@@ -121,7 +121,7 @@ impl Hash {
         hasher.result(&mut hash_buffer);
         Hash(hash_buffer)
     }
-    #[cfg(feature = "assembly")]
+    #[cfg(not(target_arch = "wasm32"))]
     /// Compute SHA256 hash of any binary datas
     pub fn compute(datas: &[u8]) -> Hash {
         let mut hash_buffer = [0u8; 32];
@@ -129,7 +129,8 @@ impl Hash {
         Hash(hash_buffer)
     }
 
-    #[cfg(not(feature = "assembly"))]
+    #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     /// Compute SHA256 hash of any binary data on several parts
     pub fn compute_multipart(data_parts: &[&[u8]]) -> Hash {
         let mut hasher = Sha256::new();
@@ -140,7 +141,7 @@ impl Hash {
         hasher.result(&mut hash_buffer);
         Hash(hash_buffer)
     }
-    #[cfg(feature = "assembly")]
+    #[cfg(not(target_arch = "wasm32"))]
     /// Compute SHA256 hash of any binary data on several parts
     pub fn compute_multipart(data_parts: &[&[u8]]) -> Hash {
         let mut ctx = digest::Context::new(&digest::SHA256);

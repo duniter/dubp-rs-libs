@@ -35,9 +35,9 @@
 
 use crate::bases::*;
 use crate::rand::UnspecifiedRandError;
-#[cfg(not(feature = "assembly"))]
+#[cfg(target_arch = "wasm32")]
 use cryptoxide::{digest::Digest, sha2::Sha512};
-#[cfg(feature = "assembly")]
+#[cfg(not(target_arch = "wasm32"))]
 use ring::digest;
 use std::{
     fmt::{Debug, Display, Error, Formatter},
@@ -97,7 +97,8 @@ impl Hash64 {
         Ok(Hash64(random_bytes))
     }
 
-    #[cfg(not(feature = "assembly"))]
+    #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     /// Compute SHA512 hash of any binary data
     pub fn sha512(data: &[u8]) -> Hash64 {
         let mut hasher = Sha512::new();
@@ -106,8 +107,7 @@ impl Hash64 {
         hasher.result(&mut hash_buffer);
         Hash64(hash_buffer)
     }
-    #[cfg(feature = "assembly")]
-    #[cfg(not(tarpaulin_include))]
+    #[cfg(not(target_arch = "wasm32"))]
     /// Compute SHA512  hash of any binary data
     pub fn sha512(datas: &[u8]) -> Hash64 {
         let mut hash_buffer = [0u8; 64];
@@ -115,7 +115,8 @@ impl Hash64 {
         Hash64(hash_buffer)
     }
 
-    #[cfg(not(feature = "assembly"))]
+    #[cfg(target_arch = "wasm32")]
+    #[cfg(not(tarpaulin_include))]
     /// Compute SHA512 hash of any binary data on several parts
     pub fn sha512_multipart(data_parts: &[&[u8]]) -> Hash64 {
         let mut hasher = Sha512::new();
@@ -126,7 +127,7 @@ impl Hash64 {
         hasher.result(&mut hash_buffer);
         Hash64(hash_buffer)
     }
-    #[cfg(feature = "assembly")]
+    #[cfg(not(target_arch = "wasm32"))]
     /// Compute SHA512 hash of any binary data on several parts
     pub fn sha512_multipart(data_parts: &[&[u8]]) -> Hash64 {
         let mut ctx = digest::Context::new(&digest::SHA512);

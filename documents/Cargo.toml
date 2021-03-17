@@ -20,14 +20,17 @@ serde = { version = "1.0.*", features = ["derive"] }
 serde_json = "1.0.*"
 thiserror = "1.0.20"
 
-[dev-dependencies]
+[dev-dependencies] 
 maplit = "1.0.2"
 pretty_assertions = "0.6.1"
 unwrap = "1.2.1"
 
 [features]
-default = ["crypto_assembly"]
 
-crypto_assembly = ["dubp-wallet/crypto_assembly"]
+# meta-feature for "standard" clients (gcli, gecko, etc)
+client = ["dubp-wallet/client"]
+
+# meta-feature for duniter
+duniter = ["dubp-wallet/duniter"]
+
 crypto_scrypt = ["dubp-wallet/crypto_scrypt"]
-crypto_pure_rust = ["dubp-wallet/crypto_pure_rust"]

@@ -20,15 +20,20 @@ blake3 = "0.3.7"
 bs58 = "0.4.0"
 byteorder = "1.3.4"
 curve25519-dalek = { version = "3.0.2", optional = true }
-cryptoxide = { version = "0.3.2", optional = true }
 ed25519-bip32 = { version = "0.3.2", optional = true }
 getrandom = { version = "0.2.2" }
 once_cell = { version = "1.5.2", optional = true, default-features = false, features = ["std"] }
-ring = { version = "0.16.20", optional = true }
 serde = { version = "1.0.123", features = ["derive"] }
 thiserror = "1.0.24"
 zerocopy = "0.3.0"
 zeroize = { version = "1.2.0", features = ["zeroize_derive"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+cryptoxide = { version = "0.3.2", optional = true }
+ring = "0.16.20"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+cryptoxide = "0.3.2"
 
 [dev-dependencies]
 bincode = "1.3.1"
@@ -42,26 +47,25 @@ criterion = { version = "0.3.4" }
 [[bench]]
 harness = false
 name = "ring_vs_sodium"
-required-features = ["assembly"]
 
 [[bench]]
 harness = false
 name = "vanity"
-required-features = ["assembly"]
 
 [features]
-default = ["assembly"]
-#default = ["assembly", "bip32-ed25519"]
-#default = ["assembly", "bip32-ed25519", "dewif", "private_message", "pubkey_check", "mnemonic"]
 
-assembly = ["ring"]
+# meta-feature for "standard" clients (gcli, gecko, etc)
+client = ["bip32-ed25519", "dewif", "mnemonic", "mnemonic_french", "mnemonic_spanish"]
+
+# meta-feature for duniter
+duniter = ["scrypt"]
+
 bip32-ed25519 = ["arrayvec", "cryptoxide", "ed25519-bip32"]
 dewif = ["aes", "arrayvec", "scrypt"]
 x25519 = ["curve25519-dalek", "pubkey_check"]
 mnemonic = ["once_cell"]
 private_message = ["arrayvec", "x25519"]
 pubkey_check = ["curve25519-dalek"]
-pure_rust = ["cryptoxide"]
 scrypt = []
 
 # mnemonic languages features (English is the default language, so always included)
