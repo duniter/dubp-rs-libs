@@ -338,8 +338,6 @@ impl PublicKey for PubKeyEnum {
 
 /// Define the operations that can be performed on a cryptographic key pair.
 pub trait KeyPair: Clone + Display + Debug + PartialEq + Eq {
-    /// PublicKey type of associated cryptosystem.
-    type PublicKey: PublicKey;
     /// Seed
     type Seed: AsRef<[u8]>;
     /// Signator type of associated cryptosystem.
@@ -352,13 +350,13 @@ pub trait KeyPair: Clone + Display + Debug + PartialEq + Eq {
     fn from_seed(seed: Self::Seed) -> Self;
 
     /// Get `PublicKey`
-    fn public_key(&self) -> Self::PublicKey;
+    fn public_key(&self) -> <Self::Signator as Signator>::PublicKey;
 
     /// Verify a signature with public key.
     fn verify(
         &self,
         message: &[u8],
-        signature: &<Self::Signator as Signator>::Signature,
+        signature: &<<Self::Signator as Signator>::PublicKey as PublicKey>::Signature,
     ) -> Result<(), SigError>;
 
     /// Upcast to KeyPairEnum
@@ -367,8 +365,6 @@ pub trait KeyPair: Clone + Display + Debug + PartialEq + Eq {
 
 /// Define the operations that can be performed on a cryptographic signator.
 pub trait Signator: Debug {
-    /// Signature type of associated cryptosystem.
-    type Signature: Signature;
     /// PublicKey type of associated cryptosystem.
     type PublicKey: PublicKey;
 
@@ -376,7 +372,7 @@ pub trait Signator: Debug {
     fn public_key(&self) -> Self::PublicKey;
 
     /// Sign a message with private key encasuled in signator.
-    fn sign(&self, message: &[u8]) -> Self::Signature;
+    fn sign(&self, message: &[u8]) -> <Self::PublicKey as PublicKey>::Signature;
 }
 
 /// Store a cryptographic key pair.
@@ -415,7 +411,6 @@ impl Display for KeyPairEnum {
 }
 
 impl KeyPair for KeyPairEnum {
-    type PublicKey = PubKeyEnum;
     type Seed = Seed32;
     type Signator = SignatorEnum;
 
@@ -481,7 +476,6 @@ pub enum SignatorEnum {
 
 impl Signator for SignatorEnum {
     type PublicKey = PubKeyEnum;
-    type Signature = Sig;
 
     fn public_key(&self) -> Self::PublicKey {
         match self {

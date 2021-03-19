@@ -84,8 +84,8 @@ impl IdentityDocumentV10 {
 impl Document for IdentityDocumentV10 {
     type PublicKey = ed25519::PublicKey;
 
-    fn version(&self) -> usize {
-        10
+    fn as_bytes(&self) -> BeefCow<[u8]> {
+        BeefCow::borrowed(self.as_text().as_bytes())
     }
 
     fn currency(&self) -> &str {
@@ -104,8 +104,8 @@ impl Document for IdentityDocumentV10 {
         svec![self.signature]
     }
 
-    fn as_bytes(&self) -> BeefCow<[u8]> {
-        BeefCow::borrowed(self.as_text().as_bytes())
+    fn version(&self) -> usize {
+        10
     }
 }
 

@@ -105,7 +105,7 @@ pub trait DubpBlockTrait {
     /// Sign block
     fn sign(&mut self, signator: &Self::Signator) -> Result<(), SignError>;
     /// Get block signature
-    fn signature(&self) -> <Self::Signator as Signator>::Signature;
+    fn signature(&self) -> <<Self::Signator as Signator>::PublicKey as PublicKey>::Signature;
     /// Get unit base
     fn unit_base(&self) -> usize;
 }

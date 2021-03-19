@@ -17,7 +17,7 @@
 
 use super::{Currency, ExpectedCurrency};
 use crate::keys::ed25519::{Ed25519KeyPair, PublicKey, PUBKEY_DATAS_SIZE_IN_BYTES};
-use crate::keys::{KeyPair, KeyPairEnum};
+use crate::keys::{KeyPair, KeyPairEnum, Signator};
 use crate::seeds::{Seed32, SEED_32_SIZE_IN_BYTES};
 use arrayvec::ArrayVec;
 use byteorder::ByteOrder;
@@ -211,9 +211,11 @@ fn read_dewif_v2(bytes: &mut [u8], passphrase: &str) -> Result<KeyPairsIter, Dew
     crate::aes256::decrypt::decrypt_8_blocks(&cipher, bytes);
 
     array_keypairs.push(KeyPairEnum::Ed25519(bytes_to_checked_keypair::<
+        _,
         Ed25519KeyPair,
     >(&bytes[..64])?));
     array_keypairs.push(KeyPairEnum::Ed25519(bytes_to_checked_keypair::<
+        _,
         Ed25519KeyPair,
     >(&bytes[64..])?));
     Ok(array_keypairs.into_iter())
@@ -256,7 +258,7 @@ fn read_dewif_v4(
     crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[1..], super::V3_AES_BLOCKS_COUNT);
 
     // Get checked keypair
-    bytes_to_checked_keypair::<crate::keys::ed25519::bip32::KeyPair>(&bytes[1..])
+    bytes_to_checked_keypair::<_, crate::keys::ed25519::bip32::KeyPair>(&bytes[1..])
 }
 
 #[cfg(feature = "bip32-ed25519")]
@@ -277,7 +279,10 @@ pub(super) fn get_dewif_v4_seed_unchecked(bytes: &mut [u8], passphrase: &str) ->
     )
 }
 
-fn bytes_to_checked_keypair<KP: KeyPair<Seed = Seed32, PublicKey = PublicKey>>(
+fn bytes_to_checked_keypair<
+    S: Signator<PublicKey = PublicKey>,
+    KP: KeyPair<Seed = Seed32, Signator = S>,
+>(
     bytes: &[u8],
 ) -> Result<KP, DewifReadError> {
     // Wrap bytes into Seed32 and PublicKey

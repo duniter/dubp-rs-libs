@@ -70,7 +70,7 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
         issuer: Self::PubKey,
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
-        cash_back_pubkey: Option<ed25519::PublicKey>,
+        cash_back_pubkey: Option<Self::PubKey>,
     ) -> Vec<Self> {
         let (inputs, inputs_sum) = inputs_with_sum;
         let (user_amount, user_comment) = user_amount_and_comment;

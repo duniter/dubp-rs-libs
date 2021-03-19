@@ -97,9 +97,7 @@ pub trait DocumentBuilder {
     type Document: Document;
 
     /// Type of the signator signing the documents.
-    type Signator: Signator<
-        Signature = <<Self::Document as Document>::PublicKey as PublicKey>::Signature,
-    >;
+    type Signator: Signator<PublicKey = <Self::Document as Document>::PublicKey>;
 
     /// Build a document and sign it with the private key.
     fn build_and_sign(self, signators: Vec<Self::Signator>) -> Self::Document;

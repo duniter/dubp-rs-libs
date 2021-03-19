@@ -286,7 +286,6 @@ impl KeyPair {
 }
 
 impl KeyPairTrait for KeyPair {
-    type PublicKey = super::PublicKey;
     type Seed = Seed32;
     type Signator = Signator;
 
@@ -336,7 +335,6 @@ pub struct Signator {
 }
 
 impl super::super::Signator for Signator {
-    type Signature = super::Signature;
     type PublicKey = super::PublicKey;
 
     fn public_key(&self) -> Self::PublicKey {
@@ -345,7 +343,7 @@ impl super::super::Signator for Signator {
         ))
     }
 
-    fn sign(&self, message: &[u8]) -> Self::Signature {
+    fn sign(&self, message: &[u8]) -> <Self::PublicKey as super::super::PublicKey>::Signature {
         super::Signature(cryptoxide::ed25519::signature_extended(
             message,
             &self.extended_secret_key,

@@ -383,7 +383,6 @@ impl Debug for Signator {
 pub struct Signator(RingKeyPair);
 
 impl super::Signator for Signator {
-    type Signature = Signature;
     type PublicKey = PublicKey;
 
     #[cfg(target_arch = "wasm32")]
@@ -397,12 +396,12 @@ impl super::Signator for Signator {
     }
     #[cfg(target_arch = "wasm32")]
     #[cfg(not(tarpaulin_include))]
-    fn sign(&self, message: &[u8]) -> Self::Signature {
+    fn sign(&self, message: &[u8]) -> <Self::PublicKey as super::PublicKey>::Signature {
         let sig_bytes = cryptoxide::ed25519::signature(message, &self.secret_key[..]);
         Signature(sig_bytes)
     }
     #[cfg(not(target_arch = "wasm32"))]
-    fn sign(&self, message: &[u8]) -> Self::Signature {
+    fn sign(&self, message: &[u8]) -> <Self::PublicKey as super::PublicKey>::Signature {
         let mut sig_bytes = [0u8; 64];
         sig_bytes.copy_from_slice(self.0.sign(message).as_ref());
         Signature(sig_bytes)
@@ -442,7 +441,6 @@ impl PartialEq<Ed25519KeyPair> for Ed25519KeyPair {
 }
 
 impl super::KeyPair for Ed25519KeyPair {
-    type PublicKey = PublicKey;
     type Seed = Seed32;
     type Signator = Signator;
 
@@ -474,7 +472,7 @@ impl super::KeyPair for Ed25519KeyPair {
     fn verify(
         &self,
         message: &[u8],
-        signature: &<Self::Signator as super::Signator>::Signature,
+        signature: &<<Self::Signator as super::Signator>::PublicKey as super::PublicKey>::Signature,
     ) -> Result<(), SigError> {
         self.public_key().verify(message, signature)
     }
