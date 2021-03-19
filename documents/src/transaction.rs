@@ -23,6 +23,7 @@ use crate::*;
 pub use v10::{
     TransactionDocumentV10, TransactionDocumentV10Builder, TransactionDocumentV10Stringified,
     TransactionInputUnlocksV10, TransactionInputV10, TransactionOutputV10,
+    UnsignedTransactionDocumentV10,
 };
 
 /// Wrap an utxo conditions
@@ -97,6 +98,20 @@ pub enum GenTxError {
     TooManySignersOrRecipients,
 }
 
+pub trait UnsignedTransactionDocumentTrait<'a>: Sized {
+    type PubKey: PublicKey;
+    type SignedDoc: TransactionDocumentTrait<'a>;
+
+    /// Get transaction raw text
+    fn as_text(&self) -> &str;
+
+    /// Sign the document
+    fn sign<S: Signator<PublicKey = Self::PubKey>>(
+        self,
+        signator: &S,
+    ) -> Result<SignedOrUnsignedDocument<Self::SignedDoc, Self>, TransactionSignErr>;
+}
+
 pub trait TransactionDocumentTrait<'a>: Sized {
     type Address;
     type Input: 'a;
@@ -106,6 +121,7 @@ pub trait TransactionDocumentTrait<'a>: Sized {
     type Output: 'a;
     type Outputs: AsRef<[Self::Output]>;
     type PubKey: PublicKey;
+    type UnsignedDoc: UnsignedTransactionDocumentTrait<'a>;
 
     fn generate_simple_txs(
         blockstamp: Blockstamp,
@@ -115,11 +131,23 @@ pub trait TransactionDocumentTrait<'a>: Sized {
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
         cash_back_pubkey: Option<Self::PubKey>,
-    ) -> Vec<Self>;
+    ) -> Vec<Self::UnsignedDoc>;
     fn get_inputs(&'a self) -> Self::Inputs;
     fn get_inputs_unlocks(&'a self) -> Self::InputsUnlocks;
     fn get_outputs(&'a self) -> Self::Outputs;
     fn verify(&self, expected_currency: Option<&str>) -> Result<(), TxVerifyErr>;
+}
+
+/// List of possible errors when signing a transaction document.
+#[derive(Debug, Error, Eq, PartialEq)]
+pub enum TransactionSignErr {
+    /// The signator's public key is not in the transaction's issuers
+    #[error("The signator's public key is not in the transaction's issuers")]
+    InvalidSignator,
+    /// Signatures don't match.
+    /// List of mismatching pairs indexes.
+    #[error("Signatures don\'t match: {0:?}")]
+    InvalidSignatures(HashMap<usize, SigError>),
 }
 
 /// Wrap a Transaction document.

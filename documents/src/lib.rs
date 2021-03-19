@@ -50,7 +50,9 @@ pub mod prelude {
 
 // Crate imports
 pub(crate) use crate::prelude::*;
-pub(crate) use crate::transaction::{TransactionDocumentTrait, UTXOConditions};
+pub(crate) use crate::transaction::{
+    TransactionDocumentTrait, TransactionSignErr, UTXOConditions, UnsignedTransactionDocumentTrait,
+};
 pub(crate) use beef::lean::Cow as BeefCow;
 pub(crate) use dubp_common::crypto::bases::b58::ToBase58;
 pub(crate) use dubp_common::crypto::hashs::Hash;
@@ -64,6 +66,13 @@ pub(crate) use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     fmt::Debug,
 };
+
+/// Signed or unsigned document
+#[derive(Debug)]
+pub enum SignedOrUnsignedDocument<S, U> {
+    Signed(S),
+    Unsigned(U),
+}
 
 /// User document of DUBP (DUniter Blockhain Protocol)
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

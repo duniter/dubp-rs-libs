@@ -15,43 +15,54 @@
 
 //! Wrappers around Transaction documents.
 
+mod builder;
+mod input_proof_output;
+mod stringified;
+mod unsigned;
+
+pub use builder::TransactionDocumentV10Builder;
+pub use input_proof_output::{
+    TransactionInputUnlocksV10, TransactionInputV10, TransactionOutputV10,
+};
+pub use stringified::TransactionDocumentV10Stringified;
+pub use unsigned::UnsignedTransactionDocumentV10;
+
 use crate::*;
 
-/// Wrap a transaction input
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct TransactionInputV10 {
-    pub amount: SourceAmount,
-    pub id: SourceIdV10,
-}
-
-impl ToString for TransactionInputV10 {
-    fn to_string(&self) -> String {
-        match self.id {
-            SourceIdV10::Ud(UdSourceIdV10 {
-                issuer,
-                block_number,
-            }) => format!(
-                "{}:{}:D:{}:{}",
-                self.amount.amount(),
-                self.amount.base(),
-                issuer,
-                block_number.0
-            ),
-            SourceIdV10::Utxo(UtxoIdV10 {
-                tx_hash,
-                output_index,
-            }) => format!(
-                "{}:{}:T:{}:{}",
-                self.amount.amount(),
-                self.amount.base(),
-                tx_hash,
-                output_index
-            ),
-        }
-    }
-}
-
 const TX_V10_MAX_LINES: usize = 100;
+
+/// Wrap a Transaction document.
+///
+/// Must be created by parsing a text document or using a builder.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
+pub struct TransactionDocumentV10 {
+    /// Document as text.
+    ///
+    /// Is used to check signatures, and other values
+    /// must be extracted from it.
+    text: Option<String>,
+
+    /// Currency.
+    currency: String,
+    /// Blockstamp
+    blockstamp: Blockstamp,
+    /// Locktime
+    locktime: u64,
+    /// Document issuers.
+    issuers: SmallVec<[ed25519::PublicKey; 1]>,
+    /// Transaction inputs.
+    inputs: Vec<TransactionInputV10>,
+    /// Inputs unlocks.
+    unlocks: Vec<TransactionInputUnlocksV10>,
+    /// Transaction outputs.
+    outputs: SmallVec<[TransactionOutputV10; 2]>,
+    /// Transaction comment
+    comment: String,
+    /// Document signatures.
+    signatures: SmallVec<[ed25519::Signature; 1]>,
+    /// Transaction hash
+    hash: Option<Hash>,
+}
 
 impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
     type Address = WalletScriptV10;
@@ -62,6 +73,7 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
     type Output = TransactionOutputV10;
     type Outputs = &'a [TransactionOutputV10];
     type PubKey = ed25519::PublicKey;
+    type UnsignedDoc = UnsignedTransactionDocumentV10;
 
     fn generate_simple_txs(
         blockstamp: Blockstamp,
@@ -71,7 +83,7 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
         recipient: Self::PubKey,
         user_amount_and_comment: (SourceAmount, String),
         cash_back_pubkey: Option<Self::PubKey>,
-    ) -> Vec<Self> {
+    ) -> Vec<Self::UnsignedDoc> {
         let (inputs, inputs_sum) = inputs_with_sum;
         let (user_amount, user_comment) = user_amount_and_comment;
         super::v10_gen::TransactionDocV10SimpleGen {
@@ -96,7 +108,6 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
     fn get_outputs(&'a self) -> Self::Outputs {
         &self.outputs
     }
-
     fn verify(&self, expected_currency_opt: Option<&str>) -> Result<(), super::TxVerifyErr> {
         if let Some(expected_currency) = expected_currency_opt {
             if self.currency != expected_currency {
@@ -141,168 +152,6 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
         }
 
         Ok(())
-    }
-}
-
-/// Wrap a transaction unlocks input
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct TransactionInputUnlocksV10 {
-    /// Input index
-    pub index: usize,
-    /// List of proof to unlock funds
-    pub unlocks: SmallVec<[WalletUnlockProofV10; 1]>,
-}
-
-impl Default for TransactionInputUnlocksV10 {
-    fn default() -> Self {
-        TransactionInputUnlocksV10 {
-            index: 0,
-            unlocks: svec![WalletUnlockProofV10::Sig(0)],
-        }
-    }
-}
-
-impl TransactionInputUnlocksV10 {
-    pub fn single_index(i: usize) -> Self {
-        TransactionInputUnlocksV10 {
-            index: i,
-            unlocks: svec![WalletUnlockProofV10::Sig(0)],
-        }
-    }
-}
-
-impl ToString for TransactionInputUnlocksV10 {
-    fn to_string(&self) -> String {
-        let mut result: String = format!("{}:", self.index);
-        for unlock in &self.unlocks {
-            result.push_str(&format!("{} ", unlock.to_string()));
-        }
-        let new_size = result.len() - 1;
-        result.truncate(new_size);
-        result
-    }
-}
-
-/// Wrap a transaction ouput
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct TransactionOutputV10 {
-    /// Amount
-    pub amount: SourceAmount,
-    /// List of conditions for consum this output
-    pub conditions: UTXOConditions,
-}
-
-impl TransactionOutputV10 {
-    /// Lightens the TransactionOutputV10 (for example to store it while minimizing the space required)
-    fn reduce(&mut self) {
-        self.conditions.reduce()
-    }
-    /// Check validity of this output
-    pub fn check(&self) -> bool {
-        self.conditions.check()
-    }
-}
-
-impl ToString for TransactionOutputV10 {
-    fn to_string(&self) -> String {
-        format!(
-            "{}:{}:{}",
-            self.amount.amount(),
-            self.amount.base(),
-            self.conditions.to_string()
-        )
-    }
-}
-/// Wrap a Transaction document.
-///
-/// Must be created by parsing a text document or using a builder.
-#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct TransactionDocumentV10 {
-    /// Document as text.
-    ///
-    /// Is used to check signatures, and other values
-    /// must be extracted from it.
-    text: Option<String>,
-
-    /// Currency.
-    currency: String,
-    /// Blockstamp
-    blockstamp: Blockstamp,
-    /// Locktime
-    locktime: u64,
-    /// Document issuers.
-    issuers: SmallVec<[ed25519::PublicKey; 1]>,
-    /// Transaction inputs.
-    inputs: Vec<TransactionInputV10>,
-    /// Inputs unlocks.
-    unlocks: Vec<TransactionInputUnlocksV10>,
-    /// Transaction outputs.
-    outputs: SmallVec<[TransactionOutputV10; 2]>,
-    /// Transaction comment
-    comment: String,
-    /// Document signatures.
-    signatures: SmallVec<[ed25519::Signature; 1]>,
-    /// Transaction hash
-    hash: Option<Hash>,
-}
-
-#[derive(Clone, Debug, Deserialize, Hash, Serialize, PartialEq, Eq)]
-/// Transaction document stringifed
-pub struct TransactionDocumentV10Stringified {
-    /// Currency.
-    pub currency: String,
-    /// Blockstamp
-    pub blockstamp: String,
-    /// Locktime
-    pub locktime: u64,
-    /// Document issuers.
-    pub issuers: Vec<String>,
-    /// Transaction inputs.
-    pub inputs: Vec<String>,
-    /// Inputs unlocks.
-    pub unlocks: Vec<String>,
-    /// Transaction outputs.
-    pub outputs: Vec<String>,
-    /// Transaction comment
-    pub comment: String,
-    /// Document signatures
-    pub signatures: Vec<String>,
-    /// Transaction hash
-    pub hash: Option<String>,
-}
-
-impl ToStringObject for TransactionDocumentV10 {
-    type StringObject = TransactionDocumentV10Stringified;
-
-    fn to_string_object(&self) -> TransactionDocumentV10Stringified {
-        TransactionDocumentV10Stringified {
-            currency: self.currency.clone(),
-            blockstamp: format!("{}", self.blockstamp),
-            locktime: self.locktime,
-            issuers: self.issuers.iter().map(|p| format!("{}", p)).collect(),
-            inputs: self
-                .inputs
-                .iter()
-                .map(TransactionInputV10::to_string)
-                .collect(),
-            unlocks: self
-                .unlocks
-                .iter()
-                .map(TransactionInputUnlocksV10::to_string)
-                .collect(),
-            outputs: self
-                .outputs
-                .iter()
-                .map(TransactionOutputV10::to_string)
-                .collect(),
-            comment: self.comment.clone(),
-            signatures: self.signatures.iter().map(|s| format!("{}", s)).collect(),
-            hash: if let Some(hash) = self.hash {
-                Some(hash.to_string())
-            } else {
-                Some(self.compute_hash().to_hex())
-            },
-        }
     }
 }
 
@@ -502,114 +351,6 @@ impl TextDocument for TransactionDocumentV10 {
     }
 }
 
-/// Transaction document builder.
-#[derive(Debug, Clone)]
-pub struct TransactionDocumentV10Builder<'a> {
-    /// Document currency.
-    pub currency: &'a str,
-    /// Reference blockstamp.
-    pub blockstamp: Blockstamp,
-    /// Locktime
-    pub locktime: u64,
-    /// Transaction Document issuers.
-    pub issuers: SmallVec<[ed25519::PublicKey; 1]>,
-    /// Transaction inputs.
-    pub inputs: &'a [TransactionInputV10],
-    /// Inputs unlocks.
-    pub unlocks: &'a [TransactionInputUnlocksV10],
-    /// Transaction ouputs.
-    pub outputs: SmallVec<[TransactionOutputV10; 2]>,
-    /// Transaction comment
-    pub comment: &'a str,
-    /// Transaction hash
-    pub hash: Option<Hash>,
-}
-
-impl<'a> TransactionDocumentV10Builder<'a> {
-    pub(crate) fn build_without_sig(self) -> TransactionDocumentV10 {
-        TransactionDocumentV10 {
-            text: Some(self.generate_text()),
-            currency: self.currency.to_string(),
-            blockstamp: self.blockstamp,
-            locktime: self.locktime,
-            issuers: self.issuers.to_smallvec(),
-            inputs: self.inputs.to_vec(),
-            unlocks: self.unlocks.to_vec(),
-            outputs: self.outputs,
-            comment: self.comment.to_owned(),
-            signatures: SmallVec::new(),
-            hash: None,
-        }
-    }
-}
-
-impl<'a> TextDocumentBuilder for TransactionDocumentV10Builder<'a> {
-    type Document = TransactionDocumentV10;
-    type Signator = ed25519::Signator;
-
-    fn build_with_text_and_sigs(
-        self,
-        text: String,
-        signatures: SmallVec<
-            [<<Self::Document as Document>::PublicKey as PublicKey>::Signature; 1],
-        >,
-    ) -> TransactionDocumentV10 {
-        TransactionDocumentV10 {
-            text: Some(text),
-            currency: self.currency.to_string(),
-            blockstamp: self.blockstamp,
-            locktime: self.locktime,
-            issuers: self.issuers.to_smallvec(),
-            inputs: self.inputs.to_vec(),
-            unlocks: self.unlocks.to_vec(),
-            outputs: self.outputs,
-            comment: self.comment.to_owned(),
-            signatures,
-            hash: self.hash,
-        }
-    }
-
-    fn generate_text(&self) -> String {
-        let mut issuers_string: String = "".to_owned();
-        let mut inputs_string: String = "".to_owned();
-        let mut unlocks_string: String = "".to_owned();
-        let mut outputs_string: String = "".to_owned();
-        for issuer in &self.issuers {
-            issuers_string.push_str(&format!("{}\n", issuer.to_string()))
-        }
-        for input in self.inputs {
-            inputs_string.push_str(&format!("{}\n", input.to_string()))
-        }
-        for unlock in self.unlocks {
-            unlocks_string.push_str(&format!("{}\n", unlock.to_string()))
-        }
-        for output in &self.outputs {
-            outputs_string.push_str(&format!("{}\n", output.to_string()))
-        }
-        format!(
-            "Version: 10
-Type: Transaction
-Currency: {currency}
-Blockstamp: {blockstamp}
-Locktime: {locktime}
-Issuers:
-{issuers}Inputs:
-{inputs}Unlocks:
-{unlocks}Outputs:
-{outputs}Comment: {comment}
-",
-            currency = self.currency,
-            blockstamp = self.blockstamp,
-            locktime = self.locktime,
-            issuers = issuers_string,
-            inputs = inputs_string,
-            unlocks = unlocks_string,
-            outputs = outputs_string,
-            comment = self.comment,
-        )
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::super::tests::tx_output_v10;
@@ -733,5 +474,31 @@ mod tests {
         assert!(TransactionDocumentV10::verify_comment("sntsrttfsrt"));
         assert!(!TransactionDocumentV10::verify_comment("sntsrt,tfsrt"));
         assert!(TransactionDocumentV10::verify_comment("sntsrt|tfsrt"));
+    }
+
+    #[test]
+    fn tx_sign() -> Result<(), TransactionSignErr> {
+        let signator =
+            ed25519::KeyPairFromSeed32Generator::generate(Seed32::default()).generate_signator();
+
+        let tx1 = TransactionDocumentV10Builder {
+            currency: "test",
+            blockstamp: Blockstamp::default(),
+            locktime: 0,
+            issuers: svec![signator.public_key()],
+            inputs: &[],
+            unlocks: &[],
+            outputs: SmallVec::new(),
+            comment: "",
+            hash: None,
+        }
+        .build_unsigned();
+
+        if let SignedOrUnsignedDocument::Signed(tx1) = tx1.sign(&signator)? {
+            assert!(tx1.verify_signatures().is_ok());
+            Ok(())
+        } else {
+            panic!("tx1.sign should return SignedOrUnsignedDocument::Signed(_)");
+        }
     }
 }

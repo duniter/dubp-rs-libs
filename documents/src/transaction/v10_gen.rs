@@ -38,7 +38,7 @@ pub(crate) struct TransactionDocV10SimpleGen {
 }
 
 impl TransactionDocV10SimpleGen {
-    pub(crate) fn gen(self) -> Vec<TransactionDocumentV10> {
+    pub(crate) fn gen(self) -> Vec<UnsignedTransactionDocumentV10> {
         let inputs_count = self.inputs.len();
         if inputs_count > MAX_INPUTS_PER_SIMPLE_TX {
             /*let (mut txs, final_changes_sources) = */
@@ -101,7 +101,13 @@ pub struct TransactionDocV10ComplexGen {
 impl TransactionDocV10ComplexGen {
     pub fn gen(
         self,
-    ) -> Result<(Option<TransactionDocumentV10>, Vec<TransactionDocumentV10>), GenTxError> {
+    ) -> Result<
+        (
+            Option<UnsignedTransactionDocumentV10>,
+            Vec<UnsignedTransactionDocumentV10>,
+        ),
+        GenTxError,
+    > {
         let mut signers = BTreeSet::new();
         for issuer in &self.issuers {
             signers.extend(issuer.signers.iter().copied())
@@ -184,7 +190,7 @@ fn gen_final_simple_tx(
     issuer: ed25519::PublicKey,
     recipient: ed25519::PublicKey,
     cash_back_pubkey: Option<ed25519::PublicKey>,
-) -> TransactionDocumentV10 {
+) -> UnsignedTransactionDocumentV10 {
     let (inputs, inputs_sum) = inputs_with_sum;
     let inputs_len = inputs.len();
     let unlocks = (0..inputs_len)
@@ -224,7 +230,7 @@ fn gen_final_simple_tx(
         comment: &comment,
         hash: None,
     }
-    .build_without_sig()
+    .build_unsigned()
 }
 
 fn gen_final_complex_tx(
@@ -234,7 +240,7 @@ fn gen_final_complex_tx(
     issuers: Vec<TxV10ComplexIssuer>,
     signers: SmallVec<[ed25519::PublicKey; 1]>,
     recipients: Vec<TxV10Recipient>,
-) -> TransactionDocumentV10 {
+) -> UnsignedTransactionDocumentV10 {
     let signers_index: BTreeMap<ed25519::PublicKey, usize> =
         signers.iter().enumerate().map(|(i, pk)| (*pk, i)).collect();
     let (inputs, unlocks, mut outputs): (
@@ -312,7 +318,7 @@ fn gen_final_complex_tx(
         comment: &comment,
         hash: None,
     }
-    .build_without_sig()
+    .build_unsigned()
 }
 
 fn gen_change_txs(
@@ -322,7 +328,7 @@ fn gen_change_txs(
     signers: SmallVec<[ed25519::PublicKey; 1]>,
     script: WalletScriptV10,
     unlocks: SmallVec<[WalletUnlockProofV10; 1]>,
-) -> Vec<TransactionDocumentV10> {
+) -> Vec<UnsignedTransactionDocumentV10> {
     let max_inputs = (TX_V10_MAX_INPUTS_PLUS_SIGNERS - (2 * signers.len())) / 2;
     let inputs_len = inputs.len();
     let div = inputs_len / max_inputs;
@@ -367,7 +373,7 @@ fn gen_one_change_tx(
     signers: SmallVec<[ed25519::PublicKey; 1]>,
     script: WalletScriptV10,
     unlocks: SmallVec<[WalletUnlockProofV10; 1]>,
-) -> TransactionDocumentV10 {
+) -> UnsignedTransactionDocumentV10 {
     let (inputs, inputs_sum) = inputs_with_sum;
     let inputs_len = inputs.len();
     let unlocks = (0..inputs_len)
@@ -394,7 +400,7 @@ fn gen_one_change_tx(
         comment: "change",
         hash: None,
     }
-    .build_without_sig()
+    .build_unsigned()
 }
 
 #[cfg(test)]
