@@ -2,7 +2,7 @@ disable-publish = true
 disable-push = true
 no-dev-version = true
 pre-release-commit-message = "v{{version}}"
-pre-release-hook = ["cargo", "test", "--all"]
+pre-release-hook = ["cargo", "test", "--all", "--all-features"]
 pre-release-replacements = [
     # crypto
     {file="crypto/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="version = \"{{version}}\"\n", exactly=1},
