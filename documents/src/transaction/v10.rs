@@ -80,7 +80,7 @@ impl<'a> TransactionDocumentTrait<'a> for TransactionDocumentV10 {
         currency: String,
         inputs_with_sum: (Vec<Self::Input>, SourceAmount),
         issuer: Self::PubKey,
-        recipient: Self::PubKey,
+        recipient: WalletScriptV10,
         user_amount_and_comment: (SourceAmount, String),
         cash_back_pubkey: Option<Self::PubKey>,
     ) -> Vec<Self::UnsignedDoc> {

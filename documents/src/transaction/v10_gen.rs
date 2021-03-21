@@ -31,7 +31,7 @@ pub(crate) struct TransactionDocV10SimpleGen {
     pub(crate) inputs: Vec<TransactionInputV10>,
     pub(crate) inputs_sum: SourceAmount,
     pub(crate) issuer: ed25519::PublicKey,
-    pub(crate) recipient: ed25519::PublicKey,
+    pub(crate) recipient: WalletScriptV10,
     pub(crate) user_amount: SourceAmount,
     pub(crate) user_comment: String,
     pub(crate) cash_back_pubkey: Option<ed25519::PublicKey>,
@@ -188,7 +188,7 @@ fn gen_final_simple_tx(
     currency: String,
     inputs_with_sum: (&[TransactionInputV10], SourceAmount),
     issuer: ed25519::PublicKey,
-    recipient: ed25519::PublicKey,
+    recipient: WalletScriptV10,
     cash_back_pubkey: Option<ed25519::PublicKey>,
 ) -> UnsignedTransactionDocumentV10 {
     let (inputs, inputs_sum) = inputs_with_sum;
@@ -201,9 +201,7 @@ fn gen_final_simple_tx(
     let rest = inputs_sum - amount;
     let main_output = TransactionOutputV10 {
         amount,
-        conditions: UTXOConditions::from(WalletScriptV10::single(WalletConditionV10::Sig(
-            recipient,
-        ))),
+        conditions: UTXOConditions::from(recipient),
     };
     let outputs = if rest.amount() > 0 {
         svec![
@@ -528,7 +526,7 @@ Comment: toto
             inputs: inputs.clone(),
             inputs_sum: SourceAmount::with_base0(40),
             issuer,
-            recipient,
+            recipient: WalletScriptV10::single_sig(recipient),
             user_amount: SourceAmount::with_base0(32),
             user_comment: "toto".to_owned(),
             cash_back_pubkey: Some(cash_back_pubkey),
@@ -580,7 +578,7 @@ Comment: toto
             inputs,
             inputs_sum: SourceAmount::with_base0(80),
             issuer,
-            recipient,
+            recipient: WalletScriptV10::single_sig(recipient),
             user_amount: SourceAmount::with_base0(62),
             user_comment: "toto".to_owned(),
             cash_back_pubkey: None,
