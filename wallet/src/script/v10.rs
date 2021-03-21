@@ -74,6 +74,13 @@ impl WalletSubScriptV10 {
 }
 
 impl WalletSubScriptV10 {
+    pub fn as_single_sig(&self) -> Option<PublicKey> {
+        if let Self::Single(WalletConditionV10::Sig(pubkey)) = self {
+            Some(*pubkey)
+        } else {
+            None
+        }
+    }
     pub fn is_single_sig(&self) -> bool {
         matches!(self, Self::Single(WalletConditionV10::Sig(_)))
     }
@@ -171,6 +178,13 @@ impl WalletScriptV10 {
         WalletScriptV10 {
             root: WalletSubScriptV10::Single(WalletConditionV10::Sig(pubkey)),
             nodes: SmallVec::new(),
+        }
+    }
+    pub fn as_single_sig(&self) -> Option<PublicKey> {
+        if self.nodes.is_empty() {
+            self.root.as_single_sig()
+        } else {
+            None
         }
     }
     pub fn is_single_sig(&self) -> bool {
@@ -436,6 +450,21 @@ mod tests {
 
         let script = WalletScriptV10::and_and(cond1, cond2, cond3);
         assert_eq!(&script.to_string(), "CSV(123) && CSV(456) && CSV(789)");
+    }
+
+    #[test]
+    fn test_as_single_sig() {
+        assert_eq!(
+            WalletScriptV10::single_sig(PublicKey::default()).as_single_sig(),
+            Some(PublicKey::default())
+        );
+        assert!(WalletScriptV10::single(WalletConditionV10::Csv(100))
+            .as_single_sig()
+            .is_none());
+
+        let cond1 = WalletConditionV10::Csv(123);
+        let cond2 = WalletConditionV10::Csv(456);
+        assert!(WalletScriptV10::and(cond1, cond2).as_single_sig().is_none());
     }
 
     #[test]
