@@ -387,9 +387,14 @@ mod tests {
 
     #[test]
     fn test_public_key_derivation() -> Result<(), InvalidAccountIndex> {
-        let seed = unwrap!(Seed32::from_base58(
-            "DNann1Lh55eZMEDXeYt59bzHbA3NJR46DeQYCS2qQdLV"
+        let mnemonic = unwrap!(crate::mnemonic::Mnemonic::from_phrase(
+            "acquire flat utility climb filter device liberty beyond matrix satisfy metal essence",
+            crate::mnemonic::Language::English
         ));
+
+        println!("mnemonic={:?}", mnemonic.phrase());
+        let seed = crate::mnemonic::mnemonic_to_seed(&mnemonic);
+        println!("seed={:?}", hex::encode(seed.as_ref()));
         let master_kp = KeyPair::from_seed(seed);
 
         let account_index = unwrap!(U31::new(2));
@@ -399,6 +404,25 @@ mod tests {
             master_kp.derive(PrivateDerivationPath::opaque(account_index, true, None)?);
         let external_chain_public_key = external_chain_kp.public_key();
         let external_chain_code = external_chain_kp.chain_code();
+        println!(
+            "external_chain_public_key={:?}",
+            external_chain_public_key.to_base58()
+        );
+        println!(
+            "external_chain_code={:?}",
+            bs58::encode(external_chain_code).into_string()
+        );
+
+        println!(
+            "address(m/2'/0'/3)= {}",
+            master_kp
+                .derive(PrivateDerivationPath::opaque(
+                    account_index,
+                    true,
+                    Some(address_index)
+                )?)
+                .public_key()
+        );
 
         assert_eq!(
             unwrap!(PublicKeyWithChainCode {
