@@ -16,21 +16,18 @@
 //! Read [DEWIF](https://git.duniter.org/nodes/common/doc/blob/dewif/rfc/0013_Duniter_Encrypted_Wallet_Import_Format.md) file content
 
 use super::{Currency, ExpectedCurrency};
-use crate::keys::ed25519::{Ed25519KeyPair, PublicKey, PUBKEY_DATAS_SIZE_IN_BYTES};
+use crate::keys::{
+    ed25519::{PublicKey, PUBKEY_DATAS_SIZE_IN_BYTES},
+    KeysAlgo,
+};
 use crate::keys::{KeyPair, KeyPairEnum, Signator};
 use crate::seeds::{Seed32, SEED_32_SIZE_IN_BYTES};
-use arrayvec::ArrayVec;
 use byteorder::ByteOrder;
 use std::{
     convert::{TryFrom, TryInto},
     hint::unreachable_unchecked,
 };
 use thiserror::Error;
-
-const MAX_KEYPAIRS_COUNT: usize = 2;
-
-type KeyPairsArray = ArrayVec<[KeyPairEnum; MAX_KEYPAIRS_COUNT]>;
-type KeyPairsIter = arrayvec::IntoIter<[KeyPairEnum; MAX_KEYPAIRS_COUNT]>;
 
 /// Error when try to read DEWIF file content
 #[derive(Clone, Debug, Error)]
@@ -58,6 +55,9 @@ pub enum DewifReadError {
         /// Actual currency
         actual: Currency,
     },
+    /// Unknown algorithm
+    #[error("unknown algorithm")]
+    UnknownAlgo,
     /// Unsupported version
     #[error("Version {actual} is not supported. Supported versions: [1, 2].")]
     UnsupportedVersion {
@@ -73,7 +73,7 @@ pub fn read_dewif_log_n(
 ) -> Result<u8, DewifReadError> {
     let bytes = base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
 
-    if bytes.len() < 8 {
+    if bytes.len() < 9 {
         return Err(DewifReadError::TooShortContent);
     }
 
@@ -88,14 +88,7 @@ pub fn read_dewif_log_n(
     }
 
     match version {
-        1 | 2 => Ok(12u8),
-        3 | 4 => {
-            if bytes.len() < 9 {
-                Err(DewifReadError::TooShortContent)
-            } else {
-                Ok(bytes[8])
-            }
-        }
+        1 => Ok(bytes[8]),
         other_version => Err(DewifReadError::UnsupportedVersion {
             actual: other_version,
         }),
@@ -106,30 +99,18 @@ pub fn read_dewif_log_n(
 pub fn read_dewif_meta(file_content: &str) -> Result<super::DewifMeta, DewifReadError> {
     let bytes = base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
 
-    if bytes.len() < 8 {
+    if bytes.len() < 10 {
         return Err(DewifReadError::TooShortContent);
     }
 
     let version = byteorder::BigEndian::read_u32(&bytes[0..4]);
     let currency = Currency::from(byteorder::BigEndian::read_u32(&bytes[4..8]));
 
-    let log_n = match version {
-        1 | 2 => 12u8,
-        3 | 4 => {
-            if bytes.len() < 9 {
-                return Err(DewifReadError::TooShortContent);
-            } else {
-                bytes[8]
-            }
-        }
-        other_version => {
-            return Err(DewifReadError::UnsupportedVersion {
-                actual: other_version,
-            });
-        }
-    };
+    let log_n = bytes[8];
+    let algo = KeysAlgo::from_u8(bytes[9]).map_err(|_| DewifReadError::UnknownAlgo)?;
 
     Ok(super::DewifMeta {
+        algo,
         currency,
         log_n,
         version,
@@ -141,7 +122,7 @@ pub fn read_dewif_file_content(
     expected_currency: ExpectedCurrency,
     file_content: &str,
     passphrase: &str,
-) -> Result<impl Iterator<Item = KeyPairEnum>, DewifReadError> {
+) -> Result<KeyPairEnum, DewifReadError> {
     let mut bytes = base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
 
     if bytes.len() < 8 {
@@ -159,121 +140,49 @@ pub fn read_dewif_file_content(
     }
 
     match version {
-        1 => Ok({
-            let mut array_keypairs = KeyPairsArray::new();
-            array_keypairs.push(read_dewif_v1(&mut bytes[8..], passphrase)?.upcast());
-            array_keypairs.into_iter()
-        }),
-        2 => read_dewif_v2(&mut bytes[8..], passphrase),
-        3 => Ok({
-            let mut array_keypairs = KeyPairsArray::new();
-            array_keypairs.push(read_dewif_v3(&mut bytes[8..], passphrase)?.upcast());
-            array_keypairs.into_iter()
-        }),
-        #[cfg(feature = "bip32-ed25519")]
-        4 => Ok({
-            let mut array_keypairs = KeyPairsArray::new();
-            array_keypairs.push(read_dewif_v4(&mut bytes[8..], passphrase)?.upcast());
-            array_keypairs.into_iter()
-        }),
+        1 => read_dewif_v1(&mut bytes[8..], passphrase),
         other_version => Err(DewifReadError::UnsupportedVersion {
             actual: other_version,
         }),
     }
 }
 
-fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<Ed25519KeyPair, DewifReadError> {
+fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<KeyPairEnum, DewifReadError> {
     match bytes.len() {
         len if len < super::V1_DATA_LEN => return Err(DewifReadError::TooShortContent),
         len if len > super::V1_DATA_LEN => return Err(DewifReadError::TooLongContent),
         _ => (),
     }
 
-    // Decrypt bytes
-    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, super::V1_LOG_N));
-    crate::aes256::decrypt::decrypt_n_blocks(&cipher, bytes, super::V1_AES_BLOCKS_COUNT);
-
-    // Get checked keypair
-    bytes_to_checked_keypair(bytes)
-}
-
-fn read_dewif_v2(bytes: &mut [u8], passphrase: &str) -> Result<KeyPairsIter, DewifReadError> {
-    let mut array_keypairs = KeyPairsArray::new();
-
-    match bytes.len() {
-        len if len < super::V2_DATA_LEN => return Err(DewifReadError::TooShortContent),
-        len if len > super::V2_DATA_LEN => return Err(DewifReadError::TooLongContent),
-        _ => (),
-    }
-
-    // Decrypt bytes
-    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, super::V2_LOG_N));
-    crate::aes256::decrypt::decrypt_8_blocks(&cipher, bytes);
-
-    array_keypairs.push(KeyPairEnum::Ed25519(bytes_to_checked_keypair::<
-        _,
-        Ed25519KeyPair,
-    >(&bytes[..64])?));
-    array_keypairs.push(KeyPairEnum::Ed25519(bytes_to_checked_keypair::<
-        _,
-        Ed25519KeyPair,
-    >(&bytes[64..])?));
-    Ok(array_keypairs.into_iter())
-}
-
-fn read_dewif_v3(bytes: &mut [u8], passphrase: &str) -> Result<Ed25519KeyPair, DewifReadError> {
-    match bytes.len() {
-        len if len < super::V3_DATA_LEN => return Err(DewifReadError::TooShortContent),
-        len if len > super::V3_DATA_LEN => return Err(DewifReadError::TooLongContent),
-        _ => (),
-    }
-
     // Read log_n
     let log_n = bytes[0];
+    // Read algo
+    let algo = KeysAlgo::from_u8(bytes[1]).map_err(|_| DewifReadError::UnknownAlgo)?;
 
     // Decrypt bytes
     let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, log_n));
-    crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[1..], super::V3_AES_BLOCKS_COUNT);
+    crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[2..], super::V1_AES_BLOCKS_COUNT);
 
     // Get checked keypair
-    bytes_to_checked_keypair(&bytes[1..])
-}
-
-#[cfg(feature = "bip32-ed25519")]
-fn read_dewif_v4(
-    bytes: &mut [u8],
-    passphrase: &str,
-) -> Result<crate::keys::ed25519::bip32::KeyPair, DewifReadError> {
-    match bytes.len() {
-        len if len < super::V3_DATA_LEN => return Err(DewifReadError::TooShortContent),
-        len if len > super::V3_DATA_LEN => return Err(DewifReadError::TooLongContent),
-        _ => (),
-    }
-
-    // Read log_n
-    let log_n = bytes[0];
-
-    // Decrypt bytes
-    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, log_n));
-    crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[1..], super::V3_AES_BLOCKS_COUNT);
-
-    // Get checked keypair
-    bytes_to_checked_keypair::<_, crate::keys::ed25519::bip32::KeyPair>(&bytes[1..])
+    Ok(match algo {
+        KeysAlgo::Ed25519 => KeyPairEnum::Ed25519(bytes_to_checked_keypair(&bytes[2..])?),
+        KeysAlgo::Bip32Ed25519 => KeyPairEnum::Bip32Ed25519(bytes_to_checked_keypair(&bytes[2..])?),
+    })
 }
 
 #[cfg(feature = "bip32-ed25519")]
 // Internal insecure function, should not expose on public API
-pub(super) fn get_dewif_v4_seed_unchecked(bytes: &mut [u8], passphrase: &str) -> Seed32 {
+pub(super) fn get_dewif_seed_unchecked(bytes: &mut [u8], passphrase: &str) -> Seed32 {
     // Read log_n
     let log_n = bytes[0];
 
     // Decrypt bytes
     let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, log_n));
-    crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[1..], super::V3_AES_BLOCKS_COUNT);
+    crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[2..], super::V1_AES_BLOCKS_COUNT);
 
     // Wrap bytes into Seed32
     Seed32::new(
-        (&bytes[1..(SEED_32_SIZE_IN_BYTES + 1)])
+        (&bytes[2..(SEED_32_SIZE_IN_BYTES + 2)])
             .try_into()
             .unwrap_or_else(|_| unsafe { unreachable_unchecked() }),
     )
@@ -352,11 +261,10 @@ mod tests {
     #[test]
     fn read_v1_ok() {
         use crate::dewif::Currency;
-        use crate::keys::{KeyPair, Signator};
         use std::str::FromStr;
 
         // Get DEWIF file content (Usually from disk)
-        let dewif_file_content = "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0";
+        let dewif_file_content = "AAAAARAAAAEMAN9vzS8DfK3ZePpXUgyV0Vbfb80vA3yt2Xj6V1IMldFWYQlZxHGWyI07G49EiViJqAhMGenY9DP6Svbh62bOAbE=";
 
         // Get user passphrase for DEWIF decryption (from cli prompt or gui)
         let encryption_passphrase = "toto titi tata";
@@ -373,22 +281,20 @@ mod tests {
         assert_eq!(
             unwrap!(read_dewif_meta(dewif_file_content)),
             DewifMeta {
+                algo: KeysAlgo::Ed25519,
                 currency: unwrap!(Currency::from_str("g1-test")),
                 log_n: 12u8,
                 version: 1
             }
         );
-        let mut key_pair_iter = unwrap!(read_dewif_file_content(
+        let key_pair = unwrap!(read_dewif_file_content(
             expected_currency,
             dewif_file_content,
             encryption_passphrase
         ));
 
-        // Get first key-pair
-        let key_pair = unwrap!(key_pair_iter.next());
-
         assert_eq!(
-            "2cC9FrvRiN3uHHcd8S7wuureDS8CAmD5y4afEgSCLHtU",
+            "4zvwRjXUKGfvwnParsHAS3HuSVzV5cA4McphgmoCtajS",
             &key_pair.public_key().to_string()
         );
 
@@ -401,77 +307,19 @@ mod tests {
         let sig = signator.sign(b"message");
 
         assert_eq!(
-            "nCWl7jtCa/nCMKKnk2NJN7daVxd/ER+e1wsFbofdh/pUvDuHxFaa7S5eUMGiqPTJ4uJQOvrmF/BOfOsYIoI2Bg==",
+            "JPurBgnHExHND1woow9nB7xVQjKkdHGs1znQbgv0ttZwOz16OlOCDDfvXfKE8e0xUfs2u7winav8IDwo7d1EBQ==",
             &sig.to_string()
         )
     }
 
     #[test]
-    fn read_v3_ok() {
-        use crate::dewif::Currency;
-        use crate::keys::{KeyPair, Signator};
-        use std::str::FromStr;
-
-        // Get DEWIF file content (Usually from disk)
-        let dewif_file_content = "AAAAAxAAAAEPdMuBFXF4C6GZPGsJDiPBbacpVKeaLoJwkDsuqLjkwof1c760Z5iVpnZlLt5XEFlEehbdtLllVhccf9OK6Zjn8A==";
-
-        // Get user passphrase for DEWIF decryption (from cli prompt or gui)
-        let encryption_passphrase = "toto titi tata";
-
-        // Expected currency
-        let expected_currency = ExpectedCurrency::Specific(unwrap!(Currency::from_str("g1-test")));
-
-        // Read DEWIF file content
-        // If the file content is correct, we get a key-pair iterator.
-        assert_eq!(
-            unwrap!(read_dewif_log_n(expected_currency, dewif_file_content)),
-            15u8
-        );
-        assert_eq!(
-            unwrap!(read_dewif_meta(dewif_file_content)),
-            DewifMeta {
-                currency: unwrap!(Currency::from_str("g1-test")),
-                log_n: 15u8,
-                version: 3
-            }
-        );
-        let mut key_pair_iter = unwrap!(read_dewif_file_content(
-            expected_currency,
-            dewif_file_content,
-            encryption_passphrase
-        ));
-
-        // Get first key-pair
-        let key_pair = unwrap!(key_pair_iter.next());
-
-        assert_eq!(
-            "2cC9FrvRiN3uHHcd8S7wuureDS8CAmD5y4afEgSCLHtU",
-            &key_pair.public_key().to_string()
-        );
-
-        // Generate signator
-        // `Signator` is a non-copiable and non-clonable type,
-        // so only generate it when you are in the scope where you effectively sign.
-        let signator = key_pair.generate_signator();
-
-        // Sign a message with keypair
-        let sig = signator.sign(b"message");
-
-        assert_eq!(
-            "nCWl7jtCa/nCMKKnk2NJN7daVxd/ER+e1wsFbofdh/pUvDuHxFaa7S5eUMGiqPTJ4uJQOvrmF/BOfOsYIoI2Bg==",
-            &sig.to_string()
-        )
-    }
-
-    #[cfg(feature = "bip32-ed25519")]
-    #[test]
-    fn read_v4_ok() {
+    fn read_v1_bip32_ok() {
         use crate::dewif::Currency;
         use crate::keys::{KeyPair, PublicKey, Signator};
         use std::str::FromStr;
 
         // Get DEWIF file content (Usually from disk)
-        let dewif_file_content = "AAAABBAAAAEPcE3yXhA0T0iElXR/vDbZTRSmdec26lWu42mWKuaczzxZ22bIGVfLmlhfVW9NWmWY7m/P/j0W6Su4QZEiERe8vA==";
+        let dewif_file_content = "AAAAARAAAAEPAXBN8l4QNE9IhJV0f7w22U0UpnXnNupVruNplirmnM88WdtmyBlXy5pYX1VvTVplmO5vz/49FukruEGRIhEXvLw=";
 
         // Get user passphrase for DEWIF decryption (from cli prompt or gui)
         let encryption_passphrase = "toto titi tata";
@@ -488,19 +336,17 @@ mod tests {
         assert_eq!(
             unwrap!(read_dewif_meta(dewif_file_content)),
             DewifMeta {
+                algo: KeysAlgo::Bip32Ed25519,
                 currency: unwrap!(Currency::from_str("g1-test")),
                 log_n: 15u8,
-                version: 4
+                version: 1
             }
         );
-        let mut key_pair_iter = unwrap!(read_dewif_file_content(
+        let key_pair = unwrap!(read_dewif_file_content(
             expected_currency,
             dewif_file_content,
             encryption_passphrase
         ));
-
-        // Get first key-pair
-        let key_pair = unwrap!(key_pair_iter.next());
 
         assert_eq!(
             "F8jY1tbCWE47NVM8Qj2S5sbNruTBXKhPDL4RjVXgNJsq",

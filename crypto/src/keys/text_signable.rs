@@ -43,7 +43,6 @@ pub trait TextSignable: Debug + Clone {
                 }
                 _ => Err(SignError::WrongAlgo),
             },
-            _ => Err(SignError::WrongAlgo),
         }
     }
     /// Check signature of entity
@@ -54,7 +53,6 @@ pub trait TextSignable: Debug + Clone {
                     Sig::Ed25519(sig) => pubkey.verify(&self.as_signable_text().as_bytes(), &sig),
                     _ => Err(SigError::NotSameAlgo),
                 },
-                _ => Err(SigError::NotSameAlgo),
             }
         } else {
             Err(SigError::NotSig)
@@ -106,8 +104,6 @@ mod tests {
             Err(SignError::WrongAlgo),
             text_signable.sign(&SignatorEnum::Schnorr())
         );
-        text_signable.issuer = PubKeyEnum::Schnorr();
-        assert_eq!(Err(SignError::WrongAlgo), text_signable.sign(&signator));
         text_signable.issuer = key_pair.public_key();
         assert_eq!(
             Ok("VYgskcKKh525MzFRzpCiT5KXCQrnFLTnzMLffbvm9uw:toto+IC1fFkkYo5ox2loc1IMLCtrir1i6oyljfshNXIyXVcz6sJMFqn+6o8Zip4XdTzoBEORkbcnEnqQEr4TgaHpCw==".to_owned()),
@@ -115,10 +111,7 @@ mod tests {
         );
         assert_eq!(Err(SignError::AlreadySign), text_signable.sign(&signator));
         assert_eq!(Ok(()), text_signable.verify());
-        let old_sig = text_signable.sig.replace(Sig::Schnorr());
-        assert_eq!(Err(SigError::NotSameAlgo), text_signable.verify());
-        text_signable.sig = old_sig;
-        text_signable.issuer = PubKeyEnum::Schnorr();
+        text_signable.sig.replace(Sig::Schnorr());
         assert_eq!(Err(SigError::NotSameAlgo), text_signable.verify());
     }
 }

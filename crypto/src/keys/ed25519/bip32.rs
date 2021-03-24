@@ -78,6 +78,7 @@ use crate::{
     bases::b58::ToBase58,
     hashs::{Hash, Hash64},
     keys::{KeyPair as KeyPairTrait, PublicKey as _},
+    mnemonic::Mnemonic,
     seeds::Seed32,
     utils::U31,
 };
@@ -270,6 +271,10 @@ impl KeyPair {
             kp = kp.derive_inner(derivation_index);
         }
         kp
+    }
+    /// Create key-pair from a mnemonic
+    pub fn from_mnemonic(mnemonic: &Mnemonic) -> Self {
+        Self::from_seed(crate::mnemonic::mnemonic_to_seed(&mnemonic))
     }
     fn derive_inner(&self, derivation_index: DerivationIndex) -> Self {
         let xprv = ed25519_bip32::XPrv::from_extended_and_chaincode(

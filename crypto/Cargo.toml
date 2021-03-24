@@ -60,8 +60,8 @@ client = ["bip32-ed25519", "dewif", "mnemonic", "mnemonic_french", "mnemonic_spa
 # meta-feature for duniter
 duniter = ["scrypt"]
 
-bip32-ed25519 = ["arrayvec", "cryptoxide", "ed25519-bip32"]
-dewif = ["aes", "arrayvec", "scrypt"]
+bip32-ed25519 = ["arrayvec", "cryptoxide", "ed25519-bip32", "mnemonic"]
+dewif = ["aes", "arrayvec", "bip32-ed25519", "scrypt", "mnemonic"]
 x25519 = ["curve25519-dalek", "pubkey_check"]
 mnemonic = ["once_cell"]
 private_message = ["arrayvec", "x25519"]

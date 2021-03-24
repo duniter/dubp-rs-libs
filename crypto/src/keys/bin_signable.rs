@@ -49,7 +49,6 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
                     .map_err(|e| SignError::SerdeError(e.to_string()))?;
                 Ok(bin_msg)
             }
-            _ => Err(SignError::WrongAlgo),
         }
     }
     /// Check signature of entity
@@ -65,7 +64,6 @@ pub trait BinSignable<'de>: Serialize + Deserialize<'de> {
                     }
                     _ => Err(SigError::NotSameAlgo),
                 },
-                _ => Err(SigError::NotSameAlgo),
             }
         } else {
             Err(SigError::NotSig)
