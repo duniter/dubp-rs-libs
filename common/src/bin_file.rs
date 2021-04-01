@@ -33,7 +33,7 @@ pub fn read_bin_file(file_path: &Path) -> Result<Vec<u8>, std::io::Error> {
 /// Write bin file
 pub fn write_bin_file(file_path: &Path, datas: &[u8]) -> Result<(), std::io::Error> {
     let mut file = File::create(file_path)?;
-    file.write_all(&datas[..])?;
+    file.write_all(datas)?;
 
     Ok(())
 }

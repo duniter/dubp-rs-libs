@@ -340,9 +340,9 @@ impl super::PublicKey for PublicKey {
     }
     #[cfg(not(target_arch = "wasm32"))]
     fn verify(&self, message: &[u8], signature: &Self::Signature) -> Result<(), SigError> {
-        Ok(UnparsedPublicKey::new(&ED25519, self.datas.as_ref())
+        UnparsedPublicKey::new(&ED25519, self.datas.as_ref())
             .verify(message, &signature.0)
-            .map_err(|_| SigError::InvalidSig)?)
+            .map_err(|_| SigError::InvalidSig)
     }
 }
 

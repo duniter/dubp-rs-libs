@@ -56,15 +56,15 @@ impl Blockstamp {
     pub const SIZE_IN_BYTES: usize = 36;
 }
 
-impl Into<[u8; Self::SIZE_IN_BYTES]> for Blockstamp {
-    fn into(self) -> [u8; Self::SIZE_IN_BYTES] {
-        let mut bytes = [0u8; Self::SIZE_IN_BYTES];
+impl From<Blockstamp> for [u8; Blockstamp::SIZE_IN_BYTES] {
+    fn from(blockstamp: Blockstamp) -> Self {
+        let mut bytes = [0u8; Blockstamp::SIZE_IN_BYTES];
 
-        bytes[..4].copy_from_slice(&self.number.0.to_be_bytes());
+        bytes[..4].copy_from_slice(&blockstamp.number.0.to_be_bytes());
 
         unsafe {
             std::ptr::copy_nonoverlapping(
-                (self.hash.0).0.as_ptr(),
+                (blockstamp.hash.0).0.as_ptr(),
                 bytes[4..].as_mut_ptr(),
                 Hash::SIZE_IN_BYTES,
             );

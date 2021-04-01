@@ -124,11 +124,11 @@ pub trait ToStringObject {
 pub trait ToJsonObject: ToStringObject {
     /// Convert to JSON String
     fn to_json_string(&self) -> Result<String, serde_json::Error> {
-        Ok(serde_json::to_string(&self.to_string_object())?)
+        serde_json::to_string(&self.to_string_object())
     }
     /// Convert to JSON String pretty
     fn to_json_string_pretty(&self) -> Result<String, serde_json::Error> {
-        Ok(serde_json::to_string_pretty(&self.to_string_object())?)
+        serde_json::to_string_pretty(&self.to_string_object())
     }
 }
 
