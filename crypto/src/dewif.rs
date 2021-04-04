@@ -196,6 +196,7 @@ fn gen_aes_seed(passphrase: &str, log_n: u8) -> Seed32 {
 mod tests {
 
     use super::*;
+    use crate::bases::b58::ToBase58 as _;
     use crate::keys::ed25519::KeyPairFromSeed32Generator;
     use crate::keys::KeyPairEnum;
     use crate::seeds::Seed32;
@@ -298,5 +299,23 @@ mod tests {
         ));
 
         assert_eq!(KeyPairEnum::Bip32Ed25519(written_keypair), keypair_read,);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn dewif_v1_legacy() -> Result<(), DewifReadError> {
+        let currency = Currency::from(G1_CURRENCY);
+        let dewif =
+            create_dewif_v1_legacy(currency, 12, "pass".to_owned(), "salt".to_owned(), "toto");
+
+        let key_pair =
+            read_dewif_file_content(ExpectedCurrency::Specific(currency), &dewif, "toto")?;
+
+        assert_eq!(
+            "3YumN7F7D8c2hmkHLHf3ZD8wc3tBHiECEK9zLPkaJtAF",
+            &key_pair.public_key().to_base58()
+        );
+
+        Ok(())
     }
 }

@@ -56,7 +56,7 @@ pub fn create_dewif_v1_legacy(
         .generate(SaltedPassword::new(salt, password));
     write_dewif_v1_content(
         currency,
-        KeysAlgo::Bip32Ed25519,
+        KeysAlgo::Ed25519,
         log_n,
         passphrase,
         &kp.public_key(),

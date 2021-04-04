@@ -53,6 +53,7 @@ harness = false
 name = "vanity"
 
 [features]
+#default = ["client"]
 
 # meta-feature for "standard" clients (gcli, gecko, etc)
 client = ["bip32-ed25519", "dewif", "mnemonic", "mnemonic_french", "mnemonic_spanish"]
