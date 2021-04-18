@@ -15,6 +15,7 @@
 
 //! Define DUBP Documents.
 
+#![allow(clippy::upper_case_acronyms)]
 #![deny(
     clippy::expect_used,
     clippy::unwrap_used,

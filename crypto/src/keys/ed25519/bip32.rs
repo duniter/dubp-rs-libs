@@ -122,9 +122,9 @@ impl From<ed25519_bip32::DerivationError> for PublicDerivationError {
 /// BIP32 Derivation index
 struct DerivationIndex(u32);
 
-impl Into<u32> for DerivationIndex {
-    fn into(self) -> u32 {
-        self.0
+impl From<DerivationIndex> for u32 {
+    fn from(val: DerivationIndex) -> Self {
+        val.0
     }
 }
 

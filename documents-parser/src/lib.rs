@@ -15,6 +15,7 @@
 
 //! Provide parser for DUBP documents.
 
+#![allow(clippy::upper_case_acronyms)]
 #![deny(
     clippy::expect_used,
     clippy::unwrap_used,

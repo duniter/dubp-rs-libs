@@ -85,9 +85,9 @@ impl From<u32> for Currency {
     }
 }
 
-impl Into<u32> for Currency {
-    fn into(self) -> u32 {
-        if let Some(currency_code) = self.0 {
+impl From<Currency> for u32 {
+    fn from(val: Currency) -> Self {
+        if let Some(currency_code) = val.0 {
             currency_code.get()
         } else {
             0u32
