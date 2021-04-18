@@ -5,7 +5,7 @@ stages:
   - publish
 
 .rust_stable_lin64:
-  image: registry.duniter.org/docker/rust/rust-x64-stable-ci:latest
+  image: duniter/rust-x64-stable-ci:latest
   tags:
     - redshift
   before_script:
