@@ -266,4 +266,54 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn test_scrypt_short_seed() {
+        let salt = "JhxtHB7UcsDbA9wMSyMKXUzBZUQvqVyB32KwzS9SWoLkjrUhHV".as_bytes();
+        let password = "JhxtHB7UcsDbA9wMSyMKXUzBZUQvqVyB32KwzS9SWoLkjrUhHV_".as_bytes();
+
+        let mut seed = [0u8; 26];
+        let now = std::time::Instant::now();
+        scrypt(
+            password,
+            salt,
+            &params::ScryptParams::default(),
+            seed.as_mut(),
+        );
+        println!("{} ms", now.elapsed().as_millis());
+
+        assert_eq!(
+            seed,
+            [
+                144u8, 5, 70, 118, 105, 47, 173, 220, 39, 152, 105, 7, 211, 34, 125, 146, 183, 172,
+                41, 54, 154, 134, 125, 97, 1, 125,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_scrypt_long_seed() {
+        let salt = "JhxtHB7UcsDbA9wMSyMKXUzBZUQvqVyB32KwzS9SWoLkjrUhHV".as_bytes();
+        let password = "JhxtHB7UcsDbA9wMSyMKXUzBZUQvqVyB32KwzS9SWoLkjrUhHV_".as_bytes();
+
+        let mut seed = [0u8; 68];
+        let now = std::time::Instant::now();
+        scrypt(
+            password,
+            salt,
+            &params::ScryptParams::default(),
+            seed.as_mut(),
+        );
+        println!("{} ms", now.elapsed().as_millis());
+
+        assert_eq!(
+            seed[..32],
+            [
+                144u8, 5, 70, 118, 105, 47, 173, 220, 39, 152, 105, 7, 211, 34, 125, 146, 183, 172,
+                41, 54, 154, 134, 125, 97, 1, 125, 241, 95, 96, 6, 79, 150
+            ]
+        );
+
+        println!("{:?}", seed);
+    }
 }

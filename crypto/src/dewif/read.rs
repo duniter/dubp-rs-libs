@@ -16,12 +16,18 @@
 //! Read [DEWIF](https://git.duniter.org/nodes/common/doc/blob/dewif/rfc/0013_Duniter_Encrypted_Wallet_Import_Format.md) file content
 
 use super::{Currency, ExpectedCurrency};
-use crate::keys::{
-    ed25519::{PublicKey, PUBKEY_DATAS_SIZE_IN_BYTES},
-    KeysAlgo,
-};
-use crate::keys::{KeyPair, KeyPairEnum, Signator};
 use crate::seeds::{Seed32, SEED_32_SIZE_IN_BYTES};
+use crate::{
+    keys::{
+        ed25519::{PublicKey, PUBKEY_DATAS_SIZE_IN_BYTES},
+        KeysAlgo,
+    },
+    mnemonic::{Language, Mnemonic, MnemonicError},
+};
+use crate::{
+    keys::{KeyPair, KeyPairEnum, Signator},
+    mnemonic::mnemonic_to_seed,
+};
 use byteorder::ByteOrder;
 use std::{
     convert::{TryFrom, TryInto},
@@ -149,8 +155,10 @@ pub fn read_dewif_file_content(
 
 fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<KeyPairEnum, DewifReadError> {
     match bytes.len() {
-        len if len < super::V1_DATA_LEN => return Err(DewifReadError::TooShortContent),
-        len if len > super::V1_DATA_LEN => return Err(DewifReadError::TooLongContent),
+        len if len < super::V1_BIP32_ED25519_DATA_LEN => {
+            return Err(DewifReadError::TooShortContent)
+        }
+        len if len > super::V1_ED25519_DATA_LEN => return Err(DewifReadError::TooLongContent),
         _ => (),
     }
 
@@ -159,33 +167,85 @@ fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<KeyPairEnum, Dewi
     // Read algo
     let algo = KeysAlgo::from_u8(bytes[1]).map_err(|_| DewifReadError::UnknownAlgo)?;
 
-    // Decrypt bytes
-    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, log_n));
-    crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[2..], super::V1_AES_BLOCKS_COUNT);
+    match algo {
+        KeysAlgo::Ed25519 => {
+            // Decrypt bytes
+            let mut decrypted_bytes = [0u8; 64];
+            crate::xor_cipher::xor_cipher(
+                &bytes[2..],
+                super::gen_xor_seed64(passphrase, log_n).as_ref(),
+                &mut decrypted_bytes,
+            );
 
-    // Get checked keypair
-    Ok(match algo {
-        KeysAlgo::Ed25519 => KeyPairEnum::Ed25519(bytes_to_checked_keypair(&bytes[2..])?),
-        KeysAlgo::Bip32Ed25519 => KeyPairEnum::Bip32Ed25519(bytes_to_checked_keypair(&bytes[2..])?),
-    })
+            // Get checked keypair
+            Ok(KeyPairEnum::Ed25519(bytes_to_checked_keypair(
+                &decrypted_bytes,
+            )?))
+        }
+        KeysAlgo::Bip32Ed25519 => {
+            // Decrypt bytes
+            let mut decrypted_bytes = [0u8; 42];
+            crate::xor_cipher::xor_cipher(
+                &bytes[2..44],
+                super::gen_xor_seed42(passphrase, log_n).as_ref(),
+                &mut decrypted_bytes,
+            );
+
+            // Get checked keypair
+            let mnemonic = get_dewif_mnemonic(&decrypted_bytes)
+                .map_err(|_| DewifReadError::CorruptedContent)?;
+            let checksum = crate::hashs::Hash::compute_multipart(&[
+                &[decrypted_bytes[0], mnemonic.entropy().len() as u8],
+                mnemonic.entropy(),
+            ]);
+            let expected_checksum = &decrypted_bytes[34..];
+            if &checksum.0[..8] != expected_checksum {
+                Err(DewifReadError::CorruptedContent)
+            } else {
+                let seed = mnemonic_to_seed(&mnemonic);
+                Ok(KeyPairEnum::Bip32Ed25519(
+                    crate::keys::ed25519::bip32::KeyPair::from_seed(seed),
+                ))
+            }
+        }
+    }
 }
 
-#[cfg(feature = "bip32-ed25519")]
 // Internal insecure function, should not expose on public API
 pub(super) fn get_dewif_seed_unchecked(bytes: &mut [u8], passphrase: &str) -> Seed32 {
     // Read log_n
     let log_n = bytes[0];
 
     // Decrypt bytes
-    let cipher = crate::aes256::new_cipher(super::gen_aes_seed(passphrase, log_n));
-    crate::aes256::decrypt::decrypt_n_blocks(&cipher, &mut bytes[2..], super::V1_AES_BLOCKS_COUNT);
+    let mut decrypted_bytes = [0u8; 64];
+    crate::xor_cipher::xor_cipher(
+        &bytes[2..],
+        super::gen_xor_seed64(passphrase, log_n).as_ref(),
+        &mut decrypted_bytes,
+    );
 
     // Wrap bytes into Seed32
     Seed32::new(
-        (&bytes[2..(SEED_32_SIZE_IN_BYTES + 2)])
+        (&decrypted_bytes[..SEED_32_SIZE_IN_BYTES])
             .try_into()
             .unwrap_or_else(|_| unsafe { unreachable_unchecked() }),
     )
+}
+
+// Internal insecure function, should not expose on public API
+pub(super) fn get_dewif_mnemonic_unchecked(bytes: &mut [u8], passphrase: &str) -> Mnemonic {
+    // Read log_n
+    let log_n = bytes[0];
+
+    // Decrypt bytes
+    let mut decrypted_bytes = [0u8; 42];
+    crate::xor_cipher::xor_cipher(
+        &bytes[2..],
+        super::gen_xor_seed42(passphrase, log_n).as_ref(),
+        &mut decrypted_bytes,
+    );
+
+    get_dewif_mnemonic(&decrypted_bytes).unwrap_or_else(|_| unsafe { unreachable_unchecked() })
 }
 
 fn bytes_to_checked_keypair<
@@ -212,6 +272,20 @@ fn bytes_to_checked_keypair<
     } else {
         Ok(keypair)
     }
+}
+
+#[cfg(feature = "bip32-ed25519")]
+fn get_dewif_mnemonic(decrypted_bytes: &[u8]) -> Result<Mnemonic, MnemonicError> {
+    // Read mnemonic language
+    let lang = Language::from_u8(decrypted_bytes[0])?;
+
+    // Read mnemonic entropy length
+    let mnemonic_entropy_len = decrypted_bytes[1];
+
+    Mnemonic::from_entropy(
+        &decrypted_bytes[2..(2 + mnemonic_entropy_len as usize)],
+        lang,
+    )
 }
 
 #[cfg(test)]
@@ -264,7 +338,7 @@ mod tests {
         use std::str::FromStr;
 
         // Get DEWIF file content (Usually from disk)
-        let dewif_file_content = "AAAAARAAAAEMAN9vzS8DfK3ZePpXUgyV0Vbfb80vA3yt2Xj6V1IMldFWYQlZxHGWyI07G49EiViJqAhMGenY9DP6Svbh62bOAbE=";
+        let dewif_file_content = "AAAAARAAAAEMAAqqbWsirdvN0W7IkpmKdG/Zbt4ZszPx9VcWUu0o4cdxIZ4HHUybCVbyVmQL9Wid8KE6FCWeMRtr5OKAUKYwsNI=";
 
         // Get user passphrase for DEWIF decryption (from cli prompt or gui)
         let encryption_passphrase = "toto titi tata";
@@ -319,7 +393,8 @@ mod tests {
         use std::str::FromStr;
 
         // Get DEWIF file content (Usually from disk)
-        let dewif_file_content = "AAAAARAAAAEPAXBN8l4QNE9IhJV0f7w22U0UpnXnNupVruNplirmnM88WdtmyBlXy5pYX1VvTVplmO5vz/49FukruEGRIhEXvLw=";
+        let dewif_file_content =
+            "AAAAARAAAAEPAS7WUE5xDEJnxAA39Lnexa5ASIowV1aMp4KIPAQRefzrD5eOj/o35aNadg=";
 
         // Get user passphrase for DEWIF decryption (from cli prompt or gui)
         let encryption_passphrase = "toto titi tata";
@@ -349,7 +424,7 @@ mod tests {
         ));
 
         assert_eq!(
-            "F8jY1tbCWE47NVM8Qj2S5sbNruTBXKhPDL4RjVXgNJsq",
+            "9TgSNiJPFtQV89Wt2GPnoozpSWTJzAxERpmTQr5Lhv7G",
             &key_pair.public_key().to_string()
         );
 
@@ -362,7 +437,7 @@ mod tests {
         let sig = signator.sign(b"message");
 
         assert_eq!(
-            "Igm0pwC1Vd5wOXMNeMD7pRzmpRkpAed+j7O+4Co4mQ3/GhWnZuE8+AvgKK3lz4PtpqoCS47y6aUo6MGUA5lJCw==",
+            "N1+7Dzjde71hBCkoqSWRc3Ywn4+z7FChKjCgG8OtIlki4BH9w6QLXQ8Pkb7uyoCa9N9VuUgtJDgYSn09ll6yCg==",
             &sig.to_string()
         );
         assert!(key_pair.public_key().verify(b"message", &sig).is_ok());

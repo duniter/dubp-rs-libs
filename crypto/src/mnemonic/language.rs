@@ -188,6 +188,47 @@ impl Language {
             Language::Spanish => &lazy::WORDMAP_SPANISH,
         }
     }
+
+    pub(crate) fn from_u8(source: u8) -> Result<Self, MnemonicError> {
+        match source {
+            0 => Ok(Self::English),
+            #[cfg(feature = "mnemonic_chinese_simplified")]
+            1 => Ok(Self::ChineseSimplified),
+            #[cfg(feature = "mnemonic_chinese_traditional")]
+            2 => Ok(Self::ChineseTraditional),
+            #[cfg(feature = "mnemonic_french")]
+            3 => Ok(Self::French),
+            #[cfg(feature = "mnemonic_italian")]
+            4 => Ok(Self::Italian),
+            #[cfg(feature = "mnemonic_japanese")]
+            5 => Ok(Self::Japanese),
+            #[cfg(feature = "mnemonic_korean")]
+            6 => Ok(Self::Korean),
+            #[cfg(feature = "mnemonic_spanish")]
+            7 => Ok(Self::Spanish),
+            _ => Err(MnemonicError::UnknownLanguage),
+        }
+    }
+
+    pub(crate) fn to_u8(self) -> u8 {
+        match self {
+            Language::English => 0,
+            #[cfg(feature = "mnemonic_chinese_simplified")]
+            Language::ChineseSimplified => 1,
+            #[cfg(feature = "mnemonic_chinese_traditional")]
+            Language::ChineseTraditional => 2,
+            #[cfg(feature = "mnemonic_french")]
+            Language::French => 3,
+            #[cfg(feature = "mnemonic_italian")]
+            Language::Italian => 4,
+            #[cfg(feature = "mnemonic_japanese")]
+            Language::Japanese => 5,
+            #[cfg(feature = "mnemonic_korean")]
+            Language::Korean => 6,
+            #[cfg(feature = "mnemonic_spanish")]
+            Language::Spanish => 7,
+        }
+    }
 }
 
 impl Default for Language {

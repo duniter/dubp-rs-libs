@@ -35,6 +35,9 @@ pub enum MnemonicError {
     /// invalid entropy length
     #[error("invalid entropy length {0} bits for mnemonic type {1:?}")]
     InvalidEntropyLength(usize, MnemonicType),
+    /// Unknown language
+    #[error("Unknown language")]
+    UnknownLanguage,
     /// Unspecified rand error
     #[error("Unspecified rand error")]
     UnspecifiedRandError(UnspecifiedRandError),

@@ -49,7 +49,7 @@
 //! let dewif_content = create_dewif_v1(Currency::from(G1_TEST_CURRENCY), 12u8, &mnemonic, encryption_passphrase);
 //!
 //! assert_eq!(
-//!     "AAAAARAAAAEMAQ38iXS15idThWb0WUDJe5tpCVUD9IpBvXIGFz9gbsGYOkkesYZS31v+rQ4jxqqjuyNbzJtbiIzjOsFUqvVgwdI=",
+//!     "AAAAARAAAAEMAQq6iQ30tXY7s9WnLPZy+let094ZszPx9VcWUu0o4cdxGvRUmWTuu5fVWA==",
 //!     dewif_content
 //! )
 //! ```
@@ -63,7 +63,7 @@
 //! use std::str::FromStr;
 //!
 //! // Get DEWIF file content (Usually from disk)
-//! let dewif_file_content = "AAAAARAAAAEMAQ38iXS15idThWb0WUDJe5tpCVUD9IpBvXIGFz9gbsGYOkkesYZS31v+rQ4jxqqjuyNbzJtbiIzjOsFUqvVgwdI=";
+//! let dewif_file_content = "AAAAARAAAAEMAQq6iQ30tXY7s9WnLPZy+let094ZszPx9VcWUu0o4cdxGvRUmWTuu5fVWA==";
 //!
 //! // Get user passphrase for DEWIF decryption (from cli prompt or gui)
 //! let encryption_passphrase = "toto titi tata";
@@ -110,17 +110,22 @@ use crate::hashs::Hash;
 #[cfg(feature = "bip32-ed25519")]
 use crate::keys::{KeyPair as _, KeysAlgo};
 use crate::scrypt::{params::ScryptParams, scrypt};
-use crate::seeds::Seed32;
+use crate::seeds::{Seed42, Seed64};
 
 const HEADERS_LEN: usize = 8;
 
 // v1
 static VERSION_V1: &[u8] = &[0, 0, 0, 1];
-const V1_ENCRYPTED_BYTES_LEN: usize = 64;
-const V1_DATA_LEN: usize = V1_ENCRYPTED_BYTES_LEN + 2;
-const V1_BYTES_LEN: usize = HEADERS_LEN + V1_DATA_LEN;
-const V1_UNENCRYPTED_BYTES_LEN: usize = V1_BYTES_LEN - V1_ENCRYPTED_BYTES_LEN;
-const V1_AES_BLOCKS_COUNT: usize = 4;
+const V1_ED25519_ENCRYPTED_BYTES_LEN: usize = 64;
+const V1_ED25519_DATA_LEN: usize = V1_ED25519_ENCRYPTED_BYTES_LEN + 2;
+const V1_ED25519_BYTES_LEN: usize = HEADERS_LEN + V1_ED25519_DATA_LEN;
+const V1_ED25519_UNENCRYPTED_BYTES_LEN: usize =
+    V1_ED25519_BYTES_LEN - V1_ED25519_ENCRYPTED_BYTES_LEN;
+const V1_BIP32_ED25519_ENCRYPTED_BYTES_LEN: usize = 42;
+const V1_BIP32_ED25519_DATA_LEN: usize = V1_BIP32_ED25519_ENCRYPTED_BYTES_LEN + 2;
+const V1_BIP32_ED25519_BYTES_LEN: usize = HEADERS_LEN + V1_BIP32_ED25519_DATA_LEN;
+const V1_BIP32_ED25519_UNENCRYPTED_BYTES_LEN: usize =
+    V1_BIP32_ED25519_BYTES_LEN - V1_BIP32_ED25519_ENCRYPTED_BYTES_LEN;
 
 /// DEWIF meta data
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -152,44 +157,58 @@ pub fn change_dewif_passphrase(
         file_content,
         old_passphrase,
     )?;
-
     if version == 1 {
         let mut bytes = base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
-        let seed = read::get_dewif_seed_unchecked(&mut bytes[8..], old_passphrase);
         match keypair {
-            crate::keys::KeyPairEnum::Ed25519(kp) => Ok(write::write_dewif_v1_content(
-                currency,
-                KeysAlgo::Ed25519,
-                log_n,
-                new_passphrase,
-                &kp.public_key(),
-                &seed,
-            )),
+            crate::keys::KeyPairEnum::Ed25519(kp) => {
+                let seed = read::get_dewif_seed_unchecked(&mut bytes[8..], old_passphrase);
+                Ok(write::write_dewif_v1_ed25519(
+                    currency,
+                    log_n,
+                    new_passphrase,
+                    &kp.public_key(),
+                    &seed,
+                ))
+            }
             #[cfg(feature = "bip32-ed25519")]
-            crate::keys::KeyPairEnum::Bip32Ed25519(kp) => Ok(write::write_dewif_v1_content(
-                currency,
-                KeysAlgo::Bip32Ed25519,
-                log_n,
-                new_passphrase,
-                &kp.public_key(),
-                &seed,
-            )),
+            crate::keys::KeyPairEnum::Bip32Ed25519(_) => {
+                let mnemonic = read::get_dewif_mnemonic_unchecked(&mut bytes[8..], old_passphrase);
+
+                Ok(write::write_dewif_v1_bip_ed25519(
+                    currency,
+                    log_n,
+                    new_passphrase,
+                    &mnemonic,
+                ))
+            }
         }
     } else {
         Err(DewifReadError::UnsupportedVersion { actual: version })
     }
 }
 
-fn gen_aes_seed(passphrase: &str, log_n: u8) -> Seed32 {
+fn gen_xor_seed42(passphrase: &str, log_n: u8) -> Seed42 {
     let salt = Hash::compute(format!("dewif{}", passphrase).as_bytes());
-    let mut aes_seed_bytes = [0u8; 32];
+    let mut seed_bytes = [0u8; 42];
     scrypt(
         passphrase.as_bytes(),
         salt.as_ref(),
         &ScryptParams { log_n, r: 16, p: 1 },
-        &mut aes_seed_bytes,
+        &mut seed_bytes,
     );
-    Seed32::new(aes_seed_bytes)
+    Seed42::new(seed_bytes)
+}
+
+fn gen_xor_seed64(passphrase: &str, log_n: u8) -> Seed64 {
+    let salt = Hash::compute(format!("dewif{}", passphrase).as_bytes());
+    let mut seed_bytes = [0u8; 64];
+    scrypt(
+        passphrase.as_bytes(),
+        salt.as_ref(),
+        &ScryptParams { log_n, r: 16, p: 1 },
+        &mut seed_bytes,
+    );
+    Seed64::new(seed_bytes)
 }
 
 #[cfg(test)]
@@ -207,9 +226,8 @@ mod tests {
         let written_keypair = KeyPairFromSeed32Generator::generate(Seed32::new([0u8; 32]));
         let currency = Currency::from(G1_TEST_CURRENCY);
 
-        let dewif_content = write::write_dewif_v1_content(
+        let dewif_content = write::write_dewif_v1_ed25519(
             currency,
-            KeysAlgo::Ed25519,
             12,
             "toto",
             &written_keypair.public_key(),
@@ -241,9 +259,8 @@ mod tests {
         let written_keypair = KeyPairFromSeed32Generator::generate(Seed32::new([0u8; 32]));
         let currency = Currency::from(G1_TEST_CURRENCY);
 
-        let mut dewif_content = write::write_dewif_v1_content(
+        let mut dewif_content = write::write_dewif_v1_ed25519(
             currency,
-            KeysAlgo::Ed25519,
             12,
             "toto",
             &written_keypair.public_key(),
@@ -264,19 +281,16 @@ mod tests {
     }
 
     #[test]
-    fn dewif_v1_bip32() {
-        let seed = Seed32::new([0u8; 32]);
-        let written_keypair = crate::keys::ed25519::bip32::KeyPair::from_seed(seed.clone());
+    fn dewif_v1_bip32() -> Result<(), crate::mnemonic::MnemonicError> {
+        let mnemonic = crate::mnemonic::Mnemonic::from_phrase(
+            "crop cash unable insane eight faith inflict route frame loud box vibrant",
+            crate::mnemonic::Language::English,
+        )?;
+        let seed = crate::mnemonic::mnemonic_to_seed(&mnemonic);
+        let written_keypair = crate::keys::ed25519::bip32::KeyPair::from_seed(seed);
         let currency = Currency::from(G1_TEST_CURRENCY);
 
-        let dewif_content = write::write_dewif_v1_content(
-            currency,
-            KeysAlgo::Bip32Ed25519,
-            12,
-            "toto",
-            &written_keypair.public_key(),
-            &seed,
-        );
+        let dewif_content = write::write_dewif_v1_bip_ed25519(currency, 12, "toto", &mnemonic);
 
         let keypair_read = unwrap!(read_dewif_file_content(
             ExpectedCurrency::Specific(currency),
@@ -299,6 +313,8 @@ mod tests {
         ));
 
         assert_eq!(KeyPairEnum::Bip32Ed25519(written_keypair), keypair_read,);
+
+        Ok(())
     }
 
     #[test]

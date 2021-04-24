@@ -1,5 +1,7 @@
 # Contributing
 
+For any addition of feature or modification of existing feature, please discuss it beforehand via an issue of this repository by tagging one or more maintainers.
+
 ## Commit Message Guidelines
 
 We have very precise rules over how our git commit messages can be formatted.  This leads to **more
@@ -47,10 +49,11 @@ Must be one of the following:
 * **chore**: Modification of the repository architecture
 * **ci**: Changes to our CI configuration files and scripts (example scopes: Github Actions, Gitlab CI)
 * **docs**: Documentation only changes
-* **feat**: A new feature
+* **feat**: Add a new feature
+* **mod**: Modify an existing feature
 * **fix**: A bug fix
 * **perf**: A code change that improves performance
-* **refactor**: A code change that neither fixes a bug nor adds a feature
+* **refactor**: A code change that neither fixes a bug nor adds a feature nor modify an existing feature
 * **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 * **test**: Adding missing tests or correcting existing tests
 
