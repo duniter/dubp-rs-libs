@@ -15,6 +15,7 @@
 
 //! XOR Cipher
 
+#[cfg(feature = "dewif")]
 pub(crate) fn xor_cipher(input: &[u8], key: &[u8], output: &mut [u8]) {
     assert_eq!(input.len(), key.len());
     assert_eq!(input.len(), output.len());
