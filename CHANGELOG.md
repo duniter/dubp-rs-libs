@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.52.0] - 2021-04-25
+
 ## [0.51.1] - 2021-04-18
 
 ## [0.51.0] - 2021-04-04
@@ -141,7 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Initial version.
 
 <!-- next-url -->
-[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.51.1...HEAD
+[Unreleased]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.52.0...HEAD
+[0.52.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.51.1...v0.52.0
 [0.51.1]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.51.0...v0.51.1
 [0.51.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.50.0...v0.51.0
 [0.50.0]: https://git.duniter.org/libs/dubp-rs-libs/compare/v0.49.0...v0.50.0
