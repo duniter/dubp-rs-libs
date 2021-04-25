@@ -116,7 +116,7 @@ mod lazy {
 ///
 /// [Mnemonic]: ./mnemonic/struct.Mnemonic.html
 /// [Seed]: ./seed/struct.Seed.html
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Language {
     /// English
     English,

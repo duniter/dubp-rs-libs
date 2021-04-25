@@ -44,12 +44,13 @@ use zeroize::Zeroize;
 /// [Seed::new()]: ./seed/struct.Seed.html#method.new
 /// [Seed::as_bytes()]: ./seed/struct.Seed.html#method.as_bytes
 ///
+#[derive(PartialEq)]
 pub struct Mnemonic {
     lang: Language,
     secret: MnemonicSecret,
 }
 
-#[derive(Default, Zeroize)]
+#[derive(Default, PartialEq, Zeroize)]
 #[zeroize(drop)]
 struct MnemonicSecret {
     entropy: Vec<u8>,

@@ -15,7 +15,8 @@
 
 //! Read [DEWIF](https://git.duniter.org/nodes/common/doc/blob/dewif/rfc/0013_Duniter_Encrypted_Wallet_Import_Format.md) file content
 
-use super::{Currency, ExpectedCurrency};
+use super::{Currency, DewifContent, DewifPayload, ExpectedCurrency};
+use crate::keys::{KeyPair, Signator};
 use crate::seeds::{Seed32, SEED_32_SIZE_IN_BYTES};
 use crate::{
     keys::{
@@ -23,10 +24,6 @@ use crate::{
         KeysAlgo,
     },
     mnemonic::{Language, Mnemonic, MnemonicError},
-};
-use crate::{
-    keys::{KeyPair, KeyPairEnum, Signator},
-    mnemonic::mnemonic_to_seed,
 };
 use byteorder::ByteOrder;
 use std::{
@@ -123,20 +120,18 @@ pub fn read_dewif_meta(file_content: &str) -> Result<super::DewifMeta, DewifRead
     })
 }
 
-/// read dewif file content with user passphrase
+/// read dewif content with user passphrase
 pub fn read_dewif_file_content(
     expected_currency: ExpectedCurrency,
     file_content: &str,
     passphrase: &str,
-) -> Result<KeyPairEnum, DewifReadError> {
+) -> Result<DewifContent, DewifReadError> {
+    let meta = read_dewif_meta(file_content)?;
+
     let mut bytes = base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
 
-    if bytes.len() < 8 {
-        return Err(DewifReadError::TooShortContent);
-    }
-
-    let version = byteorder::BigEndian::read_u32(&bytes[0..4]);
-    let currency = Currency::from(byteorder::BigEndian::read_u32(&bytes[4..8]));
+    let version = meta.version;
+    let currency = meta.currency;
 
     if !expected_currency.is_valid(currency) {
         return Err(DewifReadError::UnexpectedCurrency {
@@ -145,15 +140,18 @@ pub fn read_dewif_file_content(
         });
     }
 
-    match version {
-        1 => read_dewif_v1(&mut bytes[8..], passphrase),
-        other_version => Err(DewifReadError::UnsupportedVersion {
-            actual: other_version,
-        }),
-    }
+    let payload = match version {
+        1 => read_dewif_v1(&mut bytes[8..], passphrase)?,
+        other_version => {
+            return Err(DewifReadError::UnsupportedVersion {
+                actual: other_version,
+            });
+        }
+    };
+    Ok(DewifContent { meta, payload })
 }
 
-fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<KeyPairEnum, DewifReadError> {
+fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<DewifPayload, DewifReadError> {
     match bytes.len() {
         len if len < super::V1_BIP32_ED25519_DATA_LEN => {
             return Err(DewifReadError::TooShortContent)
@@ -178,7 +176,7 @@ fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<KeyPairEnum, Dewi
             );
 
             // Get checked keypair
-            Ok(KeyPairEnum::Ed25519(bytes_to_checked_keypair(
+            Ok(DewifPayload::Ed25519(bytes_to_checked_keypair(
                 &decrypted_bytes,
             )?))
         }
@@ -202,10 +200,7 @@ fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<KeyPairEnum, Dewi
             if &checksum.0[..8] != expected_checksum {
                 Err(DewifReadError::CorruptedContent)
             } else {
-                let seed = mnemonic_to_seed(&mnemonic);
-                Ok(KeyPairEnum::Bip32Ed25519(
-                    crate::keys::ed25519::bip32::KeyPair::from_seed(seed),
-                ))
+                Ok(DewifPayload::Bip32Ed25519(mnemonic))
             }
         }
     }
@@ -230,22 +225,6 @@ pub(super) fn get_dewif_seed_unchecked(bytes: &mut [u8], passphrase: &str) -> Se
             .try_into()
             .unwrap_or_else(|_| unsafe { unreachable_unchecked() }),
     )
-}
-
-// Internal insecure function, should not expose on public API
-pub(super) fn get_dewif_mnemonic_unchecked(bytes: &mut [u8], passphrase: &str) -> Mnemonic {
-    // Read log_n
-    let log_n = bytes[0];
-
-    // Decrypt bytes
-    let mut decrypted_bytes = [0u8; 42];
-    crate::xor_cipher::xor_cipher(
-        &bytes[2..],
-        super::gen_xor_seed42(passphrase, log_n).as_ref(),
-        &mut decrypted_bytes,
-    );
-
-    get_dewif_mnemonic(&decrypted_bytes).unwrap_or_else(|_| unsafe { unreachable_unchecked() })
 }
 
 fn bytes_to_checked_keypair<
@@ -299,7 +278,7 @@ mod tests {
     fn read_unsupported_version() -> Result<(), ()> {
         if let Err(DewifReadError::UnsupportedVersion { .. }) = read_dewif_file_content(
             ExpectedCurrency::Any,
-            "ABAAAb30ng3kI9QGMbR7TYCqPhS99J4N5CPUBjG0e02Aqj4U1UmOemI6pweNm1Ab1AR4V6ZWFnwkkp9QPxppVeMv7aaLWdop",
+            "ABAAARAAAAEMAAqqbWsirdvN0W7IkpmKdG/Zbt4ZszPx9VcWUu0o4cdxIZ4HHUybCVbyVmQL9Wid8KE6FCWeMRtr5OKAUKYwsNI=",
             "toto"
         ) {
             Ok(())
@@ -323,7 +302,7 @@ mod tests {
     fn read_unexpected_currency() -> Result<(), ()> {
         if let Err(DewifReadError::UnexpectedCurrency { .. }) = read_dewif_file_content(
             ExpectedCurrency::Specific(Currency::from(42)),
-            "AAAAARAAAAGfFDAs+jVZYkfhBlHZZ2fEQIvBqnG16g5+02cY18wSOjW0cUg2JV3SUTJYN2CrbQeRDwGazWnzSFBphchMmiL0",
+            "AAAAARAAAAEMAAqqbWsirdvN0W7IkpmKdG/Zbt4ZszPx9VcWUu0o4cdxIZ4HHUybCVbyVmQL9Wid8KE6FCWeMRtr5OKAUKYwsNI=",
             "toto titi tata"
         ) {
             Ok(())
@@ -361,29 +340,34 @@ mod tests {
                 version: 1
             }
         );
-        let key_pair = unwrap!(read_dewif_file_content(
+        if let DewifContent {
+            payload: DewifPayload::Ed25519(key_pair),
+            ..
+        } = unwrap!(read_dewif_file_content(
             expected_currency,
             dewif_file_content,
             encryption_passphrase
-        ));
+        )) {
+            assert_eq!(
+                "4zvwRjXUKGfvwnParsHAS3HuSVzV5cA4McphgmoCtajS",
+                &key_pair.public_key().to_string()
+            );
 
-        assert_eq!(
-            "4zvwRjXUKGfvwnParsHAS3HuSVzV5cA4McphgmoCtajS",
-            &key_pair.public_key().to_string()
-        );
+            // Generate signator
+            // `Signator` is a non-copiable and non-clonable type,
+            // so only generate it when you are in the scope where you effectively sign.
+            let signator = key_pair.generate_signator();
 
-        // Generate signator
-        // `Signator` is a non-copiable and non-clonable type,
-        // so only generate it when you are in the scope where you effectively sign.
-        let signator = key_pair.generate_signator();
+            // Sign a message with keypair
+            let sig = signator.sign(b"message");
 
-        // Sign a message with keypair
-        let sig = signator.sign(b"message");
-
-        assert_eq!(
-            "JPurBgnHExHND1woow9nB7xVQjKkdHGs1znQbgv0ttZwOz16OlOCDDfvXfKE8e0xUfs2u7winav8IDwo7d1EBQ==",
-            &sig.to_string()
-        )
+            assert_eq!(
+                "JPurBgnHExHND1woow9nB7xVQjKkdHGs1znQbgv0ttZwOz16OlOCDDfvXfKE8e0xUfs2u7winav8IDwo7d1EBQ==",
+                &sig.to_string()
+            )
+        } else {
+            panic!("corrupted dewif");
+        }
     }
 
     #[test]
@@ -417,29 +401,36 @@ mod tests {
                 version: 1
             }
         );
-        let key_pair = unwrap!(read_dewif_file_content(
+        if let DewifContent {
+            payload: DewifPayload::Bip32Ed25519(mnemonic),
+            ..
+        } = unwrap!(read_dewif_file_content(
             expected_currency,
             dewif_file_content,
             encryption_passphrase
-        ));
+        )) {
+            let key_pair = crate::keys::ed25519::bip32::KeyPair::from_mnemonic(&mnemonic);
 
-        assert_eq!(
-            "9TgSNiJPFtQV89Wt2GPnoozpSWTJzAxERpmTQr5Lhv7G",
-            &key_pair.public_key().to_string()
-        );
+            assert_eq!(
+                "9TgSNiJPFtQV89Wt2GPnoozpSWTJzAxERpmTQr5Lhv7G",
+                &key_pair.public_key().to_string()
+            );
 
-        // Generate signator
-        // `Signator` is a non-copiable and non-clonable type,
-        // so only generate it when you are in the scope where you effectively sign.
-        let signator = key_pair.generate_signator();
+            // Generate signator
+            // `Signator` is a non-copiable and non-clonable type,
+            // so only generate it when you are in the scope where you effectively sign.
+            let signator = key_pair.generate_signator();
 
-        // Sign a message with keypair
-        let sig = signator.sign(b"message");
+            // Sign a message with keypair
+            let sig = signator.sign(b"message");
 
-        assert_eq!(
-            "N1+7Dzjde71hBCkoqSWRc3Ywn4+z7FChKjCgG8OtIlki4BH9w6QLXQ8Pkb7uyoCa9N9VuUgtJDgYSn09ll6yCg==",
-            &sig.to_string()
-        );
-        assert!(key_pair.public_key().verify(b"message", &sig).is_ok());
+            assert_eq!(
+                "N1+7Dzjde71hBCkoqSWRc3Ywn4+z7FChKjCgG8OtIlki4BH9w6QLXQ8Pkb7uyoCa9N9VuUgtJDgYSn09ll6yCg==",
+                &sig.to_string()
+            );
+            assert!(key_pair.public_key().verify(b"message", &sig).is_ok());
+        } else {
+            panic!("corrupted dewif");
+        }
     }
 }

@@ -35,7 +35,7 @@
 //!
 //! // Get user mnemonic (from cli prompt or gui)
 //! let mnemonic = Mnemonic::from_phrase(
-//!     "tongue cute mail fossil great frozen same social weasel impact brush kind",
+//!     "crop cash unable insane eight faith inflict route frame loud box vibrant",
 //!     Language::English,
 //! ).expect("wrong mnemonic");
 //!
@@ -49,7 +49,7 @@
 //! let dewif_content = create_dewif_v1(Currency::from(G1_TEST_CURRENCY), 12u8, &mnemonic, encryption_passphrase);
 //!
 //! assert_eq!(
-//!     "AAAAARAAAAEMAQq6iQ30tXY7s9WnLPZy+let094ZszPx9VcWUu0o4cdxGvRUmWTuu5fVWA==",
+//!     "AAAAARAAAAEMAQq6Xo9JHOG5v8rUT33W5OuzF94ZszPx9VcWUu0o4cdxGvSA+S8NWUHKVw==",
 //!     dewif_content
 //! )
 //! ```
@@ -57,13 +57,14 @@
 //! ## Read DEWIF file
 //!
 //! ```
-//! use dup_crypto::dewif::{Currency, G1_TEST_CURRENCY, ExpectedCurrency, read_dewif_file_content};
-//! use dup_crypto::keys::{KeyPair, Signator};
+//! use dup_crypto::dewif::{Currency, G1_TEST_CURRENCY, DewifContent, DewifMeta, DewifPayload, ExpectedCurrency, read_dewif_file_content};
+//! use dup_crypto::keys::{KeysAlgo, KeyPair, Signator};
+//! use dup_crypto::mnemonic::{Language, Mnemonic};
 //! use std::num::NonZeroU32;
 //! use std::str::FromStr;
 //!
 //! // Get DEWIF file content (Usually from disk)
-//! let dewif_file_content = "AAAAARAAAAEMAQq6iQ30tXY7s9WnLPZy+let094ZszPx9VcWUu0o4cdxGvRUmWTuu5fVWA==";
+//! let dewif_file_content = "AAAAARAAAAEMAQq6Xo9JHOG5v8rUT33W5OuzF94ZszPx9VcWUu0o4cdxGvSA+S8NWUHKVw==";
 //!
 //! // Get user passphrase for DEWIF decryption (from cli prompt or gui)
 //! let encryption_passphrase = "toto titi tata";
@@ -72,26 +73,37 @@
 //! let expected_currency = ExpectedCurrency::Specific(Currency::from(G1_TEST_CURRENCY));
 //!
 //! // Read DEWIF file content
-//! // If the file content is correct, we get a key-pair.
-//! let key_pair = read_dewif_file_content(expected_currency, dewif_file_content, encryption_passphrase)?;
+//! let DewifContent { meta, payload } = read_dewif_file_content(expected_currency, dewif_file_content, encryption_passphrase)?;
 //!
 //! assert_eq!(
-//!     "2thWfGR3BVAMSjwML6X2ZrWZVdyqvBsfMQKKwyWWqW1d",
-//!     &key_pair.public_key().to_string()
+//!     meta,
+//!     DewifMeta {
+//!         algo: KeysAlgo::Bip32Ed25519,
+//!         currency: Currency::from(G1_TEST_CURRENCY),
+//!         log_n: 12,
+//!         version: 1
+//!     }
 //! );
 //!
-//! // Generate signator
-//! // `Signator` is a non-copiable and non-clonable type,
-//! // so only generate it when you are in the scope where you effectively sign.
-//! let signator = key_pair.generate_signator();
+//! if let DewifPayload::Bip32Ed25519(mnemonic) = payload {
+//!     let key_pair = dup_crypto::keys::ed25519::bip32::KeyPair::from_mnemonic(&mnemonic);
 //!
-//! // Sign a message with keypair
-//! let sig = signator.sign(b"message");
+//!    // Generate signator
+//!    // `Signator` is a non-copiable and non-clonable type,
+//!    // so only generate it when you are in the scope where you effectively sign.
+//!    let signator = key_pair.generate_signator();
 //!
-//! assert_eq!(
-//!     "vg7NWUTR8t4jDaki1nVj1mLV2ibynDL7XayGPvGWVw8gZbnUDjeVTukUIs7esF/MegzicIwbhFBPE216AZEkAw==",
-//!     &sig.to_string()
-//! );
+//!    // Sign a message with keypair
+//!    let sig = signator.sign(b"message");
+//!
+//!    assert_eq!(
+//!        "N1+7Dzjde71hBCkoqSWRc3Ywn4+z7FChKjCgG8OtIlki4BH9w6QLXQ8Pkb7uyoCa9N9VuUgtJDgYSn09ll6yCg==",
+//!        &sig.to_string()
+//!    );
+//! } else {
+//!     panic!("corrupted dewif")
+//! }
+//!
 //! # Ok::<(), dup_crypto::dewif::DewifReadError>(())
 //! ```
 //!
@@ -127,6 +139,15 @@ const V1_BIP32_ED25519_BYTES_LEN: usize = HEADERS_LEN + V1_BIP32_ED25519_DATA_LE
 const V1_BIP32_ED25519_UNENCRYPTED_BYTES_LEN: usize =
     V1_BIP32_ED25519_BYTES_LEN - V1_BIP32_ED25519_ENCRYPTED_BYTES_LEN;
 
+#[derive(Debug, PartialEq)]
+/// DEWIF content
+pub struct DewifContent {
+    /// DEWIF meta data
+    pub meta: DewifMeta,
+    /// DEWIF payload
+    pub payload: DewifPayload,
+}
+
 /// DEWIF meta data
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DewifMeta {
@@ -140,27 +161,35 @@ pub struct DewifMeta {
     pub version: u32,
 }
 
+#[derive(Debug, PartialEq)]
+/// DEWIF payload
+pub enum DewifPayload {
+    /// Ed25519 algo payload
+    Ed25519(crate::keys::ed25519::Ed25519KeyPair),
+    /// Bip32-Ed25519 algo payload
+    Bip32Ed25519(crate::mnemonic::Mnemonic),
+}
+
 /// Change DEWIF passphrase
 pub fn change_dewif_passphrase(
     file_content: &str,
     old_passphrase: &str,
     new_passphrase: &str,
 ) -> Result<String, DewifReadError> {
-    let DewifMeta {
-        algo: _,
-        currency,
-        log_n,
-        version,
-    } = read_dewif_meta(file_content)?;
-    let keypair = read_dewif_file_content(
-        ExpectedCurrency::Specific(currency),
-        file_content,
-        old_passphrase,
-    )?;
+    let DewifContent {
+        meta:
+            DewifMeta {
+                algo: _,
+                currency,
+                log_n,
+                version,
+            },
+        payload,
+    } = read_dewif_file_content(ExpectedCurrency::Any, file_content, old_passphrase)?;
     if version == 1 {
         let mut bytes = base64::decode(file_content).map_err(DewifReadError::InvalidBase64Str)?;
-        match keypair {
-            crate::keys::KeyPairEnum::Ed25519(kp) => {
+        match payload {
+            DewifPayload::Ed25519(kp) => {
                 let seed = read::get_dewif_seed_unchecked(&mut bytes[8..], old_passphrase);
                 Ok(write::write_dewif_v1_ed25519(
                     currency,
@@ -171,16 +200,12 @@ pub fn change_dewif_passphrase(
                 ))
             }
             #[cfg(feature = "bip32-ed25519")]
-            crate::keys::KeyPairEnum::Bip32Ed25519(_) => {
-                let mnemonic = read::get_dewif_mnemonic_unchecked(&mut bytes[8..], old_passphrase);
-
-                Ok(write::write_dewif_v1_bip_ed25519(
-                    currency,
-                    log_n,
-                    new_passphrase,
-                    &mnemonic,
-                ))
-            }
+            DewifPayload::Bip32Ed25519(mnemonic) => Ok(write::write_dewif_v1_bip_ed25519(
+                currency,
+                log_n,
+                new_passphrase,
+                &mnemonic,
+            )),
         }
     } else {
         Err(DewifReadError::UnsupportedVersion { actual: version })
@@ -213,11 +238,9 @@ fn gen_xor_seed64(passphrase: &str, log_n: u8) -> Seed64 {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use crate::bases::b58::ToBase58 as _;
     use crate::keys::ed25519::KeyPairFromSeed32Generator;
-    use crate::keys::KeyPairEnum;
     use crate::seeds::Seed32;
     use unwrap::unwrap;
 
@@ -226,7 +249,7 @@ mod tests {
         let written_keypair = KeyPairFromSeed32Generator::generate(Seed32::new([0u8; 32]));
         let currency = Currency::from(G1_TEST_CURRENCY);
 
-        let dewif_content = write::write_dewif_v1_ed25519(
+        let dewif_content_str = write::write_dewif_v1_ed25519(
             currency,
             12,
             "toto",
@@ -234,24 +257,31 @@ mod tests {
             &written_keypair.seed(),
         );
 
-        let keypair_read = unwrap!(read_dewif_file_content(
+        let dewif_content = unwrap!(read_dewif_file_content(
             ExpectedCurrency::Specific(currency),
-            &dewif_content,
+            &dewif_content_str,
             "toto"
         ));
 
-        assert_eq!(KeyPairEnum::Ed25519(written_keypair.clone()), keypair_read,);
+        assert_eq!(
+            DewifPayload::Ed25519(written_keypair.clone()),
+            dewif_content.payload,
+        );
 
         // Change DEWIF passphrase
-        let new_dewif_content = unwrap!(change_dewif_passphrase(&dewif_content, "toto", "titi"));
+        let new_dewif_content =
+            unwrap!(change_dewif_passphrase(&dewif_content_str, "toto", "titi"));
 
-        let keypair_read = unwrap!(read_dewif_file_content(
+        let dewif_content = unwrap!(read_dewif_file_content(
             ExpectedCurrency::Specific(currency),
             &new_dewif_content,
             "titi"
         ));
 
-        assert_eq!(KeyPairEnum::Ed25519(written_keypair), keypair_read,);
+        assert_eq!(
+            DewifPayload::Ed25519(written_keypair),
+            dewif_content.payload,
+        );
     }
 
     #[test]
@@ -286,33 +316,36 @@ mod tests {
             "crop cash unable insane eight faith inflict route frame loud box vibrant",
             crate::mnemonic::Language::English,
         )?;
-        let seed = crate::mnemonic::mnemonic_to_seed(&mnemonic);
-        let written_keypair = crate::keys::ed25519::bip32::KeyPair::from_seed(seed);
+        let mnemonic_copy = crate::mnemonic::Mnemonic::from_phrase(
+            "crop cash unable insane eight faith inflict route frame loud box vibrant",
+            crate::mnemonic::Language::English,
+        )?;
         let currency = Currency::from(G1_TEST_CURRENCY);
 
-        let dewif_content = write::write_dewif_v1_bip_ed25519(currency, 12, "toto", &mnemonic);
+        let dewif_content_str = write::write_dewif_v1_bip_ed25519(currency, 12, "toto", &mnemonic);
 
-        let keypair_read = unwrap!(read_dewif_file_content(
+        let dewif_content = unwrap!(read_dewif_file_content(
             ExpectedCurrency::Specific(currency),
-            &dewif_content,
+            &dewif_content_str,
             "toto"
         ));
 
-        assert_eq!(
-            KeyPairEnum::Bip32Ed25519(written_keypair.clone()),
-            keypair_read,
-        );
+        assert_eq!(DewifPayload::Bip32Ed25519(mnemonic), dewif_content.payload,);
 
         // Change DEWIF passphrase
-        let new_dewif_content = unwrap!(change_dewif_passphrase(&dewif_content, "toto", "titi"));
+        let new_dewif_content_str =
+            unwrap!(change_dewif_passphrase(&dewif_content_str, "toto", "titi"));
 
-        let keypair_read = unwrap!(read_dewif_file_content(
+        let new_dewif_content = unwrap!(read_dewif_file_content(
             ExpectedCurrency::Specific(currency),
-            &new_dewif_content,
+            &new_dewif_content_str,
             "titi"
         ));
 
-        assert_eq!(KeyPairEnum::Bip32Ed25519(written_keypair), keypair_read,);
+        assert_eq!(
+            DewifPayload::Bip32Ed25519(mnemonic_copy),
+            new_dewif_content.payload,
+        );
 
         Ok(())
     }
@@ -324,13 +357,18 @@ mod tests {
         let dewif =
             create_dewif_v1_legacy(currency, 12, "pass".to_owned(), "salt".to_owned(), "toto");
 
-        let key_pair =
-            read_dewif_file_content(ExpectedCurrency::Specific(currency), &dewif, "toto")?;
-
-        assert_eq!(
-            "3YumN7F7D8c2hmkHLHf3ZD8wc3tBHiECEK9zLPkaJtAF",
-            &key_pair.public_key().to_base58()
-        );
+        if let DewifContent {
+            payload: DewifPayload::Ed25519(key_pair),
+            ..
+        } = read_dewif_file_content(ExpectedCurrency::Specific(currency), &dewif, "toto")?
+        {
+            assert_eq!(
+                "3YumN7F7D8c2hmkHLHf3ZD8wc3tBHiECEK9zLPkaJtAF",
+                &key_pair.public_key().to_base58()
+            );
+        } else {
+            panic!("corrupted dewif");
+        }
 
         Ok(())
     }
