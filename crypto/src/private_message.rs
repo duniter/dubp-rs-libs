@@ -24,9 +24,9 @@
 //! ```;
 //! use dup_crypto::keys::{
 //!     KeyPair, PublicKey,
-//!     ed25519::{KeyPairFromSaltedPasswordGenerator, PublicKey as Ed25519PublicKey, SaltedPassword}
+//!     ed25519::{KeyPairFromSeed32Generator, PublicKey as Ed25519PublicKey}
 //! };
-//! use dup_crypto::private_message::{Aad, Algorithm, AuthenticationPolicy, METADATA_LEN};
+//! use dup_crypto::private_message::{ChaChaRounds, AuthenticationPolicy, METADATA_LEN};
 //! use dup_crypto::seeds::Seed32;
 //!
 //! // Take the time to study which is the authentication policy adapted
@@ -35,18 +35,16 @@
 //! let authentication_policy = AuthenticationPolicy::PrivateAuthentication;
 //!
 //! // Regardless of the authentication policy chosen, the sender's key-pair is required.
-//! let sender_key_pair = KeyPairFromSaltedPasswordGenerator::with_default_parameters()
-//!     .generate(SaltedPassword::new("sender salt".to_owned(), "sender password".to_owned()));
+//! let sender_key_pair = KeyPairFromSeed32Generator::generate(Seed32::new([42u8; 32]));
 //!
-//! // Choose an encryption algorithm adapted to your specific use case.
-//! // Read `dup_crypto::private_message::Algorithm` documentation.
-//! let encryption_algo = Algorithm::Chacha20Poly1305;
+//! // Choose number of chacha rounds.
+//! let chacha_rounds = ChaChaRounds::ChaCha20;
 //!
 //! // Aad value must be known by the software that will decipher the message, it can be the
 //! // name of the service followed by the name of the network (name of the currency for example).
 //! // This field is only used to ensure that there is no interference between different services
 //! // and/or networks.
-//! let aad = Aad::from(b"service name - currency name");
+//! let aad = b"service name - currency name";
 //!
 //! // Define receiver and message content
 //! // The message must be mutable because for performance reasons the encryption is applied
@@ -67,8 +65,8 @@
 //! // Finally, authenticate and encrypt the message.
 //! dup_crypto::private_message::encrypt_private_message(
 //!     aad,
-//!     encryption_algo,
 //!     authentication_policy,
+//!     chacha_rounds,
 //!     &mut buffer,
 //!     &receiver_public_key,
 //!     &sender_key_pair,
@@ -83,40 +81,30 @@
 //!
 //! ```
 //! use dup_crypto::keys::{KeyPair, ed25519::KeyPairFromSeed32Generator};
-//! use dup_crypto::private_message::{Aad, Algorithm, DecryptedMessage};
+//! use dup_crypto::private_message::{ChaChaRounds, DecryptedMessage};
 //! use dup_crypto::seeds::Seed32;
 //!
 //! let receiver_key_pair = KeyPairFromSeed32Generator::generate(
 //!     Seed32::from_base58("7nY1fYmCXL1vF86ptneeg8r7M6C7G93M8MCfzBCaCtiJ").expect("invalid seed")
 //! );
 //!
-//! let mut encrypted_message = vec![221u8, 252, 176, 127, 197, // ... several bytes hidden
-//! # 20, 191, 154, 245, 206, 154, 71, 71,
-//! # 169, 240, 50, 142, 231, 143, 239, 55, 31, 117, 197, 66, 90, 232, 14, 108, 203, 188, 70, 123, 75,
-//! # 216, 55, 5, 57, 60, 35, 185, 99, 147, 23, 51, 57, 93, 213, 149, 101, 24, 195, 18, 168, 37, 71, 182,
-//! # 220, 198, 250, 72, 199, 21, 66, 15, 57, 144, 247, 54, 19, 30, 134, 210, 227, 205, 113, 142, 15, 77,
-//! # 76, 223, 132, 38, 237, 100, 139, 227, 115, 49, 216, 102, 120, 124, 84, 208, 85, 242, 141, 216, 145,
-//! # 10, 17, 168, 219, 129, 199, 149, 188, 210, 123, 79, 128, 76, 159, 133, 251, 95, 29, 238, 43, 225,
-//! # 211, 43, 197, 237, 93, 79, 243, 120, 227, 153, 79, 57, 1, 23, 233, 167, 110, 210, 16, 52, 16, 73, 13,
-//! # 214, 16, 223, 17, 175, 228, 211, 151, 79, 227, 14, 56, 135, 77, 73, 36, 22, 115, 77, 201, 114, 38,
-//! # 206, 240, 212, 129, 247, 111, 165, 182, 98, 176, 247, 69, 198, 34, 71, 26, 176, 147, 205, 173, 50,
-//! # 247, 151, 148, 197, 162, 88, 254, 185, 149, 108, 2, 137, 139, 66, 82, 168, 213, 118, 218, 188, 238,
-//! # 147, 89, 156];
+//! let mut encrypted_message = vec![3, 81, 192, 79, 234, // ... several bytes hidden
+//! # 127, 151, 145, 237, 209, 209, 213, 219, 29, 249, 21, 217, 231, 216, 147, 105, 39, 180, 181, 92, 97, 215, 153, 65, 104, 221, 236, 96, 151, 136, 3, 100, 109, 170, 117, 137, 66, 225, 189, 200, 38, 151, 219, 60, 78, 17, 146, 69, 35, 92, 186, 192, 69, 187, 44, 201, 163, 53, 16, 151, 212, 172, 120, 151, 241, 42, 79, 11, 77, 54, 21, 30, 206, 105, 94, 195, 177, 80, 58, 96, 28, 27, 99, 164, 39, 87, 49, 143, 185, 7, 137, 138, 189, 60, 98, 208, 169, 168, 236, 13, 86, 74, 177, 60, 197, 45, 222, 135, 193, 130, 161, 192, 56, 168, 169, 97, 8, 33, 101, 202, 180, 239, 178, 42, 139, 226, 59, 22, 228, 43, 245, 236, 204, 106, 86, 218, 88, 238, 215, 219, 4, 38, 88, 90, 42, 250, 27, 236, 204, 73, 53, 179, 39, 7, 124, 187, 126, 81, 4, 117, 244, 114, 88, 52, 214, 86, 168, 213, 201, 114, 248, 145, 212, 164, 189, 78, 8, 201, 178, 85, 12, 25, 248, 193, 247, 13, 103, 15, 50, 197, 17, 41, 93, 164, 36, 87, 97, 215, 216, 207, 183, 21, 236, 114, 227, 88, 235, 86, 72, 183, 49, 69, 176];
 //!
 //! let DecryptedMessage { message, sender_public_key, signature_opt } =
 //!     dup_crypto::private_message::decrypt_private_message(
-//!         Aad::from(b"service name - currency name"),
-//!         Algorithm::Chacha20Poly1305,
+//!         b"service name - currency name",
+//!         ChaChaRounds::ChaCha20,
 //!         &mut encrypted_message,
 //!         &receiver_key_pair,
 //! )?;
 //!
 //! assert_eq!(
 //!     message,
-//!     &b"This is a secret message, which can only be read by the recipient."[..],
+//!     b"Hello, this is a secret message, which can only be read by the recipient.",
 //! );
 //! assert_eq!{
-//!     "4HbjoXtWu9C2Q5LMu1RcWHS66k4dnvHspBxKWagFG5rJ",
+//!     "5pFCsihCTDbFaysD6jDhvv7wUcZsSKoGWQ3Lm1QU5Z9t",
 //!     &sender_public_key.to_string(),
 //! }
 //! assert_eq!(
@@ -131,7 +119,6 @@
 mod authentication;
 
 pub use self::authentication::AuthenticationPolicy;
-pub use ring::aead::Aad;
 
 use self::authentication::{
     generate_authentication_proof, verify_authentication_proof, write_anthentication_datas,
@@ -143,41 +130,36 @@ use crate::keys::x25519::{diffie_hellman, X25519PublicKey, X25519SecretKey};
 use crate::keys::{KeyPair, PubKeyFromBytesError};
 use crate::rand::UnspecifiedRandError;
 use crate::seeds::Seed32;
-use ring::aead::{LessSafeKey, Nonce, Tag, UnboundKey};
-use ring::pbkdf2;
-use std::convert::TryFrom;
-use std::{hint::unreachable_unchecked, num::NonZeroU32};
+use chacha20poly1305::aead::{AeadInPlace as _, NewAead};
+use chacha20poly1305::{ChaCha12Poly1305, ChaCha20Poly1305, ChaCha8Poly1305};
+use std::num::NonZeroU32;
+use std::{convert::TryFrom, hint::unreachable_unchecked};
 use zeroize::Zeroize;
 
+type Key = chacha20poly1305::aead::Key<ChaCha20Poly1305>;
+type Nonce =
+    chacha20poly1305::aead::Nonce<chacha20poly1305::aead::generic_array::typenum::consts::U12>;
+type Tag = chacha20poly1305::aead::Tag<chacha20poly1305::aead::generic_array::typenum::consts::U16>;
+
 /// Metadata length
-pub const METADATA_LEN: usize = 129; // EPHEMERAL_PUBLIC_KEY_LEN + AUTHENTICATION_DATAS_LEN
+pub const METADATA_LEN: usize = CLEAR_FOOTER_LEN + AUTHENTICATION_DATAS_LEN;
 
-const ITERATIONS: u32 = 3;
-const SENDER_PUBLIC_KEY_LEN: usize = 32;
-const EPHEMERAL_PUBLIC_KEY_LEN: usize = 32;
 const AUTHENTICATION_DATAS_LEN: usize = 97;
+const CLEAR_FOOTER_LEN: usize = EPHEMERAL_PUBLIC_KEY_LEN + TAG_LEN;
+const EPHEMERAL_PUBLIC_KEY_LEN: usize = 32;
+const PBKDF2_ITERATIONS: u32 = 3;
+const SENDER_PUBLIC_KEY_LEN: usize = 32;
+const TAG_LEN: usize = 16;
 
-/// Private message encryption algorithm
-/// If your program is susceptible to running on machines that do not provide hardware
-/// acceleration for AES (some phones, embedded devices, old computers, etc) then you
-/// should choose `Chacha20Poly1305`. Even on devices with hardware acceleration for AES,
-/// the performance of `Chacha20Poly1305` is often equivalent to `Aes256Gcm`, so only choose
-/// `Aes256Gcm` if you have strong reasons to do so.
+/// Number of ChaCha rounds
 #[derive(Clone, Copy, Debug)]
-pub enum Algorithm {
-    /// AES-256 in GCM mode with 128-bit tags and 96 bit nonces.
-    Aes256Gcm,
-    /// ChaCha20-Poly1305 as described in [RFC 7539](https://tools.ietf.org/html/rfc7539).
-    Chacha20Poly1305,
-}
-
-impl Algorithm {
-    fn to_ring_algo(self) -> &'static ring::aead::Algorithm {
-        match self {
-            Self::Aes256Gcm => &ring::aead::AES_256_GCM,
-            Self::Chacha20Poly1305 => &ring::aead::CHACHA20_POLY1305,
-        }
-    }
+pub enum ChaChaRounds {
+    /// 8 rounds
+    ChaCha8,
+    /// 12 rounds
+    ChaCha12,
+    /// 20 rounds
+    ChaCha20,
 }
 
 /// Error at encryption/decryption of a private message
@@ -191,8 +173,10 @@ pub enum PrivateMessageError {
     InvalidSenderPubKey(PubKeyFromBytesError),
     /// Invalid authentication proof : invalid signature
     InvalidAuthenticationProof,
-    /// Unspecified errror
-    Unspecified,
+    /// Unspecified aead error
+    UnspecifiedAeadError,
+    /// Unspecified rand error
+    UnspecifiedRandError,
 }
 
 impl From<std::io::Error> for PrivateMessageError {
@@ -203,23 +187,17 @@ impl From<std::io::Error> for PrivateMessageError {
 
 impl From<UnspecifiedRandError> for PrivateMessageError {
     fn from(_: UnspecifiedRandError) -> Self {
-        PrivateMessageError::Unspecified
-    }
-}
-
-impl From<ring::error::Unspecified> for PrivateMessageError {
-    fn from(_: ring::error::Unspecified) -> Self {
-        PrivateMessageError::Unspecified
+        PrivateMessageError::UnspecifiedRandError
     }
 }
 
 #[derive(Zeroize)]
 #[zeroize(drop)]
-struct SharedSecret([u8; 48]);
+struct SharedSecret([u8; 44]);
 
 impl Default for SharedSecret {
     fn default() -> Self {
-        SharedSecret([0u8; 48])
+        SharedSecret([0u8; 44])
     }
 }
 
@@ -236,16 +214,15 @@ impl AsMut<[u8]> for SharedSecret {
 }
 
 /// Encrypt private message
-pub fn encrypt_private_message<A, M>(
-    additionally_authenticated_data: Aad<A>,
-    algorithm: Algorithm,
+pub fn encrypt_private_message<M>(
+    additionally_authenticated_data: &[u8],
     authentication_policy: AuthenticationPolicy,
+    chacha_rounds: ChaChaRounds,
     message: &mut M,
     receiver_public_key: &Ed25519PublicKey,
     sender_keypair: &Ed25519KeyPair,
 ) -> Result<(), PrivateMessageError>
 where
-    A: AsRef<[u8]>,
     M: AsRef<[u8]> + AsMut<[u8]> + Extend<u8>,
 {
     // Generate ephemeral ed25519 keypair
@@ -253,12 +230,11 @@ where
 
     // Compute DH exchange (ephemeral_secret_key, receiver_public_key)
     // and derive symmetric_key and nonce from shared secret
-    let (symmetric_key, nonce) = generate_symmetric_key_and_nonce(
-        algorithm,
+    let shared_secret = generate_shared_secret(
         ephemeral_keypair.public_key().datas.as_ref(),
         ephemeral_keypair.seed(),
         &receiver_public_key,
-    )?;
+    );
 
     // Write encrypted footer (=authentication datas)
     let encrypted_footer = write_anthentication_datas(
@@ -274,11 +250,11 @@ where
     message.extend(encrypted_footer);
 
     // Encrypt message
-    let tag = encrypt::<A>(
-        symmetric_key,
-        nonce,
+    let tag = encrypt(
         additionally_authenticated_data,
+        chacha_rounds,
         message.as_mut(),
+        shared_secret,
     )?;
 
     // write clear footer (tag and ephemeral_public_key)
@@ -309,37 +285,40 @@ pub struct DecryptedMessage<'m> {
 /// If the authentication method chosen by the sender is `Signature`,
 /// then the signature is necessarily returned. The signature is returned
 /// to allow subsequent publication of proof that this particular message was sent by the sender.
-pub fn decrypt_private_message<'m, A: AsRef<[u8]>>(
-    additionally_authenticated_data: Aad<A>,
-    algorithm: Algorithm,
+pub fn decrypt_private_message<'m>(
+    additionally_authenticated_data: &[u8],
+    chacha_rounds: ChaChaRounds,
     encrypted_message: &'m mut [u8],
     receiver_key_pair: &Ed25519KeyPair,
 ) -> Result<DecryptedMessage<'m>, PrivateMessageError> {
-    // Get ephemeral public key
+    // Read clear footer (tag and ephemeral public key)
     let len = encrypted_message.len();
-    let ephemeral_public_key = &encrypted_message[(len - EPHEMERAL_PUBLIC_KEY_LEN)..];
+    let clear_footer_begin = len - EPHEMERAL_PUBLIC_KEY_LEN - TAG_LEN;
+    let tag_end = len - EPHEMERAL_PUBLIC_KEY_LEN;
+    let tag = Tag::from_slice(&encrypted_message[clear_footer_begin..tag_end]).to_owned();
+    let sender_ephemeral_public_key =
+        Ed25519PublicKey::try_from(&encrypted_message[(len - EPHEMERAL_PUBLIC_KEY_LEN)..])
+            .map_err(PrivateMessageError::InvalidEphemeralPubKey)?;
 
     // Compute DH exchange (receiver_secret_key, ephemeral_public_key)
     // and derive symmetric_key and nonce from shared secret
-    let (symmetric_key, nonce) = generate_symmetric_key_and_nonce(
-        algorithm,
-        &ephemeral_public_key,
+    let shared_secret = generate_shared_secret(
+        &sender_ephemeral_public_key.datas.as_ref(),
         &receiver_key_pair.seed(),
-        &Ed25519PublicKey::try_from(ephemeral_public_key)
-            .map_err(PrivateMessageError::InvalidEphemeralPubKey)?,
-    )?;
+        &sender_ephemeral_public_key,
+    );
 
     // Decrypt message
-    decrypt::<A>(
-        symmetric_key,
-        nonce,
+    decrypt(
         additionally_authenticated_data,
-        &mut encrypted_message[..(len - EPHEMERAL_PUBLIC_KEY_LEN)],
+        chacha_rounds,
+        &mut encrypted_message[..(len - CLEAR_FOOTER_LEN)],
+        shared_secret,
+        &tag,
     )?;
 
     // Verify authentication proof
-    let tag_len = algorithm.to_ring_algo().tag_len();
-    let authent_end = len - EPHEMERAL_PUBLIC_KEY_LEN - tag_len;
+    let authent_end = clear_footer_begin;
     let authent_begin = authent_end - AUTHENTICATION_DATAS_LEN;
     let (sender_public_key, sig_opt) = verify_authentication_proof(
         receiver_key_pair,
@@ -354,29 +333,31 @@ pub fn decrypt_private_message<'m, A: AsRef<[u8]>>(
     })
 }
 
-fn generate_symmetric_key_and_nonce(
-    algorithm: Algorithm,
+fn generate_shared_secret(
     ephemeral_public_key: &[u8],
     exchange_secret_key: &Seed32,
     exchange_public_key: &Ed25519PublicKey,
-) -> Result<(UnboundKey, Nonce), PrivateMessageError> {
-    let shared_secret = diffie_hellman(
+) -> SharedSecret {
+    diffie_hellman(
         X25519SecretKey::from(exchange_secret_key),
         X25519PublicKey::from(exchange_public_key),
         |key_material| derive(key_material, ephemeral_public_key),
-    );
-
-    let symmetric_key = UnboundKey::new(algorithm.to_ring_algo(), &shared_secret.as_ref()[..32])?;
-    let nonce = Nonce::try_assume_unique_for_key(&shared_secret.as_ref()[32..44])?;
-
-    Ok((symmetric_key, nonce))
+    )
 }
 
+#[cfg(target_arch = "wasm32")]
+#[cfg(not(tarpaulin_include))]
 fn derive(seed: &[u8], salt: &[u8]) -> SharedSecret {
     let mut shared_secret = SharedSecret::default();
-    pbkdf2::derive(
-        pbkdf2::PBKDF2_HMAC_SHA384,
-        unsafe { NonZeroU32::new_unchecked(ITERATIONS) },
+    let mut hmac = cryptoxide::hmac::Hmac::new(cryptoxide::sha2::Sha512::new(), seed);
+    cryptoxide::pbkdf2::pbkdf2(&mut hmac, salt, ITERATIONS.get(), shared_secret.as_mut());
+}
+#[cfg(not(target_arch = "wasm32"))]
+fn derive(seed: &[u8], salt: &[u8]) -> SharedSecret {
+    let mut shared_secret = SharedSecret::default();
+    ring::pbkdf2::derive(
+        ring::pbkdf2::PBKDF2_HMAC_SHA512,
+        unsafe { NonZeroU32::new_unchecked(PBKDF2_ITERATIONS) },
         salt,
         seed,
         shared_secret.as_mut(),
@@ -384,26 +365,48 @@ fn derive(seed: &[u8], salt: &[u8]) -> SharedSecret {
     shared_secret
 }
 
-fn encrypt<A: AsRef<[u8]>>(
-    key: UnboundKey,
-    nonce: Nonce,
-    aad: Aad<A>,
+fn encrypt(
+    associated_data: &[u8],
+    chacha_rounds: ChaChaRounds,
     message: &mut [u8],
+    shared_secret: SharedSecret,
 ) -> Result<Tag, PrivateMessageError> {
-    let key = LessSafeKey::new(key);
-    Ok(key.seal_in_place_separate_tag(nonce, aad, message.as_mut())?)
+    let symmetric_key = Key::from_slice(&shared_secret.as_ref()[..32]);
+    let nonce = Nonce::from_slice(&shared_secret.as_ref()[32..44]);
+    match chacha_rounds {
+        ChaChaRounds::ChaCha8 => ChaCha8Poly1305::new(symmetric_key)
+            .encrypt_in_place_detached(&nonce, associated_data, message)
+            .map_err(|_| PrivateMessageError::UnspecifiedAeadError),
+        ChaChaRounds::ChaCha12 => ChaCha12Poly1305::new(symmetric_key)
+            .encrypt_in_place_detached(&nonce, associated_data, message)
+            .map_err(|_| PrivateMessageError::UnspecifiedAeadError),
+        ChaChaRounds::ChaCha20 => ChaCha20Poly1305::new(symmetric_key)
+            .encrypt_in_place_detached(&nonce, associated_data, message)
+            .map_err(|_| PrivateMessageError::UnspecifiedAeadError),
+    }
 }
 
-fn decrypt<A: AsRef<[u8]>>(
-    key: UnboundKey,
-    nonce: Nonce,
-    aad: Aad<A>,
+fn decrypt(
+    associated_data: &[u8],
+    chacha_rounds: ChaChaRounds,
     encrypted_message: &mut [u8],
+    shared_secret: SharedSecret,
+    tag: &Tag,
 ) -> Result<(), PrivateMessageError> {
-    let key = LessSafeKey::new(key);
-    key.open_in_place(nonce, aad, encrypted_message)?;
+    let symmetric_key = Key::from_slice(&shared_secret.as_ref()[..32]);
+    let nonce = Nonce::from_slice(&shared_secret.as_ref()[32..44]);
 
-    Ok(())
+    match chacha_rounds {
+        ChaChaRounds::ChaCha8 => ChaCha8Poly1305::new(symmetric_key)
+            .decrypt_in_place_detached(&nonce, associated_data, encrypted_message, tag)
+            .map_err(|_| PrivateMessageError::UnspecifiedAeadError),
+        ChaChaRounds::ChaCha12 => ChaCha12Poly1305::new(symmetric_key)
+            .decrypt_in_place_detached(&nonce, associated_data, encrypted_message, tag)
+            .map_err(|_| PrivateMessageError::UnspecifiedAeadError),
+        ChaChaRounds::ChaCha20 => ChaCha20Poly1305::new(symmetric_key)
+            .decrypt_in_place_detached(&nonce, associated_data, encrypted_message, tag)
+            .map_err(|_| PrivateMessageError::UnspecifiedAeadError),
+    }
 }
 
 #[cfg(test)]
@@ -412,6 +415,7 @@ mod tests {
     use super::*;
     use crate::keys::ed25519::KeyPairFromSeed32Generator;
     use crate::keys::KeyPair;
+    use unwrap::unwrap;
 
     const AAD: &[u8] = b"service name - currency name";
     const MESSAGE: &[u8] =
@@ -449,15 +453,17 @@ mod tests {
         println!("encrypted message={:?}", encrypted_message);
 
         match decrypt_private_message(
-            Aad::from(b"invalid aad"),
-            Algorithm::Chacha20Poly1305,
+            b"invalid aad",
+            ChaChaRounds::ChaCha20,
             &mut encrypted_message,
             &receiver_key_pair,
         ) {
-            Ok(_) => panic!("Expected error rivateMessageError::Unspecified, found: Ok(())."),
-            Err(PrivateMessageError::Unspecified) => Ok(()),
+            Ok(_) => {
+                panic!("Expected error PrivateMessageError::UnspecifiedAeadError, found: Ok(()).")
+            }
+            Err(PrivateMessageError::UnspecifiedAeadError) => Ok(()),
             Err(e) => panic!(
-                "Expected error rivateMessageError::Unspecified, found: {:?}.",
+                "Expected error PrivateMessageError::UnspecifiedAeadError, found: {:?}.",
                 e
             ),
         }
@@ -476,15 +482,17 @@ mod tests {
         println!("encrypted message={:?}", encrypted_message);
 
         match decrypt_private_message(
-            Aad::from(AAD),
-            Algorithm::Aes256Gcm,
+            AAD,
+            ChaChaRounds::ChaCha12,
             &mut encrypted_message,
             &receiver_key_pair,
         ) {
-            Ok(_) => panic!("Expected error rivateMessageError::Unspecified, found: Ok(())."),
-            Err(PrivateMessageError::Unspecified) => Ok(()),
+            Ok(_) => {
+                panic!("Expected error PrivateMessageError::UnspecifiedAeadError, found: Ok(()).")
+            }
+            Err(PrivateMessageError::UnspecifiedAeadError) => Ok(()),
             Err(e) => panic!(
-                "Expected error rivateMessageError::Unspecified, found: {:?}.",
+                "Expected error PrivateMessageError::UnspecifiedAeadError, found: {:?}.",
                 e
             ),
         }
@@ -493,7 +501,9 @@ mod tests {
     #[test]
     fn encrypt_and_decrypt_ok() -> Result<(), PrivateMessageError> {
         let sender_key_pair = KeyPairFromSeed32Generator::generate(Seed32::random()?);
-        let receiver_key_pair = KeyPairFromSeed32Generator::generate(Seed32::random()?);
+        let receiver_key_pair = KeyPairFromSeed32Generator::generate(unwrap!(Seed32::from_base58(
+            "7nY1fYmCXL1vF86ptneeg8r7M6C7G93M8MCfzBCaCtiJ"
+        )));
 
         let message = MESSAGE;
 
@@ -507,8 +517,8 @@ mod tests {
             sender_public_key,
             signature_opt,
         } = decrypt_private_message(
-            Aad::from(AAD),
-            Algorithm::Chacha20Poly1305,
+            AAD,
+            ChaChaRounds::ChaCha20,
             &mut encrypted_message,
             &receiver_key_pair,
         )?;
@@ -531,9 +541,9 @@ mod tests {
         encrypted_message.extend(message);
 
         encrypt_private_message(
-            Aad::from(AAD),
-            Algorithm::Chacha20Poly1305,
+            AAD,
             AuthenticationPolicy::PrivateAuthentication,
+            ChaChaRounds::ChaCha20,
             &mut encrypted_message,
             receiver_public_key,
             sender_keypair,
