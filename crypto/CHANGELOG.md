@@ -99,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- DEWIF: read_dewif_file_content() now directly returns an Iterator.
+- DEWIF: read_dewif_content() now directly returns an Iterator.
 
 ## [0.9.1] - 2020-01-19
 

@@ -61,6 +61,9 @@ pub enum DewifReadError {
     /// Unknown algorithm
     #[error("unknown algorithm")]
     UnknownAlgo,
+    /// Unspecified rand error
+    #[error("Unspecified rand error")]
+    UnspecifiedRandError,
     /// Unsupported version
     #[error("Version {actual} is not supported. Supported versions: [1, 2].")]
     UnsupportedVersion {
@@ -121,7 +124,7 @@ pub fn read_dewif_meta(file_content: &str) -> Result<super::DewifMeta, DewifRead
 }
 
 /// read dewif content with user passphrase
-pub fn read_dewif_file_content(
+pub fn read_dewif_content(
     expected_currency: ExpectedCurrency,
     file_content: &str,
     passphrase: &str,
@@ -164,14 +167,16 @@ fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<DewifPayload, Dew
     let log_n = bytes[0];
     // Read algo
     let algo = KeysAlgo::from_u8(bytes[1]).map_err(|_| DewifReadError::UnknownAlgo)?;
+    // Read nonce
+    let nonce = super::read_nonce(&bytes[2..14]);
 
     match algo {
         KeysAlgo::Ed25519 => {
             // Decrypt bytes
             let mut decrypted_bytes = [0u8; 64];
             crate::xor_cipher::xor_cipher(
-                &bytes[2..],
-                super::gen_xor_seed64(passphrase, log_n).as_ref(),
+                &bytes[super::V1_CLEAR_HEADERS_LEN..],
+                super::gen_xor_seed64(log_n, nonce, passphrase).as_ref(),
                 &mut decrypted_bytes,
             );
 
@@ -184,20 +189,17 @@ fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<DewifPayload, Dew
             // Decrypt bytes
             let mut decrypted_bytes = [0u8; 42];
             crate::xor_cipher::xor_cipher(
-                &bytes[2..44],
-                super::gen_xor_seed42(passphrase, log_n).as_ref(),
+                &bytes[super::V1_CLEAR_HEADERS_LEN..(super::V1_CLEAR_HEADERS_LEN + 42)],
+                super::gen_xor_seed42(log_n, nonce, passphrase).as_ref(),
                 &mut decrypted_bytes,
             );
 
             // Get checked keypair
             let mnemonic = get_dewif_mnemonic(&decrypted_bytes)
                 .map_err(|_| DewifReadError::CorruptedContent)?;
-            let checksum = crate::hashs::Hash::compute_multipart(&[
-                &[decrypted_bytes[0], mnemonic.entropy().len() as u8],
-                mnemonic.entropy(),
-            ]);
+            let checksum = super::compute_checksum(&nonce, decrypted_bytes[0], mnemonic.entropy());
             let expected_checksum = &decrypted_bytes[34..];
-            if &checksum.0[..8] != expected_checksum {
+            if &checksum[..] != expected_checksum {
                 Err(DewifReadError::CorruptedContent)
             } else {
                 Ok(DewifPayload::Bip32Ed25519(mnemonic))
@@ -210,12 +212,14 @@ fn read_dewif_v1(bytes: &mut [u8], passphrase: &str) -> Result<DewifPayload, Dew
 pub(super) fn get_dewif_seed_unchecked(bytes: &mut [u8], passphrase: &str) -> Seed32 {
     // Read log_n
     let log_n = bytes[0];
+    // Read nonce
+    let nonce = super::read_nonce(&bytes[2..14]);
 
     // Decrypt bytes
     let mut decrypted_bytes = [0u8; 64];
     crate::xor_cipher::xor_cipher(
-        &bytes[2..],
-        super::gen_xor_seed64(passphrase, log_n).as_ref(),
+        &bytes[super::V1_CLEAR_HEADERS_LEN..],
+        super::gen_xor_seed64(log_n, nonce, passphrase).as_ref(),
         &mut decrypted_bytes,
     );
 
@@ -276,7 +280,7 @@ mod tests {
 
     #[test]
     fn read_unsupported_version() -> Result<(), ()> {
-        if let Err(DewifReadError::UnsupportedVersion { .. }) = read_dewif_file_content(
+        if let Err(DewifReadError::UnsupportedVersion { .. }) = read_dewif_content(
             ExpectedCurrency::Any,
             "ABAAARAAAAEMAAqqbWsirdvN0W7IkpmKdG/Zbt4ZszPx9VcWUu0o4cdxIZ4HHUybCVbyVmQL9Wid8KE6FCWeMRtr5OKAUKYwsNI=",
             "toto"
@@ -290,7 +294,7 @@ mod tests {
     #[test]
     fn read_too_short_content() -> Result<(), ()> {
         if let Err(DewifReadError::TooShortContent) =
-            read_dewif_file_content(ExpectedCurrency::Any, "AAA", "toto")
+            read_dewif_content(ExpectedCurrency::Any, "AAA", "toto")
         {
             Ok(())
         } else {
@@ -300,7 +304,7 @@ mod tests {
 
     #[test]
     fn read_unexpected_currency() -> Result<(), ()> {
-        if let Err(DewifReadError::UnexpectedCurrency { .. }) = read_dewif_file_content(
+        if let Err(DewifReadError::UnexpectedCurrency { .. }) = read_dewif_content(
             ExpectedCurrency::Specific(Currency::from(42)),
             "AAAAARAAAAEMAAqqbWsirdvN0W7IkpmKdG/Zbt4ZszPx9VcWUu0o4cdxIZ4HHUybCVbyVmQL9Wid8KE6FCWeMRtr5OKAUKYwsNI=",
             "toto titi tata"
@@ -317,7 +321,7 @@ mod tests {
         use std::str::FromStr;
 
         // Get DEWIF file content (Usually from disk)
-        let dewif_file_content = "AAAAARAAAAEMAAqqbWsirdvN0W7IkpmKdG/Zbt4ZszPx9VcWUu0o4cdxIZ4HHUybCVbyVmQL9Wid8KE6FCWeMRtr5OKAUKYwsNI=";
+        let dewif_file_content = "AAAAARAAAAEMACoqKioqKioqKioqKufSmkhlv1gbkEomswG4hQ2uMIVh+YOEym0ZRyNRwX226lsjB2UT2cnWLR11Wf3xm8Dm2lLB4IAfxd+iFiza7h4=";
 
         // Get user passphrase for DEWIF decryption (from cli prompt or gui)
         let encryption_passphrase = "toto titi tata";
@@ -343,7 +347,7 @@ mod tests {
         if let DewifContent {
             payload: DewifPayload::Ed25519(key_pair),
             ..
-        } = unwrap!(read_dewif_file_content(
+        } = unwrap!(read_dewif_content(
             expected_currency,
             dewif_file_content,
             encryption_passphrase
@@ -378,7 +382,7 @@ mod tests {
 
         // Get DEWIF file content (Usually from disk)
         let dewif_file_content =
-            "AAAAARAAAAEPAS7WUE5xDEJnxAA39Lnexa5ASIowV1aMp4KIPAQRefzrD5eOj/o35aNadg=";
+            "AAAAARAAAAEOASoqKioqKioqKioqKkIx/qkP1PWhtDNca4MdsvxPWAtvCd7nYriwMOHKxIFO8GJy9ElNngbSVQ==";
 
         // Get user passphrase for DEWIF decryption (from cli prompt or gui)
         let encryption_passphrase = "toto titi tata";
@@ -390,21 +394,21 @@ mod tests {
         // If the file content is correct, we get a key-pair iterator.
         assert_eq!(
             unwrap!(read_dewif_log_n(expected_currency, dewif_file_content)),
-            15u8
+            14u8
         );
         assert_eq!(
             unwrap!(read_dewif_meta(dewif_file_content)),
             DewifMeta {
                 algo: KeysAlgo::Bip32Ed25519,
                 currency: unwrap!(Currency::from_str("g1-test")),
-                log_n: 15u8,
+                log_n: 14u8,
                 version: 1
             }
         );
         if let DewifContent {
             payload: DewifPayload::Bip32Ed25519(mnemonic),
             ..
-        } = unwrap!(read_dewif_file_content(
+        } = unwrap!(read_dewif_content(
             expected_currency,
             dewif_file_content,
             encryption_passphrase

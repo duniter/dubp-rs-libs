@@ -19,6 +19,7 @@ use super::Currency;
 use crate::{
     keys::{ed25519::SaltedPassword, KeyPair as _, KeysAlgo},
     mnemonic::Mnemonic,
+    rand::UnspecifiedRandError,
 };
 
 /// Create dewif v1 file
@@ -27,7 +28,7 @@ pub fn create_dewif_v1(
     log_n: u8,
     mnemonic: &Mnemonic,
     passphrase: &str,
-) -> String {
+) -> Result<String, UnspecifiedRandError> {
     write_dewif_v1_bip_ed25519(currency, log_n, passphrase, &mnemonic)
 }
 
@@ -40,7 +41,7 @@ pub fn create_dewif_v1_legacy(
     password: String,
     salt: String,
     passphrase: &str,
-) -> String {
+) -> Result<String, UnspecifiedRandError> {
     let kp = crate::keys::ed25519::KeyPairFromSaltedPasswordGenerator::with_default_parameters()
         .generate(SaltedPassword::new(salt, password));
     write_dewif_v1_ed25519(currency, log_n, passphrase, &kp.public_key(), &kp.seed())
@@ -52,7 +53,7 @@ pub(super) fn write_dewif_v1_bip_ed25519(
     log_n: u8,
     passphrase: &str,
     mnemonic: &Mnemonic,
-) -> String {
+) -> Result<String, UnspecifiedRandError> {
     let mut bytes = [0u8; super::V1_BIP32_ED25519_BYTES_LEN];
 
     // Clear meta data
@@ -62,32 +63,33 @@ pub(super) fn write_dewif_v1_bip_ed25519(
     bytes[4..8].copy_from_slice(&currency_code.to_be_bytes()); // 4
     bytes[8] = log_n; // log_n
     bytes[9] = KeysAlgo::Bip32Ed25519.to_u8(); // algo
+    let nonce = super::gen_nonce()?;
+    bytes[10..22].copy_from_slice(&nonce[..]); // 12
 
     // Prepare encrypted data
     let language_code = mnemonic.language().to_u8();
     let mnemonic_entropy = mnemonic.entropy();
     let mnemonic_entropy_len = mnemonic_entropy.len();
     let mnemonic_entropy_len_u8 = mnemonic_entropy_len as u8;
-    let checksum = crate::hashs::Hash::compute_multipart(&[
-        &[language_code, mnemonic_entropy_len_u8],
-        mnemonic_entropy,
-    ]);
-    println!("checksum={}", hex::encode(&checksum.0[..8]));
+    let checksum = super::compute_checksum(&nonce, language_code, mnemonic_entropy);
 
-    // Encrypt
+    // Prepare bytes to encrypt
     let mut bytes_to_encrypt = [0u8; 42];
     bytes_to_encrypt[0] = mnemonic.language().to_u8();
     bytes_to_encrypt[1] = mnemonic_entropy_len_u8;
+    bytes_to_encrypt[2..34].copy_from_slice(crate::hashs::Hash::compute(mnemonic_entropy).as_ref()); //pre-fill emtropy bytes
     bytes_to_encrypt[2..(2 + mnemonic_entropy_len)].copy_from_slice(mnemonic_entropy);
-    bytes_to_encrypt[34..].copy_from_slice(&checksum.0[..8]);
+    bytes_to_encrypt[34..].copy_from_slice(&checksum[..]);
+
+    // Encrypt
     crate::xor_cipher::xor_cipher(
         &bytes_to_encrypt,
-        super::gen_xor_seed42(passphrase, log_n).as_ref(),
+        super::gen_xor_seed42(log_n, nonce, passphrase).as_ref(),
         &mut bytes[super::V1_BIP32_ED25519_UNENCRYPTED_BYTES_LEN
             ..(super::V1_BIP32_ED25519_UNENCRYPTED_BYTES_LEN + 42)],
     );
 
-    base64::encode(bytes.as_ref())
+    Ok(base64::encode(bytes.as_ref()))
 }
 
 /// Write dewif v1 file content with algo Ed25519
@@ -97,7 +99,7 @@ pub(super) fn write_dewif_v1_ed25519(
     passphrase: &str,
     public_key: &crate::keys::ed25519::PublicKey,
     seed: &crate::seeds::Seed32,
-) -> String {
+) -> Result<String, UnspecifiedRandError> {
     let mut bytes = [0u8; super::V1_ED25519_BYTES_LEN];
 
     // Clear meta data
@@ -107,6 +109,8 @@ pub(super) fn write_dewif_v1_ed25519(
     bytes[4..8].copy_from_slice(&currency_code.to_be_bytes()); // 4
     bytes[8] = log_n; // log_n
     bytes[9] = KeysAlgo::Ed25519.to_u8(); // algo
+    let nonce = super::gen_nonce()?;
+    bytes[10..22].copy_from_slice(&nonce[..]); // 12
 
     // Encrypted data
     let mut bytes_to_encrypt = [0u8; 64];
@@ -114,11 +118,11 @@ pub(super) fn write_dewif_v1_ed25519(
     bytes_to_encrypt[32..].copy_from_slice(public_key.datas.as_ref()); // 32
     crate::xor_cipher::xor_cipher(
         &bytes_to_encrypt,
-        super::gen_xor_seed64(passphrase, log_n).as_ref(),
+        super::gen_xor_seed64(log_n, nonce, passphrase).as_ref(),
         &mut bytes[super::V1_ED25519_UNENCRYPTED_BYTES_LEN..],
     );
 
-    base64::encode(bytes.as_ref())
+    Ok(base64::encode(bytes.as_ref()))
 }
 
 #[cfg(test)]
@@ -135,16 +139,16 @@ mod tests {
         let keypair = KeyPairFromSeed32Generator::generate(Seed32::new([0u8; 32]));
         println!("pubkey={}", keypair.public_key());
 
-        let dewif_content = write_dewif_v1_ed25519(
+        let dewif_content = unwrap!(write_dewif_v1_ed25519(
             unwrap!(Currency::from_str("g1-test")),
             12,
             "toto titi tata",
             &keypair.public_key(),
             keypair.seed(),
-        );
+        ));
         println!("{}", dewif_content);
         assert_eq!(
-            "AAAAARAAAAEMAAqqbWsirdvN0W7IkpmKdG/Zbt4ZszPx9VcWUu0o4cdxIZ4HHUybCVbyVmQL9Wid8KE6FCWeMRtr5OKAUKYwsNI=",
+            "AAAAARAAAAEMACoqKioqKioqKioqKufSmkhlv1gbkEomswG4hQ2uMIVh+YOEym0ZRyNRwX226lsjB2UT2cnWLR11Wf3xm8Dm2lLB4IAfxd+iFiza7h4=",
             dewif_content
         )
     }
@@ -168,16 +172,16 @@ mod tests {
         let encryption_passphrase = "toto titi tata";
 
         // Serialize keypair in DEWIF format
-        let dewif_content = write_dewif_v1_ed25519(
+        let dewif_content = unwrap!(write_dewif_v1_ed25519(
             unwrap!(Currency::from_str("g1-test")),
             12,
             encryption_passphrase,
             &keypair.public_key(),
             keypair.seed(),
-        );
+        ));
 
         assert_eq!(
-            "AAAAARAAAAEMALUJm4gAYvodNzw/CPBV4Pckm+pv1taVmMdXpbthi9YyDSu9ioexcFO1YJpKPKATZR5IMBpeOOnZkzhTb3k2SYo=",
+            "AAAAARAAAAEMACoqKioqKioqKioqKlhxbKtHcHnLdhjRKWhnEZVTxbEXnGbgp/1YsHUYq2z1xu6ZkK45oMyRG+M0kDV/Dn+U/m0B6XKtsgVxKfPcF0Y=",
             dewif_content
         )
     }
@@ -193,15 +197,15 @@ mod tests {
         let encryption_passphrase = "toto titi tata";
 
         // Serialize keypair in DEWIF format
-        let dewif_content = write_dewif_v1_bip_ed25519(
+        let dewif_content = unwrap!(write_dewif_v1_bip_ed25519(
             unwrap!(Currency::from_str("g1-test")),
             14,
             encryption_passphrase,
             &mnemonic,
-        );
+        ));
 
         assert_eq!(
-            "AAAAARAAAAEOAVdFrhPxVIhaRvWaM7vMCKg3C8Tvpn66v+z/7frzCONBABhrDBygESqnEg==",
+            "AAAAARAAAAEOASoqKioqKioqKioqKkIx/qkP1PWhtDNca4MdsvxPWAtvCd7nYriwMOHKxIFO8GJy9ElNngbSVQ==",
             dewif_content
         );
 
