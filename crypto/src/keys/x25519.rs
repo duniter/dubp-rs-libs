@@ -18,11 +18,10 @@
 //! - Diffie hellman exchange
 
 use super::ed25519::PublicKey;
-use crate::seeds::Seed32;
+use crate::{hashs::Hash64, seeds::Seed32};
 use curve25519_dalek::edwards::CompressedEdwardsY;
 use curve25519_dalek::montgomery::MontgomeryPoint;
 use curve25519_dalek::scalar::Scalar;
-use ring::digest;
 use std::hint::unreachable_unchecked;
 use zeroize::Zeroize;
 
@@ -47,11 +46,10 @@ pub(crate) struct X25519SecretKey([u8; 32]);
 
 impl From<&Seed32> for X25519SecretKey {
     fn from(seed: &Seed32) -> Self {
-        let mut hash = [0u8; 64];
-        hash.copy_from_slice(digest::digest(&digest::SHA512, seed.as_ref()).as_ref());
+        let hash = Hash64::sha512(seed.as_ref());
 
         let mut x25519_sk = [0; 32];
-        x25519_sk[..32].copy_from_slice(&hash[..32]);
+        x25519_sk[..32].copy_from_slice(&hash.0[..32]);
         x25519_sk[0] &= 248;
         x25519_sk[31] &= 127;
         x25519_sk[31] |= 64;

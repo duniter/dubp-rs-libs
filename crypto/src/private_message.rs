@@ -350,7 +350,13 @@ fn generate_shared_secret(
 fn derive(seed: &[u8], salt: &[u8]) -> SharedSecret {
     let mut shared_secret = SharedSecret::default();
     let mut hmac = cryptoxide::hmac::Hmac::new(cryptoxide::sha2::Sha512::new(), seed);
-    cryptoxide::pbkdf2::pbkdf2(&mut hmac, salt, ITERATIONS.get(), shared_secret.as_mut());
+    cryptoxide::pbkdf2::pbkdf2(
+        &mut hmac,
+        salt,
+        PBKDF2_ITERATIONS.get(),
+        shared_secret.as_mut(),
+    );
+    shared_secret
 }
 #[cfg(not(target_arch = "wasm32"))]
 fn derive(seed: &[u8], salt: &[u8]) -> SharedSecret {
