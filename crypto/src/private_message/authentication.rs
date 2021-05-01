@@ -16,9 +16,12 @@
 //! Handle private message authentication policy
 
 use super::{PrivateMessageError, AUTHENTICATION_DATAS_LEN, SENDER_PUBLIC_KEY_LEN};
-use crate::keys::ed25519::{Ed25519KeyPair, PublicKey as Ed25519PublicKey, Signature};
 use crate::keys::x25519::{diffie_hellman, X25519PublicKey, X25519SecretKey};
 use crate::keys::{KeyPair, PublicKey, Signator};
+use crate::{
+    hashs::Hash64,
+    keys::ed25519::{Ed25519KeyPair, PublicKey as Ed25519PublicKey, Signature},
+};
 use std::{convert::TryFrom, hint::unreachable_unchecked};
 
 #[derive(Clone, Copy, Debug)]
@@ -93,7 +96,7 @@ pub(crate) fn generate_authentication_proof(
         AuthenticationPolicy::PrivateAuthentication => diffie_hellman(
             X25519SecretKey::from(sender_keypair.seed()),
             X25519PublicKey::from(receiver_public_key),
-            |key_material| sha512(&[message, key_material]),
+            |key_material| Hash64::sha512_multipart(&[message, key_material]).0,
         ),
         AuthenticationPolicy::Signature => {
             sender_keypair.generate_signator().sign(message.as_ref()).0
@@ -119,7 +122,7 @@ pub(crate) fn verify_authentication_proof(
             let expected_proof = AuthenticationProof(diffie_hellman(
                 X25519SecretKey::from(receiver_key_pair.seed()),
                 X25519PublicKey::from(&sender_public_key),
-                |key_material| sha512(&[message, key_material]),
+                |key_material| Hash64::sha512_multipart(&[message, key_material]).0,
             ));
             for i in 0..32 {
                 if expected_proof.0[i] != authent_proof.0[i] {
@@ -135,30 +138,6 @@ pub(crate) fn verify_authentication_proof(
         }
     }
     Ok((sender_public_key, signature_opt))
-}
-
-#[cfg(target_arch = "wasm32")]
-#[cfg(not(tarpaulin_include))]
-/// Compute SHA256 hash of any binary data on several parts
-pub fn sha512(data_parts: &[&[u8]]) -> [u8; 64] {
-    let mut hasher = cryptoxide::sha2::Sha512::new();
-    for data in data_parts {
-        hasher.input(data);
-    }
-    let mut hash_buffer = [0u8; 64];
-    hasher.result(&mut hash_buffer);
-    hash_buffer
-}
-#[cfg(not(target_arch = "wasm32"))]
-/// Compute SHA256 hash of any binary data on several parts
-pub fn sha512(data_parts: &[&[u8]]) -> [u8; 64] {
-    let mut ctx = ring::digest::Context::new(&ring::digest::SHA512);
-    for data in data_parts {
-        ctx.update(data);
-    }
-    let mut hash_buffer = [0u8; 64];
-    hash_buffer.copy_from_slice(ctx.finish().as_ref());
-    hash_buffer
 }
 
 #[cfg(test)]
