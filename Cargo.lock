@@ -424,7 +424,7 @@ dependencies = [
 
 [[package]]
 name = "dubp"
-version = "0.52.0"
+version = "0.53.0"
 dependencies = [
  "dubp-block",
  "dubp-common",
@@ -437,7 +437,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-block"
-version = "0.52.0"
+version = "0.53.0"
 dependencies = [
  "bincode",
  "dubp-documents",
@@ -453,7 +453,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-common"
-version = "0.52.0"
+version = "0.53.0"
 dependencies = [
  "bincode",
  "dup-crypto",
@@ -466,7 +466,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-documents"
-version = "0.52.0"
+version = "0.53.0"
 dependencies = [
  "beef",
  "dubp-wallet",
@@ -481,7 +481,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-documents-parser"
-version = "0.52.0"
+version = "0.53.0"
 dependencies = [
  "dubp-documents",
  "json-pest-parser",
@@ -494,7 +494,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-wallet"
-version = "0.52.0"
+version = "0.53.0"
 dependencies = [
  "byteorder",
  "dubp-common",
@@ -509,7 +509,7 @@ dependencies = [
 
 [[package]]
 name = "dup-crypto"
-version = "0.52.0"
+version = "0.53.0"
 dependencies = [
  "arrayvec",
  "base64",
