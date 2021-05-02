@@ -1,5 +1,6 @@
 stages:
   - fmt
+  - build
   - tests
   - quality
   - publish
@@ -13,12 +14,37 @@ stages:
     - rustup show
     - rustc --version && cargo --version
 
+.rust_stable_wasm32:
+  image: duniter/rust-wasm:latest
+  tags:
+    - redshift
+  before_script:
+    - export PATH="$HOME/.cargo/bin:$PATH"
+    - rustup show
+    - rustc --version && cargo --version
+
 fmt:
   extends: .rust_stable_lin64
   stage: fmt
   script:
     - cargo fmt -- --version
     - cargo fmt -- --check
+
+build:linux64:stable:
+  extends: .rust_stable_lin64
+  stage: build
+  tags:
+    - redshift
+  script: 
+    - RUSTFLAGS="-D warnings" cargo build
+
+build:wasm32:stable:
+  extends: .rust_stable_wasm32
+  stage: build
+  tags:
+    - redshift
+  script: 
+    - cargo build --target wasm32-unknown-unknown
         
 tests:linux64:stable:
   extends: .rust_stable_lin64
@@ -26,7 +52,6 @@ tests:linux64:stable:
   tags:
     - redshift
   script: 
-    - RUSTFLAGS="-D warnings" cargo build
     - cargo test --doc
     - cargo tarpaulin --all --all-features --ignore-tests -iv --out Xml
     - bash <(curl -s https://codecov.io/bash)
