@@ -36,7 +36,7 @@ build:linux64:stable:
   tags:
     - redshift
   script: 
-    - RUSTFLAGS="-D warnings" cargo build
+    - RUSTFLAGS="-D warnings" cargo build --all-features
 
 build:wasm32:stable:
   extends: .rust_stable_wasm32
@@ -44,7 +44,7 @@ build:wasm32:stable:
   tags:
     - redshift
   script: 
-    - cargo build --target wasm32-unknown-unknown
+    - cargo build --all-features --target wasm32-unknown-unknown
         
 tests:linux64:stable:
   extends: .rust_stable_lin64
