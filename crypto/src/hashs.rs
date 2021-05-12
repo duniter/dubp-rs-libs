@@ -49,6 +49,8 @@ use std::{
     str::FromStr,
 };
 
+const BLAKE3_CUTOFF: usize = 1 << 17;
+
 /// A hash wrapper.
 ///
 /// A hash is often provided as string composed of 64 hexadecimal character (0 to 9 then A to F).
@@ -155,7 +157,14 @@ impl Hash {
 
     /// Compute BLAKE3 hash of any binary datas
     pub fn compute_blake3(datas: &[u8]) -> Hash {
-        Hash(blake3::hash(datas).into())
+        if datas.len() > BLAKE3_CUTOFF {
+            let mut hasher = blake3::Hasher::new();
+            hasher.update_with_join::<blake3::join::RayonJoin>(datas);
+            let hash = hasher.finalize();
+            Hash(hash.into())
+        } else {
+            Hash(blake3::hash(datas).into())
+        }
     }
 
     /// Convert Hash into bytes vector

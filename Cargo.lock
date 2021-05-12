@@ -94,6 +94,7 @@ dependencies = [
  "constant_time_eq",
  "crypto-mac",
  "digest 0.9.0",
+ "rayon",
 ]
 
 [[package]]
