@@ -38,7 +38,7 @@ pub struct CurrencyNameAndGenesisBlockParams {
     pub genesis_block_params: GenesisBlockParams,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Deserialize, PartialEq, Serialize)]
 /// Currency parameters
 pub struct CurrencyParameters {
     /// Protocol version
