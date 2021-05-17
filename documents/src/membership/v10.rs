@@ -122,7 +122,12 @@ impl MembershipDocumentV10 {
         self.membership
     }
 
-    /// Identity to use for this public key.
+    /// Blockstamp of associated identity
+    pub fn identity_blockstamp(&self) -> Blockstamp {
+        self.identity_blockstamp
+    }
+
+    /// Username of associated identity
     pub fn identity_username(&self) -> &str {
         &self.identity_username
     }

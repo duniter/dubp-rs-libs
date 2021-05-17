@@ -62,6 +62,8 @@ pub trait DubpBlockTrait {
     fn compute_hashed_string(&self) -> String;
     /// Compute the character string that will be signed
     fn compute_signed_string(&self) -> String;
+    /// Get currency parameters
+    fn currency_parameters(&self) -> Option<CurrencyParameters>;
     /// Get current frame size (in blocks)
     fn current_frame_size(&self) -> usize;
     /// Get universal dividend amount
@@ -137,6 +139,7 @@ impl DubpBlockTrait for DubpBlock {
     dubp_block_fn!(compute_hash, BlockHash);
     dubp_block_fn!(compute_hashed_string, String);
     dubp_block_fn!(compute_signed_string, String);
+    dubp_block_fn!(currency_parameters, Option<CurrencyParameters>);
     dubp_block_fn!(current_frame_size, usize);
     dubp_block_fn!(dividend, Option<SourceAmount>);
     dubp_block_fn!(generate_compact_inner_text, String);
