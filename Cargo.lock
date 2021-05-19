@@ -434,7 +434,7 @@ dependencies = [
 
 [[package]]
 name = "dubp"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "dubp-block",
  "dubp-common",
@@ -449,7 +449,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-block"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "bincode",
  "dubp-documents",
@@ -465,7 +465,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-common"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "bincode",
  "dup-crypto",
@@ -478,7 +478,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-documents"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "beef",
  "dubp-wallet",
@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-documents-parser"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "dubp-documents",
  "json-pest-parser",
@@ -506,7 +506,7 @@ dependencies = [
 
 [[package]]
 name = "dubp-wallet"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "byteorder",
  "dubp-common",
@@ -521,7 +521,7 @@ dependencies = [
 
 [[package]]
 name = "duniter-bda-types"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "arrayvec 0.7.0",
  "bincode",
@@ -534,7 +534,7 @@ dependencies = [
 
 [[package]]
 name = "duniter-peer"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "beef",
  "dubp-common",
@@ -550,7 +550,7 @@ dependencies = [
 
 [[package]]
 name = "dup-crypto"
-version = "0.54.1"
+version = "0.55.1"
 dependencies = [
  "arrayvec 0.5.2",
  "base64",
