@@ -31,6 +31,10 @@ pre-release-replacements = [
     {file="block/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\" }", replace="version = \"{{version}}\" }", exactly=2},
     {file="block/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="version = \"{{version}}\"\n", exactly=1},
     {file="Cargo.lock", search="dubp-block\"\nversion = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="dubp-block\"\nversion = \"{{version}}\"\n", exactly=1},
+    # bda-types
+    {file="bda-types/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\" }", replace="version = \"{{version}}\" }", exactly=2},
+    {file="bda-types/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="version = \"{{version}}\"\n", exactly=1},
+    {file="Cargo.lock", search="duniter-bda-types\"\nversion = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="duniter-bda-types\"\nversion = \"{{version}}\"\n", exactly=1},
     # dubp
     {file="Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\" }", replace="version = \"{{version}}\" }", exactly=6},
     # CHANGELOG

@@ -37,6 +37,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
 
 [[package]]
+name = "arrayvec"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a2f58b0bb10c380af2b26e57212856b8c9a59e0925b4c20f4a174a49734eaf7"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -88,7 +97,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9ff35b701f3914bdb8fad3368d822c766ef2858b2583198e41639b936f09d3f"
 dependencies = [
  "arrayref",
- "arrayvec",
+ "arrayvec 0.5.2",
  "cc",
  "cfg-if 0.1.10",
  "constant_time_eq",
@@ -509,6 +518,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "duniter-bda-types"
+version = "0.54.1"
+dependencies = [
+ "arrayvec 0.7.0",
+ "bincode",
+ "dubp-documents",
+ "duniter-peer",
+ "serde",
+ "smallvec",
+ "thiserror",
+]
+
+[[package]]
 name = "duniter-peer"
 version = "0.54.1"
 dependencies = [
@@ -528,7 +550,7 @@ dependencies = [
 name = "dup-crypto"
 version = "0.54.1"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.5.2",
  "base64",
  "bincode",
  "blake3",

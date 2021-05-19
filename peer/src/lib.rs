@@ -40,7 +40,7 @@ pub(crate) use dubp_common::{
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use smallvec::SmallVec;
 
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct PeerV10 {
     pub currency: String,
     pub pubkey: PublicKey,

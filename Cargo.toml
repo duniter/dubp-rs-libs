@@ -33,6 +33,7 @@ rusty-hook = "0.11.2"
 
 [workspace]
 members = [
+    "bda-types",
     "block",
     "common",
     "crypto",
