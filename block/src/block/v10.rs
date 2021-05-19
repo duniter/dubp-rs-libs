@@ -767,7 +767,7 @@ impl FromStringObject for DubpBlockV10 {
             )?,
             hash: BlockHash(
                 Hash::from_hex(stringified.hash.as_ref().ok_or_else(|| {
-                    TextParseError::InvalidInnerFormat("Block without inner_hash".to_owned())
+                    TextParseError::InvalidInnerFormat("Block without hash".to_owned())
                 })?)
                 .map_err(|error| TextParseError::BaseConversionError {
                     field: "block.hash",
