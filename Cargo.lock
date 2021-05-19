@@ -509,6 +509,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "duniter-peer"
+version = "0.54.1"
+dependencies = [
+ "beef",
+ "dubp-common",
+ "log",
+ "maplit",
+ "pretty_assertions",
+ "serde",
+ "serde_json",
+ "smallvec",
+ "thiserror",
+ "unwrap",
+]
+
+[[package]]
 name = "dup-crypto"
 version = "0.54.1"
 dependencies = [

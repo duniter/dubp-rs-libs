@@ -38,6 +38,7 @@ members = [
     "crypto",
     "documents",
     "documents-parser",
+    "peer",
     "wallet"
 ]
 

@@ -11,6 +11,10 @@ pre-release-replacements = [
     {file="common/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\" }", replace="version = \"{{version}}\" }", exactly=1},
     {file="common/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="version = \"{{version}}\"\n", exactly=1},
     {file="Cargo.lock", search="dubp-common\"\nversion = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="dubp-common\"\nversion = \"{{version}}\"\n", exactly=1},
+    # peer
+    {file="peer/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\" }", replace="version = \"{{version}}\" }", exactly=1},
+    {file="peer/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="version = \"{{version}}\"\n", exactly=1},
+    {file="Cargo.lock", search="duniter-peer\"\nversion = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="duniter-peer\"\nversion = \"{{version}}\"\n", exactly=1},
     # wallet
     {file="wallet/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\" }", replace="version = \"{{version}}\" }", exactly=1},
     {file="wallet/Cargo.toml", search="version = \"[0-9]+.[0-9]+.[0-9]+\"\n", replace="version = \"{{version}}\"\n", exactly=1},
