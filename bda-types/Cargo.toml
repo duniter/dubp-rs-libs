@@ -2,6 +2,7 @@
 name = "duniter-bda-types"
 version = "0.55.1"
 authors = ["librelois <elois@duniter.org>"]
+description = "Provide Binary Duniter Api (BDA) types definition."
 license = "AGPL-3.0"
 edition = "2018"
 
