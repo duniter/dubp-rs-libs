@@ -13,20 +13,22 @@ version = "0.54.1"
 path = "lib.rs"
 
 [dependencies]
-dup-crypto = { path = "crypto", default-features = false, version = "0.54.1" }
+dubp-block = { path = "block", optional = true, version = "0.54.1" }
 dubp-common = { path = "common", version = "0.54.1" }
-dubp-wallet = { path = "wallet", version = "0.54.1" }
 dubp-documents = { path = "documents", version = "0.54.1" }
 dubp-documents-parser = { path = "documents-parser", version = "0.54.1" }
-dubp-block = { path = "block", optional = true, version = "0.54.1" }
+dubp-wallet = { path = "wallet", version = "0.54.1" }
+duniter-bda-types = { path = "bda-types", version = "0.54.1" }
+duniter-peer = { path = "peer", version = "0.54.1" }
+dup-crypto = { path = "crypto", default-features = false, version = "0.54.1" }
 
 [features]
 
 # meta-feature for "standard" clients (gcli, gecko, etc)
-client = ["dup-crypto/client", "dubp-common/client", "dubp-wallet/client", "dubp-documents/client", "dubp-documents-parser/client"]
+client = ["dup-crypto/client", "dubp-common/client", "duniter-peer/client", "dubp-wallet/client", "dubp-documents/client", "dubp-documents-parser/client", "duniter-bda-types/client"]
 
 # meta-feature for duniter
-duniter = ["dup-crypto/duniter", "dubp-common/duniter", "dubp-wallet/duniter", "dubp-documents/duniter", "dubp-documents-parser/duniter", "dubp-block/duniter"]
+duniter = ["dup-crypto/duniter", "dubp-common/duniter", "duniter-peer/duniter", "dubp-wallet/duniter", "dubp-documents/duniter", "dubp-documents-parser/duniter", "duniter-bda-types/duniter", "dubp-block/duniter"]
 
 [dev-dependencies]
 rusty-hook = "0.11.2"

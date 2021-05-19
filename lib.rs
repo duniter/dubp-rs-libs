@@ -19,4 +19,6 @@ pub use dubp_common as common;
 pub use dubp_documents as documents;
 pub use dubp_documents_parser as documents_parser;
 pub use dubp_wallet as wallet;
+pub use duniter_bda_types as bda_types;
+pub use duniter_peer as peer;
 pub use dup_crypto as crypto;
