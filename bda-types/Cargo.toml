@@ -1,6 +1,6 @@
 [package]
 name = "duniter-bda-types"
-version = "0.56.0"
+version = "0.57.0"
 authors = ["librelois <elois@duniter.org>"]
 description = "Provide Binary Duniter Api (BDA) types definition."
 license = "AGPL-3.0"
@@ -9,8 +9,8 @@ edition = "2018"
 [dependencies]
 arrayvec = { version = "0.7", features = ["serde"] }
 bincode = "1.3"
-dubp-documents = { path = "../documents", default-features = false, version = "0.56.0" }
-duniter-peer = { path = "../peer", default-features = false, version = "0.56.0" }
+dubp-documents = { path = "../documents", default-features = false, version = "0.57.0" }
+duniter-peer = { path = "../peer", default-features = false, version = "0.57.0" }
 serde = { version = "1.0.105", features = ["derive"] }
 smallvec = { version = "1.6.0", features = ["serde"] }
 thiserror = "1.0.20"
