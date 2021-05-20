@@ -24,12 +24,14 @@
 
 pub mod amount;
 pub mod identity;
+pub mod peer;
 pub mod prepare_payment;
 pub mod rejected_tx;
 pub mod utxo;
 
 use crate::amount::Amount;
 use crate::identity::Identity;
+use crate::peer::Peer;
 use crate::prepare_payment::{PrepareSimplePayment, PrepareSimplePaymentResp};
 use crate::utxo::Utxo;
 
@@ -128,7 +130,7 @@ pub enum BcaRespTypeV0 {
     RejectedTxs(Vec<rejected_tx::RejectedTx>),
     Identities(ArrayVec<Option<Identity>, 16>),
     CurrentUd(SourceAmount),
-    PeersV10(Vec<PeerV10>),
+    PeersV10(Vec<Peer>),
 }
 
 // Result and error
