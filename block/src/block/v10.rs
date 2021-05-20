@@ -281,6 +281,9 @@ impl DubpBlockTrait for DubpBlockV10 {
     fn current_frame_size(&self) -> usize {
         self.content.issuers_frame
     }
+    fn currency_name(&self) -> CurrencyName {
+        self.content.currency.clone()
+    }
     fn currency_parameters(&self) -> Option<CurrencyParameters> {
         if let Some(genesis_parameters) = self.content.parameters {
             Some(CurrencyParameters::from((
