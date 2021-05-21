@@ -57,13 +57,14 @@ name = "vanity"
 #default = ["client"]
 
 # meta-feature for "standard" clients (gcli, gecko, etc)
-client = ["bip32-ed25519", "dewif", "mnemonic", "mnemonic_french", "mnemonic_spanish"]
+client = ["bip32-ed25519", "dewif", "encrypt_tx_comment", "mnemonic", "mnemonic_french", "mnemonic_spanish"]
 
 # meta-feature for duniter
 duniter = []
 
 bip32-ed25519 = ["arrayvec", "cryptoxide", "ed25519-bip32", "mnemonic"]
 dewif = ["arrayvec", "bip32-ed25519", "mnemonic"]
+encrypt_tx_comment = ["cryptoxide", "x25519"]
 x25519 = ["curve25519-dalek", "pubkey_check"]
 mnemonic = ["once_cell"]
 private_message = ["arrayvec", "chacha20poly1305", "x25519"]

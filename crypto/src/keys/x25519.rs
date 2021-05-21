@@ -27,7 +27,7 @@ use zeroize::Zeroize;
 
 /// x25519 public key
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct X25519PublicKey(MontgomeryPoint);
+pub(crate) struct X25519PublicKey(pub(crate) MontgomeryPoint);
 
 impl From<&PublicKey> for X25519PublicKey {
     fn from(ed25519_public_key: &PublicKey) -> Self {
@@ -42,7 +42,17 @@ impl From<&PublicKey> for X25519PublicKey {
 
 #[derive(Zeroize)]
 #[zeroize(drop)]
-pub(crate) struct X25519SecretKey([u8; 32]);
+pub(crate) struct X25519SecretKey(pub(crate) [u8; 32]);
+
+impl X25519SecretKey {
+    pub(crate) fn from_bytes(mut bytes: [u8; 32]) -> Self {
+        bytes[0] &= 248;
+        bytes[31] &= 127;
+        bytes[31] |= 64;
+
+        X25519SecretKey(bytes)
+    }
+}
 
 impl From<&Seed32> for X25519SecretKey {
     fn from(seed: &Seed32) -> Self {
@@ -50,11 +60,7 @@ impl From<&Seed32> for X25519SecretKey {
 
         let mut x25519_sk = [0; 32];
         x25519_sk[..32].copy_from_slice(&hash.0[..32]);
-        x25519_sk[0] &= 248;
-        x25519_sk[31] &= 127;
-        x25519_sk[31] |= 64;
-
-        X25519SecretKey(x25519_sk)
+        Self::from_bytes(x25519_sk)
     }
 }
 

@@ -189,6 +189,7 @@ impl Language {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn from_u8(source: u8) -> Result<Self, MnemonicError> {
         match source {
             0 => Ok(Self::English),
@@ -210,6 +211,7 @@ impl Language {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn to_u8(self) -> u8 {
         match self {
             Language::English => 0,

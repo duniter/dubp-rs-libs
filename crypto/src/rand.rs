@@ -43,6 +43,14 @@ pub fn gen_random_bytes(buffer: &mut [u8]) -> Result<(), UnspecifiedRandError> {
 }
 
 #[inline]
+/// Generate random u8
+pub fn gen_u8() -> Result<u8, UnspecifiedRandError> {
+    let mut random_byte = [0u8; 1];
+    getrandom(&mut random_byte[..]).map_err(|_| UnspecifiedRandError)?;
+    Ok(random_byte[0])
+}
+
+#[inline]
 /// Generate random u32
 pub fn gen_u32() -> Result<u32, UnspecifiedRandError> {
     let mut random_bytes = [0u8; 4];

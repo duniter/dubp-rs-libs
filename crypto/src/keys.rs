@@ -349,8 +349,15 @@ impl PublicKey for PubKeyEnum {
     }
 }
 
+pub(crate) mod inner {
+    #[doc(hidden)]
+    pub trait KeyPairInner {
+        fn scalar_bytes(&self) -> [u8; 32];
+    }
+}
+
 /// Define the operations that can be performed on a cryptographic key pair.
-pub trait KeyPair: Clone + Display + Debug + PartialEq + Eq {
+pub trait KeyPair: Clone + Display + Debug + inner::KeyPairInner + PartialEq + Eq {
     /// Seed
     type Seed: AsRef<[u8]>;
     /// Signator type of associated cryptosystem.
@@ -419,6 +426,16 @@ impl Display for KeyPairEnum {
             KeyPairEnum::Bip32Ed25519(ref keypair) => {
                 write!(f, "{}", keypair)
             }
+        }
+    }
+}
+
+impl inner::KeyPairInner for KeyPairEnum {
+    fn scalar_bytes(&self) -> [u8; 32] {
+        match self {
+            KeyPairEnum::Ed25519(ref ed25519_keypair) => ed25519_keypair.scalar_bytes(),
+            #[cfg(feature = "bip32-ed25519")]
+            KeyPairEnum::Bip32Ed25519(ref keypair) => keypair.scalar_bytes(),
         }
     }
 }

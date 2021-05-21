@@ -27,6 +27,7 @@ use super::{PubKeyFromBytesError, SigError};
 use crate::bases::b58::{bytes_to_str_base58, ToBase58};
 use crate::bases::*;
 use crate::hashs::Hash as Hash32;
+use crate::hashs::Hash64;
 use crate::rand::UnspecifiedRandError;
 use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
@@ -52,6 +53,8 @@ pub const PUBKEY_SIZE_IN_BYTES: usize = 33;
 pub(crate) const PUBKEY_DATAS_SIZE_IN_BYTES: usize = 32;
 /// constf a signature in bytes
 pub const SIG_SIZE_IN_BYTES: usize = 64;
+
+const EXTENDED_SECRET_KEY_SIZE: usize = 64;
 
 /// Store a ed25519 signature.
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
@@ -438,6 +441,17 @@ impl PartialEq<Ed25519KeyPair> for Ed25519KeyPair {
     }
 }
 
+impl super::inner::KeyPairInner for Ed25519KeyPair {
+    fn scalar_bytes(&self) -> [u8; 32] {
+        let mut hash: Hash64 = Hash64::sha512(self.seed.as_ref());
+        normalize_bytes_ed25519(&mut hash.0);
+
+        let mut scalar_bytes = [0; 32];
+        scalar_bytes.copy_from_slice(&hash.0[..32]);
+        scalar_bytes
+    }
+}
+
 impl super::KeyPair for Ed25519KeyPair {
     type Seed = Seed32;
     type Signator = Signator;
@@ -575,6 +589,12 @@ impl KeyPairFromSaltedPasswordGenerator {
         // Generate keypair from seed
         KeyPairFromSeed32Generator::generate(seed)
     }
+}
+
+fn normalize_bytes_ed25519(bytes: &mut [u8; EXTENDED_SECRET_KEY_SIZE]) {
+    bytes[0] &= 248;
+    bytes[31] &= 63;
+    bytes[31] |= 64;
 }
 
 #[cfg(test)]

@@ -52,6 +52,8 @@
 pub mod bases;
 #[cfg(feature = "dewif")]
 pub mod dewif;
+#[cfg(feature = "encrypt_tx_comment")]
+pub mod encrypt_tx_comment;
 pub mod hashs;
 pub mod keys;
 #[cfg(feature = "mnemonic")]

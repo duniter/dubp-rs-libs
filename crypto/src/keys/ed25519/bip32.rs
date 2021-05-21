@@ -77,7 +77,8 @@
 use crate::{
     bases::b58::ToBase58,
     hashs::{Hash, Hash64},
-    keys::{KeyPair as KeyPairTrait, PublicKey as _},
+    keys::ed25519::EXTENDED_SECRET_KEY_SIZE,
+    keys::{inner::KeyPairInner, KeyPair as KeyPairTrait, PublicKey as _},
     mnemonic::Mnemonic,
     seeds::Seed32,
     utils::U31,
@@ -88,7 +89,6 @@ use thiserror::Error;
 use zeroize::Zeroize;
 
 const CHAIN_CODE_SIZE: usize = 32;
-const EXTENDED_SECRET_KEY_SIZE: usize = 64;
 
 /// BIP32 Chain code
 pub type ChainCode = [u8; 32];
@@ -287,6 +287,14 @@ impl KeyPair {
             chain_code: xprv_derived.chain_code(),
             extended_secret_key: xprv_derived.extended_secret_key(),
         }
+    }
+}
+
+impl KeyPairInner for KeyPair {
+    fn scalar_bytes(&self) -> [u8; 32] {
+        let mut scalar_bytes = [0; 32];
+        scalar_bytes.copy_from_slice(&self.extended_secret_key[..32]);
+        scalar_bytes
     }
 }
 
