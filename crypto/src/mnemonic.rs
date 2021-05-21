@@ -47,7 +47,6 @@ pub use mnemonic_type::MnemonicType;
 ///
 /// [Mnemonic]: ./mnemonic/struct.Mnemonic.html
 /// [Mnemonic::phrase()]: ./mnemonic/struct.Mnemonic.html#method.phrase
-#[cfg(feature = "scrypt")]
 pub fn mnemonic_to_seed(mnemonic: &Mnemonic) -> crate::keys::Seed32 {
     let mnemonic_bytes = mnemonic.phrase().as_bytes();
     let salt = crate::hashs::Hash::compute(format!("dubp{}", mnemonic.phrase()).as_bytes());

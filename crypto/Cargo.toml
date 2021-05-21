@@ -60,15 +60,14 @@ name = "vanity"
 client = ["bip32-ed25519", "dewif", "mnemonic", "mnemonic_french", "mnemonic_spanish"]
 
 # meta-feature for duniter
-duniter = ["scrypt"]
+duniter = []
 
 bip32-ed25519 = ["arrayvec", "cryptoxide", "ed25519-bip32", "mnemonic"]
-dewif = ["arrayvec", "bip32-ed25519", "scrypt", "mnemonic"]
+dewif = ["arrayvec", "bip32-ed25519", "mnemonic"]
 x25519 = ["curve25519-dalek", "pubkey_check"]
 mnemonic = ["once_cell"]
 private_message = ["arrayvec", "chacha20poly1305", "x25519"]
 pubkey_check = ["curve25519-dalek"]
-scrypt = []
 
 # mnemonic languages features (English is the default language, so always included)
 mnemonic_all_languages = ["mnemonic_chinese_simplified", "mnemonic_chinese_traditional", "mnemonic_french", "mnemonic_italian", "mnemonic_japanese", "mnemonic_korean", "mnemonic_spanish"]

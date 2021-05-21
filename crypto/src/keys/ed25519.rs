@@ -28,7 +28,6 @@ use crate::bases::b58::{bytes_to_str_base58, ToBase58};
 use crate::bases::*;
 use crate::hashs::Hash as Hash32;
 use crate::rand::UnspecifiedRandError;
-#[cfg(feature = "scrypt")]
 use crate::scrypt::{params::ScryptParams, scrypt};
 use crate::seeds::Seed32;
 #[cfg(not(target_arch = "wasm32"))]
@@ -46,7 +45,6 @@ use std::{
     hash::Hash,
     hint::unreachable_unchecked,
 };
-#[cfg(feature = "scrypt")]
 use zeroize::Zeroize;
 
 /// Size of a public key in bytes
@@ -514,7 +512,6 @@ impl KeyPairFromSeed32Generator {
     }
 }
 
-#[cfg(feature = "scrypt")]
 #[derive(Zeroize)]
 #[zeroize(drop)]
 /// Salted password
@@ -523,21 +520,18 @@ pub struct SaltedPassword {
     password: String,
 }
 
-#[cfg(feature = "scrypt")]
 impl SaltedPassword {
     /// Create new salted password
     pub fn new(salt: String, password: String) -> SaltedPassword {
         SaltedPassword { salt, password }
     }
 }
-#[cfg(feature = "scrypt")]
 /// Keypair generator with given parameters for `scrypt` keypair function.
 #[derive(Copy, Clone)]
 pub struct KeyPairFromSaltedPasswordGenerator {
     scrypt_params: ScryptParams,
 }
 
-#[cfg(feature = "scrypt")]
 impl KeyPairFromSaltedPasswordGenerator {
     /// Create a `KeyPairGenerator` with default arguments `(log_n: 12, r: 16, p: 1)`
     pub fn with_default_parameters() -> KeyPairFromSaltedPasswordGenerator {
@@ -851,7 +845,6 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
     }
 
     #[test]
-    #[cfg(feature = "scrypt")]
     fn keypair_generate() {
         let key_pair1 = KeyPairFromSaltedPasswordGenerator::with_default_parameters().generate(
             SaltedPassword::new(
@@ -885,7 +878,6 @@ Timestamp: 0-E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
     }
 
     #[test]
-    #[cfg(feature = "scrypt")]
     fn keypair_generate_sign_and_verify() {
         let keypair = KeyPairFromSaltedPasswordGenerator::with_default_parameters().generate(
             SaltedPassword::new("password".to_owned(), "salt".to_owned()),

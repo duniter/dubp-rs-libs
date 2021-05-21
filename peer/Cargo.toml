@@ -33,5 +33,3 @@ client = ["dubp-common/client"]
 
 # meta-feature for duniter
 duniter = ["dubp-common/duniter"]
-
-crypto_scrypt = ["dubp-common/crypto_scrypt"]

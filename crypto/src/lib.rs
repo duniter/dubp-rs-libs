@@ -59,7 +59,6 @@ pub mod mnemonic;
 #[cfg(feature = "private_message")]
 pub mod private_message;
 pub mod rand;
-#[cfg(feature = "scrypt")]
 pub mod scrypt;
 pub mod seeds;
 pub mod utils;

@@ -22,5 +22,3 @@ client = ["dubp-documents/client"]
 
 # meta-feature for duniter
 duniter = ["dubp-documents/duniter"]
-
-crypto_scrypt = ["dubp-documents/crypto_scrypt"]

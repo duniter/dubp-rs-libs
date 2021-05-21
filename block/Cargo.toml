@@ -30,5 +30,3 @@ unwrap = "1.2.1"
 
 # meta-feature for duniter
 duniter = ["dubp-documents/duniter", "dubp-documents-parser/duniter"]
-
-crypto_scrypt = ["dubp-documents/crypto_scrypt", "dubp-documents-parser/crypto_scrypt"]

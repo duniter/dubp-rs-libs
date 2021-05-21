@@ -32,5 +32,3 @@ client = ["dubp-wallet/client"]
 
 # meta-feature for duniter
 duniter = ["dubp-wallet/duniter"]
-
-crypto_scrypt = ["dubp-wallet/crypto_scrypt"]
