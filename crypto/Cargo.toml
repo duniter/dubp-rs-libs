@@ -13,7 +13,7 @@ edition = "2018"
 path = "src/lib.rs"
 
 [dependencies]
-arrayvec = { version = "0.5.2", features = ["array-sizes-33-128", "array-sizes-129-255"], optional = true }
+arrayvec = { version = "0.7", optional = true }
 base64 = "0.13.0"
 blake3 = { version = "0.3.7", features = ["rayon"] }
 bs58 = "0.4.0"

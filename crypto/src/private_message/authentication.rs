@@ -75,7 +75,7 @@ pub(crate) fn write_anthentication_datas(
     authent_proof: AuthenticationProof,
     authent_policy: AuthenticationPolicy,
 ) -> impl AsRef<[u8]> + IntoIterator<Item = u8> {
-    let mut authent_datas = arrayvec::ArrayVec::<[u8; 97]>::new();
+    let mut authent_datas = arrayvec::ArrayVec::<u8, 97>::new();
     authent_datas
         .try_extend_from_slice(sender_public_key.datas.as_ref())
         .unwrap_or_else(|_| unsafe { unreachable_unchecked() }); // It's safe because the public key is 32 bytes long.

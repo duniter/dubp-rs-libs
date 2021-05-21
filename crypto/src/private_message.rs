@@ -258,7 +258,7 @@ where
     )?;
 
     // write clear footer (tag and ephemeral_public_key)
-    let mut clear_footer = arrayvec::ArrayVec::<[u8; 48]>::new();
+    let mut clear_footer = arrayvec::ArrayVec::<u8, 48>::new();
     clear_footer
         .try_extend_from_slice(tag.as_ref())
         .unwrap_or_else(|_| unsafe { unreachable_unchecked() }); // It's safe because the tag is 16 bytes long.

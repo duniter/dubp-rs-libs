@@ -146,7 +146,7 @@ impl DerivationIndex {
 
 #[derive(Clone, Debug)]
 /// Private Derivation path
-pub struct PrivateDerivationPath(ArrayVec<[DerivationIndex; 3]>);
+pub struct PrivateDerivationPath(ArrayVec<DerivationIndex, 3>);
 
 impl PrivateDerivationPath {
     /// Derive transparent account
