@@ -50,6 +50,9 @@ pub enum DecryptTxCommentErr {
     /// Too long
     #[error("Too long data")]
     TooLong,
+    /// Malicious input
+    #[error("malicious input")]
+    MaliciousInput,
     /// Invalid utf8 message
     #[error("Invalid utf8 message: {0}")]
     Utf8Err(std::str::Utf8Error),
@@ -163,13 +166,7 @@ pub fn decrypt_tx_comment_with_shared_key(
         decrypted_data.push(encryption_key[i] ^ encrypted_data[i]);
     }
 
-    // Read real message length
-    let real_message_length = decrypted_data[0] as usize;
-
-    std::str::from_utf8(&decrypted_data[1..=real_message_length])
-        .map_err(DecryptTxCommentErr::Utf8Err)?
-        .try_into()
-        .map_err(|_| DecryptTxCommentErr::TooLong)
+    read_decrypted_data(decrypted_data.as_ref())
 }
 
 /// Encrypt transaction comment
@@ -262,6 +259,23 @@ fn gen_nonce() -> Result<Nonce, UnspecifiedRandError> {
     ])
 }
 
+fn read_decrypted_data(
+    decrypted_data: &[u8],
+) -> Result<ArrayString<MAX_MSG_LEN>, DecryptTxCommentErr> {
+    // Read real message length
+    let real_message_length = decrypted_data[0] as usize;
+
+    // Verify real message length
+    if real_message_length >= decrypted_data.len() {
+        return Err(DecryptTxCommentErr::MaliciousInput);
+    }
+
+    std::str::from_utf8(&decrypted_data[1..=real_message_length])
+        .map_err(DecryptTxCommentErr::Utf8Err)?
+        .try_into()
+        .map_err(|_| DecryptTxCommentErr::TooLong)
+}
+
 fn verify_magic_value_and_read_version(
     encrypted_tx_comment: &ArrayString<MAX_B64_LEN>,
 ) -> Result<(u8, ArrayVec<u8, MAX_LEN>), DecryptTxCommentErr> {
@@ -305,6 +319,13 @@ mod tests {
         seeds::Seed32,
     };
     use unwrap::unwrap;
+
+    #[test]
+    fn test_read_malicious_decrypted_data() {
+        let decrypted_data = &[42, 1];
+
+        assert!(read_decrypted_data(decrypted_data).is_err());
+    }
 
     #[test]
     fn test_decrypt_tx_comment() -> Result<(), DecryptTxCommentErr> {
@@ -379,7 +400,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cryptobox_sharedkey() {
+    fn test_cryptobox_shared_key() {
         use crate::keys::ed25519::Ed25519KeyPair;
         use crate::keys::inner::KeyPairInner;
         use sodiumoxide::crypto::box_;
