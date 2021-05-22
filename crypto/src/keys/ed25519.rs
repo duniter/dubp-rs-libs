@@ -442,9 +442,9 @@ impl PartialEq<Ed25519KeyPair> for Ed25519KeyPair {
 }
 
 impl super::inner::KeyPairInner for Ed25519KeyPair {
-    fn scalar_bytes(&self) -> [u8; 32] {
-        let mut hash: Hash64 = Hash64::sha512(self.seed.as_ref());
-        normalize_bytes_ed25519(&mut hash.0);
+    fn scalar_bytes_without_normalization(&self) -> [u8; 32] {
+        let hash: Hash64 = Hash64::sha512(self.seed.as_ref());
+        //normalize_bytes_ed25519(&mut hash.0);
 
         let mut scalar_bytes = [0; 32];
         scalar_bytes.copy_from_slice(&hash.0[..32]);
@@ -591,11 +591,11 @@ impl KeyPairFromSaltedPasswordGenerator {
     }
 }
 
-fn normalize_bytes_ed25519(bytes: &mut [u8; EXTENDED_SECRET_KEY_SIZE]) {
+/*fn normalize_bytes_ed25519(bytes: &mut [u8; EXTENDED_SECRET_KEY_SIZE]) {
     bytes[0] &= 248;
     bytes[31] &= 63;
     bytes[31] |= 64;
-}
+}*/
 
 #[cfg(test)]
 mod tests {

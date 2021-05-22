@@ -352,7 +352,7 @@ impl PublicKey for PubKeyEnum {
 pub(crate) mod inner {
     #[doc(hidden)]
     pub trait KeyPairInner {
-        fn scalar_bytes(&self) -> [u8; 32];
+        fn scalar_bytes_without_normalization(&self) -> [u8; 32];
     }
 }
 
@@ -431,11 +431,13 @@ impl Display for KeyPairEnum {
 }
 
 impl inner::KeyPairInner for KeyPairEnum {
-    fn scalar_bytes(&self) -> [u8; 32] {
+    fn scalar_bytes_without_normalization(&self) -> [u8; 32] {
         match self {
-            KeyPairEnum::Ed25519(ref ed25519_keypair) => ed25519_keypair.scalar_bytes(),
+            KeyPairEnum::Ed25519(ref ed25519_keypair) => {
+                ed25519_keypair.scalar_bytes_without_normalization()
+            }
             #[cfg(feature = "bip32-ed25519")]
-            KeyPairEnum::Bip32Ed25519(ref keypair) => keypair.scalar_bytes(),
+            KeyPairEnum::Bip32Ed25519(ref keypair) => keypair.scalar_bytes_without_normalization(),
         }
     }
 }

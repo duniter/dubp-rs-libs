@@ -74,7 +74,7 @@ pub struct SharedKey([u8; 32]);
 /// compute shared key
 pub fn compute_shared_key<K: KeyPair>(my_keypair: &K, its_pubkey: &PublicKey) -> SharedKey {
     let precomputed_key = diffie_hellman(
-        X25519SecretKey::from_bytes(my_keypair.scalar_bytes()),
+        X25519SecretKey::from_bytes(my_keypair.scalar_bytes_without_normalization()),
         X25519PublicKey::from(its_pubkey),
         |shared_secret| {
             let mut buffer = [0; 32];
@@ -254,8 +254,8 @@ fn gen_nonce() -> Result<Nonce, UnspecifiedRandError> {
 #[allow(clippy::unnecessary_wraps)]
 fn gen_nonce() -> Result<Nonce, UnspecifiedRandError> {
     Ok([
-        0x7f, 0xf8, 0xbc, 0x19, 0x0a, 0xb7, 0xd5, 0x46, 0x1d, 0xee, 0x47, 0xfc, 0x29, 0xde, 0xc9,
-        0xf2,
+        0x16, 0x74, 0x02, 0x85, 0x72, 0x1a, 0xde, 0xb1, 0x0d, 0xa0, 0x41, 0x06, 0xc9, 0xeb, 0x9e,
+        0x34,
     ])
 }
 
@@ -350,7 +350,7 @@ mod tests {
         let shared_key = compute_shared_key(&kp_bob, &pk_alice);
 
         // Get encrypted comment
-        let encrypted_tx_comment = unwrap!(ArrayString::from("J7YBAH/4vBkKt9VGHe5H/CneyfKdagW5oo8oh6cGBE5PRmb/rJs7LiXal4hnsS6+sry/4Hwny0iFLSEgXuPNIJk2"));
+        let encrypted_tx_comment = unwrap!(ArrayString::from("J7YBABZ0AoVyGt6xDaBBBsnrnjREXG3NgZKjIyN2lxEx+jbNmf/tZt6uMaelMGRx48kqEovl70uUU17l1J8FOy9i"));
 
         // Decrypt comment
         let tx_comment = decrypt_tx_comment_with_shared_key(&shared_key, &encrypted_tx_comment)?;
@@ -393,7 +393,7 @@ mod tests {
         println!("encrypted_comment={}", encrypted_comment);
         assert_eq!(
             &encrypted_comment[..88], // 88 b64 chars encode 66 octets (21 mate data + 45 comment)
-            "J7YBAH/4vBkKt9VGHe5H/CneyfKdagW5oo8oh6cGBE5PRmb/rJs7LiXal4hnsS6+sry/4Hwny0iFLSEgXuPNIJk2"
+            "J7YBABZ0AoVyGt6xDaBBBsnrnjREXG3NgZKjIyN2lxEx+jbNmf/tZt6uMaelMGRx48kqEovl70uUU17l1J8FOy9i"
         );
 
         //
@@ -410,8 +410,8 @@ mod tests {
         let kp1 = unwrap!(Ed25519KeyPair::generate_random());
         let kp2 = unwrap!(Ed25519KeyPair::generate_random());
 
-        let sk1 = X25519SecretKey::from_bytes(kp1.scalar_bytes());
-        let sk2 = X25519SecretKey::from_bytes(kp2.scalar_bytes());
+        let sk1 = X25519SecretKey::from_bytes(kp1.scalar_bytes_without_normalization());
+        let sk2 = X25519SecretKey::from_bytes(kp2.scalar_bytes_without_normalization());
         let pk1 = X25519PublicKey::from(&kp1.public_key());
         let pk2 = X25519PublicKey::from(&kp2.public_key());
 

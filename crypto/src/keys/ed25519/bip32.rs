@@ -291,7 +291,7 @@ impl KeyPair {
 }
 
 impl KeyPairInner for KeyPair {
-    fn scalar_bytes(&self) -> [u8; 32] {
+    fn scalar_bytes_without_normalization(&self) -> [u8; 32] {
         let mut scalar_bytes = [0; 32];
         scalar_bytes.copy_from_slice(&self.extended_secret_key[..32]);
         scalar_bytes
