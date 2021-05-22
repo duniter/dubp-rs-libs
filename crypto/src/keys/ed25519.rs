@@ -54,8 +54,6 @@ pub(crate) const PUBKEY_DATAS_SIZE_IN_BYTES: usize = 32;
 /// constf a signature in bytes
 pub const SIG_SIZE_IN_BYTES: usize = 64;
 
-const EXTENDED_SECRET_KEY_SIZE: usize = 64;
-
 /// Store a ed25519 signature.
 #[derive(Clone, Copy, Eq, Hash, PartialEq)]
 pub struct Signature(pub [u8; 64]);
