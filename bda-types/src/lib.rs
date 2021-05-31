@@ -92,6 +92,14 @@ pub enum BcaReqTypeV0 {
     PeersV10 {
         n: usize,
     },
+    CurrentBlockstamp,
+    Sync {
+        from: u32,
+        to: Option<u32>,
+    },
+    CompressedBlockChunk {
+        chunk_id: usize,
+    },
 }
 
 // Request types helpers
@@ -131,6 +139,16 @@ pub enum BcaRespTypeV0 {
     Identities(ArrayVec<Option<Identity>, 16>),
     CurrentUd(SourceAmount),
     PeersV10(Vec<Peer>),
+    CurrentBlockstamp(Blockstamp),
+    Sync {
+        blocks_chunks_hashs: Vec<Hash>,
+        peers: Vec<Peer>,
+        target_blockstamp: Blockstamp,
+    },
+    CompressedBlockChunk {
+        chunk_id: usize,
+        compressed_data: Vec<u8>,
+    },
 }
 
 // Result and error
