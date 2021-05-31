@@ -7,20 +7,20 @@ license = "AGPL-3.0"
 name = "dubp"
 readme = "README.md"
 repository = "https://git.duniter.org/libs-dupb-rs-libs"
-version = "0.57.0"
+version = "0.58.0"
 
 [lib]
 path = "lib.rs"
 
 [dependencies]
-dubp-block = { path = "block", optional = true, version = "0.57.0" }
-dubp-common = { path = "common", version = "0.57.0" }
-dubp-documents = { path = "documents", version = "0.57.0" }
-dubp-documents-parser = { path = "documents-parser", version = "0.57.0" }
-dubp-wallet = { path = "wallet", version = "0.57.0" }
-duniter-bda-types = { path = "bda-types", version = "0.57.0" }
-duniter-peer = { path = "peer", version = "0.57.0" }
-dup-crypto = { path = "crypto", default-features = false, version = "0.57.0" }
+dubp-block = { path = "block", optional = true, version = "0.58.0" }
+dubp-common = { path = "common", version = "0.58.0" }
+dubp-documents = { path = "documents", version = "0.58.0" }
+dubp-documents-parser = { path = "documents-parser", version = "0.58.0" }
+dubp-wallet = { path = "wallet", version = "0.58.0" }
+duniter-bda-types = { path = "bda-types", version = "0.58.0" }
+duniter-peer = { path = "peer", version = "0.58.0" }
+dup-crypto = { path = "crypto", default-features = false, version = "0.58.0" }
 
 [features]
 
