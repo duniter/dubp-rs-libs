@@ -66,6 +66,7 @@ const BLAKE3_CUTOFF: usize = 1 << 17;
     Serialize,
     zerocopy::AsBytes,
     zerocopy::FromBytes,
+    zerocopy::Unaligned,
 )]
 #[repr(transparent)]
 pub struct Hash(pub [u8; 32]);
